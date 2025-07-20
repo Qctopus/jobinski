@@ -95,8 +95,8 @@ export class JobAnalyticsProcessor {
     const jobTitle = job.title || '';
     const jobDescription = job.description || '';
     
-    // IMPORTANT: Give much higher weight to job_labels since they are pre-processed and clean
-    const searchText = `${jobLabels} ${jobTitle} ${jobDescription}`.toLowerCase();
+      // IMPORTANT: Give much higher weight to job_labels since they are pre-processed and clean
+  // searchText variable removed as we now use specific field matching
     const categoryScores: { [key: string]: number } = {};
 
     // Score each category based on keyword matches
