@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell } from 'recharts';
-import { Building2, TrendingUp, Calendar, Filter, Users, Target, Lightbulb, Activity } from 'lucide-react';
-import { ProcessedJobData, FilterOptions, DashboardMetrics } from '../types';
+import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity } from 'lucide-react';
+import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 import CategoryInsights from './CategoryInsights';
 
