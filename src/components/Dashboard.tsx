@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
-import CategoryInsights from './CategoryInsights';
+// import CategoryInsights from './CategoryInsights';
 
 interface DashboardProps {
   data: ProcessedJobData[];
@@ -18,7 +18,15 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
   
   const metrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(data, filters);
+    console.log('Dashboard: Calculating metrics for', data.length, 'jobs');
+    const result = processor.calculateDashboardMetrics(data, filters);
+    console.log('Dashboard: Metrics calculated:', {
+      totalJobs: result.totalJobs,
+      totalAgencies: result.totalAgencies,
+      topCategoriesCount: result.topCategories.length,
+      topCategories: result.topCategories.slice(0, 3)
+    });
+    return result;
   }, [data, filters, processor]);
 
   const agencies = useMemo(() => {
@@ -303,11 +311,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           </div>
 
           {/* Category Intelligence Component */}
+          {/* CategoryInsights temporarily disabled for debugging
           <CategoryInsights 
             metrics={metrics}
             data={data}
             filters={filters}
           />
+          */}
 
           {/* Agency Performance Table */}
           <div className="bg-white rounded-lg shadow">

@@ -89,7 +89,12 @@ export class JobAnalyticsProcessor {
 
   // Categorize a job based on its labels, title, and description
   categorizeJob(job: JobData): { primary: string; secondary: string[] } {
-    const searchText = `${job.job_labels} ${job.title} ${job.description}`.toLowerCase();
+    // Handle potential null/undefined values
+    const jobLabels = job.job_labels || '';
+    const jobTitle = job.title || '';
+    const jobDescription = job.description || '';
+    
+    const searchText = `${jobLabels} ${jobTitle} ${jobDescription}`.toLowerCase();
     const categoryScores: { [key: string]: number } = {};
 
     // Score each category based on keyword matches
@@ -101,12 +106,12 @@ export class JobAnalyticsProcessor {
         score += matches.length;
         
         // Bonus points for matches in job_labels (more relevant)
-        if (job.job_labels.toLowerCase().includes(keyword.toLowerCase())) {
+        if (jobLabels.toLowerCase().includes(keyword.toLowerCase())) {
           score += 2;
         }
         
         // Bonus points for matches in title (most relevant)
-        if (job.title.toLowerCase().includes(keyword.toLowerCase())) {
+        if (jobTitle.toLowerCase().includes(keyword.toLowerCase())) {
           score += 3;
         }
       });
@@ -120,6 +125,15 @@ export class JobAnalyticsProcessor {
     const sortedCategories = Object.entries(categoryScores)
       .sort(([,a], [,b]) => b - a)
       .map(([category]) => category);
+
+    // Debug logging for first few jobs
+    if (Object.keys(categoryScores).length === 0) {
+      console.log('No category found for job:', {
+        title: jobTitle,
+        labels: jobLabels.substring(0, 100),
+        searchText: searchText.substring(0, 150)
+      });
+    }
 
     return {
       primary: sortedCategories[0] || 'General',
@@ -212,59 +226,84 @@ export class JobAnalyticsProcessor {
 
   // Process job data with enhanced analytics
   processJobData(jobs: JobData[]): ProcessedJobData[] {
-    return jobs.filter(job => job.id && job.title && job.posting_date)
-      .map(job => {
-        // Basic processing (from original)
-        let postingDate: Date;
-        let applyUntilDate: Date;
-        
-        try {
-          postingDate = parseISO(job.posting_date);
-          if (isNaN(postingDate.getTime())) postingDate = new Date();
-        } catch {
-          postingDate = new Date();
-        }
+    console.log(`Processing ${jobs.length} jobs...`);
+    
+    const filteredJobs = jobs.filter(job => job.id && job.title && job.posting_date);
+    console.log(`${filteredJobs.length} jobs after filtering`);
+    
+    const processedJobs = filteredJobs.map((job, index) => {
+      // Basic processing (from original)
+      let postingDate: Date;
+      let applyUntilDate: Date;
+      
+      try {
+        postingDate = parseISO(job.posting_date);
+        if (isNaN(postingDate.getTime())) postingDate = new Date();
+      } catch {
+        postingDate = new Date();
+      }
 
-        try {
-          applyUntilDate = parseISO(job.apply_until);
-          if (isNaN(applyUntilDate.getTime())) applyUntilDate = new Date();
-        } catch {
-          applyUntilDate = new Date();
-        }
+      try {
+        applyUntilDate = parseISO(job.apply_until);
+        if (isNaN(applyUntilDate.getTime())) applyUntilDate = new Date();
+      } catch {
+        applyUntilDate = new Date();
+      }
 
-        const applicationWindow = differenceInDays(applyUntilDate, postingDate);
-        const experiences = [job.hs_min_exp || 0, job.bachelor_min_exp || 0, job.master_min_exp || 0];
-        const relevantExperience = Math.max(...experiences);
-        const languageCount = job.languages ? job.languages.split(/[,;/|]/).filter(lang => lang.trim().length > 0).length : 0;
-        const isHomeBased = job.duty_station.toLowerCase().includes('home based') || 
-                           job.duty_station.toLowerCase().includes('remote') ||
-                           job.duty_station.toLowerCase().includes('telecommuting');
+      const applicationWindow = differenceInDays(applyUntilDate, postingDate);
+      const experiences = [job.hs_min_exp || 0, job.bachelor_min_exp || 0, job.master_min_exp || 0];
+      const relevantExperience = Math.max(...experiences);
+      const languageCount = job.languages ? job.languages.split(/[,;/|]/).filter(lang => lang.trim().length > 0).length : 0;
+      const isHomeBased = job.duty_station.toLowerCase().includes('home based') || 
+                         job.duty_station.toLowerCase().includes('remote') ||
+                         job.duty_station.toLowerCase().includes('telecommuting');
 
-        // Enhanced analytics
-        const categories = this.categorizeJob(job);
-        const skillDomain = this.determineSkillDomain(job);
-        const seniorityLevel = this.determineSeniorityLevel(job.up_grade);
-        const locationType = this.determineLocationType(job.duty_station);
+      // Enhanced analytics
+      const categories = this.categorizeJob(job);
+      const skillDomain = this.determineSkillDomain(job);
+      const seniorityLevel = this.determineSeniorityLevel(job.up_grade);
+      const locationType = this.determineLocationType(job.duty_station);
 
-        return {
-          ...job,
-          application_window_days: Math.max(0, applicationWindow),
-          relevant_experience: relevantExperience,
-          language_count: languageCount,
-          is_home_based: isHomeBased,
-          formatted_posting_date: format(postingDate, 'MMM dd, yyyy'),
-          formatted_apply_until: format(applyUntilDate, 'MMM dd, yyyy'),
-          // New analytics fields
-          primary_category: categories.primary,
-          secondary_categories: categories.secondary,
-          skill_domain: skillDomain,
-          seniority_level: seniorityLevel,
-          location_type: locationType,
-          posting_month: format(postingDate, 'yyyy-MM'),
-          posting_year: postingDate.getFullYear(),
-          posting_quarter: `${postingDate.getFullYear()}-Q${Math.floor(postingDate.getMonth() / 3) + 1}`
-        };
-      });
+      // Debug first few jobs
+      if (index < 3) {
+        console.log(`Job ${index + 1}:`, {
+          title: job.title,
+          primaryCategory: categories.primary,
+          agency: job.short_agency || job.long_agency
+        });
+      }
+
+      return {
+        ...job,
+        application_window_days: Math.max(0, applicationWindow),
+        relevant_experience: relevantExperience,
+        language_count: languageCount,
+        is_home_based: isHomeBased,
+        formatted_posting_date: format(postingDate, 'MMM dd, yyyy'),
+        formatted_apply_until: format(applyUntilDate, 'MMM dd, yyyy'),
+        // New analytics fields
+        primary_category: categories.primary,
+        secondary_categories: categories.secondary,
+        skill_domain: skillDomain,
+        seniority_level: seniorityLevel,
+        location_type: locationType,
+        posting_month: format(postingDate, 'yyyy-MM'),
+        posting_year: postingDate.getFullYear(),
+        posting_quarter: `${postingDate.getFullYear()}-Q${Math.floor(postingDate.getMonth() / 3) + 1}`
+      };
+    });
+
+    console.log(`Processed ${processedJobs.length} jobs successfully`);
+    
+    // Show category distribution
+    const categoryCount = new Map<string, number>();
+    processedJobs.forEach(job => {
+      categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
+    });
+    
+    console.log('Category distribution:', Object.fromEntries(categoryCount));
+    
+    return processedJobs;
   }
 
   // Calculate comprehensive dashboard metrics
