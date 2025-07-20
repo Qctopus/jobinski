@@ -1,10 +1,11 @@
 import { format, differenceInDays, parseISO, subMonths, isAfter } from 'date-fns';
-import { 
+  import { 
   JobData, 
   ProcessedJobData, 
   JobCategory, 
   DashboardMetrics, 
   AgencyInsight, 
+  DepartmentInsight,
   CategoryInsight, 
   TimeSeriesData,
   FilterOptions 
@@ -94,6 +95,7 @@ export class JobAnalyticsProcessor {
     const jobTitle = job.title || '';
     const jobDescription = job.description || '';
     
+    // IMPORTANT: Give much higher weight to job_labels since they are pre-processed and clean
     const searchText = `${jobLabels} ${jobTitle} ${jobDescription}`.toLowerCase();
     const categoryScores: { [key: string]: number } = {};
 
@@ -102,18 +104,18 @@ export class JobAnalyticsProcessor {
       let score = 0;
       category.keywords.forEach(keyword => {
         const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'g');
-        const matches = searchText.match(regex) || [];
-        score += matches.length;
         
-        // Bonus points for matches in job_labels (more relevant)
-        if (jobLabels.toLowerCase().includes(keyword.toLowerCase())) {
-          score += 2;
-        }
+        // HEAVILY weight job_labels matches (they're clean and relevant)
+        const labelsMatches = (jobLabels.toLowerCase().match(regex) || []).length;
+        score += labelsMatches * 10; // 10x weight for job_labels
         
-        // Bonus points for matches in title (most relevant)
-        if (jobTitle.toLowerCase().includes(keyword.toLowerCase())) {
-          score += 3;
-        }
+        // Medium weight for title matches
+        const titleMatches = (jobTitle.toLowerCase().match(regex) || []).length;
+        score += titleMatches * 5; // 5x weight for titles
+        
+        // Lower weight for description matches (can be noisy)
+        const descMatches = (jobDescription.toLowerCase().match(regex) || []).length;
+        score += descMatches * 1; // 1x weight for descriptions
       });
       
       if (score > 0) {
@@ -126,12 +128,12 @@ export class JobAnalyticsProcessor {
       .sort(([,a], [,b]) => b - a)
       .map(([category]) => category);
 
-    // Debug logging for first few jobs
-    if (Object.keys(categoryScores).length === 0) {
-      console.log('No category found for job:', {
-        title: jobTitle,
-        labels: jobLabels.substring(0, 100),
-        searchText: searchText.substring(0, 150)
+    // Debug logging for troubleshooting (only for first few jobs)
+    if (Math.random() < 0.01) { // Log ~1% of jobs to avoid spam
+      console.log(`Categorizing job: "${jobTitle.substring(0, 40)}"`, {
+        jobLabels: jobLabels.substring(0, 80),
+        scores: Object.keys(categoryScores).length,
+        primaryCategory: sortedCategories[0] || 'General'
       });
     }
 
@@ -335,6 +337,10 @@ export class JobAnalyticsProcessor {
     // Agency insights
     const agencyInsights = this.calculateAgencyInsights(filteredData);
 
+    // Department insights  
+    const departmentInsights = this.calculateDepartmentInsights(filteredData);
+    const totalDepartments = new Set(filteredData.map(job => job.department)).size;
+
     // Category insights
     const categoryInsights = this.calculateCategoryInsights(filteredData, data);
 
@@ -347,8 +353,10 @@ export class JobAnalyticsProcessor {
     return {
       totalJobs,
       totalAgencies,
+      totalDepartments,
       topCategories,
       agencyInsights,
+      departmentInsights,
       categoryInsights,
       timeSeriesData,
       emergingCategories
@@ -410,8 +418,12 @@ export class JobAnalyticsProcessor {
 
     return Array.from(agencyMap.entries()).map(([agency, jobs]) => {
       const categoryCount = new Map<string, number>();
+      const departmentCount = new Map<string, number>();
+      
       jobs.forEach(job => {
         categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
+        const dept = job.department || 'Unknown';
+        departmentCount.set(dept, (departmentCount.get(dept) || 0) + 1);
       });
 
       const topCategories = Array.from(categoryCount.entries())
@@ -423,14 +435,152 @@ export class JobAnalyticsProcessor {
         .filter(cat => cat.percentage > 30)
         .map(cat => cat.category);
 
+      // Calculate department insights for this agency
+      const departments = this.calculateDepartmentInsightsForAgency(jobs, agency);
+
+      // Determine organization level
+      const longName = jobs[0]?.long_agency || agency;
+      const organizationLevel = this.getOrganizationLevel(agency, longName);
+
       return {
         agency,
+        longName,
         totalJobs: jobs.length,
         topCategories,
         growthRate: 0, // Would need historical data
-        specializations
+        specializations,
+        departments,
+        organizationLevel,
+        parentOrganization: this.getParentOrganization(agency, longName)
       };
     }).sort((a, b) => b.totalJobs - a.totalJobs);
+  }
+
+  private calculateDepartmentInsights(data: ProcessedJobData[]): DepartmentInsight[] {
+    const deptMap = new Map<string, ProcessedJobData[]>();
+    
+    data.forEach(job => {
+      const deptKey = `${job.short_agency || job.long_agency || 'Unknown'}|${job.department || 'Unknown'}`;
+      if (!deptMap.has(deptKey)) {
+        deptMap.set(deptKey, []);
+      }
+      deptMap.get(deptKey)!.push(job);
+    });
+
+    return Array.from(deptMap.entries()).map(([deptKey, jobs]) => {
+      const [agency, department] = deptKey.split('|');
+      
+      const categoryCount = new Map<string, number>();
+      const locationCount = new Map<string, number>();
+      const grades: string[] = [];
+      
+      jobs.forEach(job => {
+        categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
+        locationCount.set(job.location_type, (locationCount.get(job.location_type) || 0) + 1);
+        if (job.up_grade) grades.push(job.up_grade);
+      });
+
+      const topCategories = Array.from(categoryCount.entries())
+        .map(([category, count]) => ({ category, count, percentage: (count / jobs.length) * 100 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+
+      const locationTypes = Array.from(locationCount.entries())
+        .map(([type, count]) => ({ type, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Calculate specialization score (how focused vs general)
+      const topCategoryPercentage = topCategories[0]?.percentage || 0;
+      const specializationScore = topCategoryPercentage > 50 ? topCategoryPercentage : 0;
+
+      return {
+        department,
+        agency,
+        totalJobs: jobs.length,
+        topCategories,
+        avgGradeLevel: this.calculateAvgGrade(grades),
+        locationTypes,
+        specializationScore
+      };
+    }).sort((a, b) => b.totalJobs - a.totalJobs);
+  }
+
+  private calculateDepartmentInsightsForAgency(jobs: ProcessedJobData[], agency: string): DepartmentInsight[] {
+    const deptMap = new Map<string, ProcessedJobData[]>();
+    
+    jobs.forEach(job => {
+      const dept = job.department || 'Unknown';
+      if (!deptMap.has(dept)) {
+        deptMap.set(dept, []);
+      }
+      deptMap.get(dept)!.push(job);
+    });
+
+    return Array.from(deptMap.entries()).map(([department, deptJobs]) => {
+      const categoryCount = new Map<string, number>();
+      const locationCount = new Map<string, number>();
+      const grades: string[] = [];
+      
+      deptJobs.forEach(job => {
+        categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
+        locationCount.set(job.location_type, (locationCount.get(job.location_type) || 0) + 1);
+        if (job.up_grade) grades.push(job.up_grade);
+      });
+
+      const topCategories = Array.from(categoryCount.entries())
+        .map(([category, count]) => ({ category, count, percentage: (count / deptJobs.length) * 100 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+
+      const locationTypes = Array.from(locationCount.entries())
+        .map(([type, count]) => ({ type, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const topCategoryPercentage = topCategories[0]?.percentage || 0;
+      const specializationScore = topCategoryPercentage > 50 ? topCategoryPercentage : 0;
+
+      return {
+        department,
+        agency,
+        totalJobs: deptJobs.length,
+        topCategories,
+        avgGradeLevel: this.calculateAvgGrade(grades),
+        locationTypes,
+        specializationScore
+      };
+    }).sort((a, b) => b.totalJobs - a.totalJobs);
+  }
+
+  private getOrganizationLevel(shortAgency: string, longAgency: string): 'Agency' | 'Programme' | 'Fund' | 'Office' {
+    const combined = `${shortAgency} ${longAgency}`.toLowerCase();
+    if (combined.includes('programme')) return 'Programme';
+    if (combined.includes('fund')) return 'Fund';
+    if (combined.includes('office')) return 'Office';
+    return 'Agency';
+  }
+
+  private getParentOrganization(shortAgency: string, longAgency: string): string | undefined {
+    // Common UN system parent organizations
+    if (shortAgency === 'UN Secretariat' || longAgency.includes('United Nations Secretariat')) {
+      return 'United Nations';
+    }
+    if (shortAgency === 'UNDP' || shortAgency === 'UNFPA' || shortAgency === 'UNOPS') {
+      return 'UN Development System';
+    }
+    return undefined;
+  }
+
+  private calculateAvgGrade(grades: string[]): string {
+    if (grades.length === 0) return 'Unknown';
+    
+    // Simple approach: return the most common grade
+    const gradeCount = new Map<string, number>();
+    grades.forEach(grade => {
+      gradeCount.set(grade, (gradeCount.get(grade) || 0) + 1);
+    });
+    
+    return Array.from(gradeCount.entries())
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
   }
 
   private calculateCategoryInsights(filteredData: ProcessedJobData[], allData: ProcessedJobData[]): CategoryInsight[] {

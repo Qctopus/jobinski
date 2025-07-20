@@ -61,6 +61,21 @@ export interface AgencyInsight {
   topCategories: { category: string; count: number; percentage: number }[];
   growthRate: number;
   specializations: string[];
+  // Enhanced agency analysis
+  longName: string;
+  departments: DepartmentInsight[];
+  organizationLevel: 'Agency' | 'Programme' | 'Fund' | 'Office';
+  parentOrganization?: string;
+}
+
+export interface DepartmentInsight {
+  department: string;
+  agency: string;
+  totalJobs: number;
+  topCategories: { category: string; count: number; percentage: number }[];
+  avgGradeLevel: string;
+  locationTypes: { type: string; count: number }[];
+  specializationScore: number; // How specialized vs general this department is
 }
 
 export interface CategoryInsight {
@@ -82,8 +97,10 @@ export interface TimeSeriesData {
 export interface DashboardMetrics {
   totalJobs: number;
   totalAgencies: number;
+  totalDepartments: number;
   topCategories: { category: string; count: number; percentage: number }[];
   agencyInsights: AgencyInsight[];
+  departmentInsights: DepartmentInsight[];
   categoryInsights: CategoryInsight[];
   timeSeriesData: TimeSeriesData[];
   emergingCategories: { category: string; growthRate: number; isNew: boolean }[];

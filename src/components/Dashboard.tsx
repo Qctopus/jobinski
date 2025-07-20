@@ -4,7 +4,6 @@ import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity } f
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 import CategoryInsights from './CategoryInsights';
-import DataExplorer from './DataExplorer';
 
 interface DashboardProps {
   data: ProcessedJobData[];
@@ -97,8 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             </p>
           </div>
 
-          {/* Data Explorer for debugging */}
-          <DataExplorer data={data} />
+
 
           {/* Controls */}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -168,12 +166,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
               
               <div className="p-6">
-                {/* Debug info */}
-                <div className="mb-4 p-2 bg-gray-100 text-xs rounded">
-                  <strong>Chart Debug:</strong> {topCategoriesChartData.length} categories, 
-                  Data: {JSON.stringify(topCategoriesChartData.slice(0, 3), null, 1)}
-                </div>
-                
                 {topCategoriesChartData.length === 0 ? (
                   <div className="flex items-center justify-center h-96 text-gray-500">
                     <div className="text-center">
