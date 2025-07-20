@@ -39,13 +39,23 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     return processor.processJobData(data);
   }, [data, processor]);
 
+  // Calculate metrics based on view type
+  const isAgencyView = filters.selectedAgency !== 'all';
+  const selectedAgencyName = filters.selectedAgency;
+
+  // For agency view: use filtered metrics for internal insights
+  // For market view: use filtered metrics for everything
   const metrics = useMemo(() => {
     return processor.calculateDashboardMetrics(processedData, filters);
   }, [processedData, filters, processor]);
 
-  // Determine if we're in agency-specific or market view
-  const isAgencyView = filters.selectedAgency !== 'all';
-  const selectedAgencyName = filters.selectedAgency;
+  // For market-level insights: always use unfiltered data to avoid "100% agency" problem
+  const marketMetrics = useMemo(() => {
+    return processor.calculateDashboardMetrics(processedData, { 
+      selectedAgency: 'all', 
+      timeRange: filters.timeRange 
+    });
+  }, [processedData, filters.timeRange, processor]);
 
   // Prepare data for charts based on view type
   const topCategoriesChartData = useMemo(() => {
@@ -87,15 +97,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     };
   }, [isAgencyView, selectedAgencyName, metrics.agencyInsights, processedData]);
 
-  // Market insights for cross-agency view
+  // Market insights for cross-agency view (always use unfiltered data)
   const marketInsights = useMemo(() => {
-    if (isAgencyView) return null;
-    
     return {
-      topAgencies: metrics.agencyInsights.slice(0, 6),
-      categoryLeaders: metrics.categoryInsights.slice(0, 5)
+      topAgencies: marketMetrics.agencyInsights.slice(0, 6),
+      categoryLeaders: marketMetrics.categoryInsights.slice(0, 5)
     };
-  }, [isAgencyView, metrics]);
+  }, [marketMetrics]);
 
   const getCategoryColor = (categoryName: string) => {
     const category = JOB_CATEGORIES.find(cat => cat.name === categoryName);
@@ -341,6 +349,51 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Agency Panel 4: Market Context - Show market leadership for context */}
+                <div className="bg-white rounded-lg shadow">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Eye className="h-6 w-6 text-un-blue" />
+                        <h3 className="text-lg font-semibold text-gray-900">Market Context</h3>
+                      </div>
+                      <span className="text-sm text-gray-500">How do we compare?</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {marketInsights?.categoryLeaders.slice(0, 6).map((category, index) => (
+                        <div key={category.category} className={`rounded-lg p-4 ${
+                          category.leadingAgency === selectedAgencyName 
+                            ? 'bg-blue-50 border border-blue-200' 
+                            : 'bg-gray-50'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: getCategoryColor(category.category) }}
+                            ></div>
+                            <h4 className="font-semibold text-gray-900">
+                              {category.category.length > 25 ? category.category.substring(0, 22) + '...' : category.category}
+                            </h4>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-1">
+                            Market Leader: <span className={`font-medium ${
+                              category.leadingAgency === selectedAgencyName ? 'text-blue-600' : 'text-gray-900'
+                            }`}>
+                              {category.leadingAgency === selectedAgencyName ? '👑 Us' : category.leadingAgency}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {category.totalJobs} total market positions
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
               // MARKET VIEW: Cross-Agency Analysis
@@ -359,8 +412,14 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     </div>
                     
                     <div className="p-6">
+                      {/* Use marketMetrics for unfiltered market view */}
                       <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
+                        <BarChart data={marketMetrics.topCategories.map(item => ({
+                          category: item.category.length > 20 ? item.category.substring(0, 17) + '...' : item.category,
+                          fullCategory: item.category,
+                          jobs: item.count,
+                          percentage: item.percentage
+                        }))} layout="horizontal" margin={{ left: 20, right: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           type="number" 
@@ -376,13 +435,14 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                         <Tooltip 
                           formatter={(value: any, name: any) => [`${value} jobs`, 'Total positions']}
                           labelFormatter={(label: any) => {
-                            const item = topCategoriesChartData.find(d => d.category === label);
-                            return item?.fullCategory || label;
+                            const item = marketMetrics.topCategories.find(d => 
+                              (d.category.length > 20 ? d.category.substring(0, 17) + '...' : d.category) === label);
+                            return item?.category || label;
                           }}
                         />
                         <Bar dataKey="jobs" radius={4}>
-                          {topCategoriesChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={getCategoryColor(entry.fullCategory)} />
+                          {marketMetrics.topCategories.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={getCategoryColor(entry.category)} />
                           ))}
                         </Bar>
                       </BarChart>

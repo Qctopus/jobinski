@@ -12,21 +12,23 @@ interface ExecutiveSummaryProps {
 const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ data, filters }) => {
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
   
-  const filteredData = useMemo(() => {
-    return processor.applyFilters ? processor.applyFilters(data, filters) : data;
-  }, [data, filters, processor]);
-
+  // For executive summary, always use unfiltered data for market-level insights
+  // This prevents the "100% agency" problem when filtering
   const dashboardMetrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(filteredData, filters);
-  }, [filteredData, filters, processor]);
+    return processor.calculateDashboardMetrics(data, { selectedAgency: 'all', timeRange: filters.timeRange });
+  }, [data, filters.timeRange, processor]);
 
   const temporalTrends = useMemo(() => {
-    return processor.calculateTemporalTrends(filteredData, 12);
-  }, [filteredData, processor]);
+    return processor.calculateTemporalTrends(data, 12);
+  }, [data, processor]);
 
   const competitiveIntel = useMemo(() => {
-    return processor.calculateCompetitiveIntelligence(filteredData);
-  }, [filteredData, processor]);
+    return processor.calculateCompetitiveIntelligence(data);
+  }, [data, processor]);
+
+  // Agency-specific context for personalized insights
+  const isAgencyView = filters.selectedAgency !== 'all';
+  const selectedAgencyName = filters.selectedAgency;
 
   // Generate executive insights
   const executiveInsights = useMemo(() => {
@@ -38,13 +40,20 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ data, filters }) =>
       icon: React.ReactNode;
     }> = [];
 
-    // Top category insight
+    // Top category insight - agency aware
     if (dashboardMetrics.topCategories.length > 0) {
       const topCategory = dashboardMetrics.topCategories[0];
       insights.push({
         type: 'trend',
-        title: `${topCategory.category} Dominates Hiring`,
-        description: `Leading category represents ${topCategory.percentage.toFixed(1)}% of all job postings, indicating strong organizational focus.`,
+        title: isAgencyView 
+          ? `Market Leader in ${topCategory.category}` 
+          : `${topCategory.category} Dominates Hiring`,
+        description: isAgencyView
+          ? `${topCategory.category} is the top category market-wide with ${topCategory.percentage.toFixed(1)}% of all positions. ${
+              competitiveIntel.categoryDominance.find(c => c.category === topCategory.category)?.leadingAgency === selectedAgencyName 
+                ? 'We lead this market!' : 'Consider strengthening our position here.'
+            }`
+          : `Leading category represents ${topCategory.percentage.toFixed(1)}% of all job postings, indicating strong organizational focus.`,
         metric: `${topCategory.count} positions`,
         icon: <Target className="h-5 w-5" />
       });
@@ -62,14 +71,24 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ data, filters }) =>
       });
     }
 
-    // Competitive landscape insight
+    // Competitive landscape insight - agency aware
     if (competitiveIntel.agencyPositioning.length > 0) {
       const topAgency = competitiveIntel.agencyPositioning[0];
+      const ourPosition = competitiveIntel.agencyPositioning.find(a => a.agency === selectedAgencyName);
+      
       insights.push({
         type: 'trend',
-        title: 'Market Leadership Concentration',
-        description: `${topAgency.agency} leads with ${topAgency.marketShare.toFixed(1)}% market share across ${topAgency.diversity} different role categories.`,
-        metric: `${topAgency.volume} positions`,
+        title: isAgencyView 
+          ? `Our Market Position: #${competitiveIntel.agencyPositioning.findIndex(a => a.agency === selectedAgencyName) + 1}`
+          : 'Market Leadership Concentration',
+        description: isAgencyView && ourPosition
+          ? `We rank #${competitiveIntel.agencyPositioning.findIndex(a => a.agency === selectedAgencyName) + 1} with ${ourPosition.marketShare.toFixed(1)}% market share across ${ourPosition.diversity} categories. ${
+              ourPosition.agency === topAgency.agency ? 'We are the market leader!' : `Market leader ${topAgency.agency} has ${topAgency.marketShare.toFixed(1)}%.`
+            }`
+          : `${topAgency.agency} leads with ${topAgency.marketShare.toFixed(1)}% market share across ${topAgency.diversity} different role categories.`,
+        metric: isAgencyView && ourPosition 
+          ? `${ourPosition.volume} our positions` 
+          : `${topAgency.volume} positions`,
         icon: <Award className="h-5 w-5" />
       });
     }

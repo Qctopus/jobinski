@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Target, Users, Zap, TrendingUp, Eye, ArrowRight, Award, MapPin } from 'lucide-react';
+import { Target, Users, Zap, TrendingUp, Eye, ArrowRight, Award, MapPin, Briefcase } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 
@@ -13,13 +13,32 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
   
-  const filteredData = useMemo(() => {
-    return processor.applyFilters ? processor.applyFilters(data, filters) : data;
-  }, [data, filters, processor]);
-
+  // Always use unfiltered data for competitive analysis
   const competitiveAnalysis = useMemo(() => {
-    return processor.calculateCompetitiveIntelligence(filteredData);
-  }, [filteredData, processor]);
+    return processor.calculateCompetitiveIntelligence(data);
+  }, [data, processor]);
+
+  // Determine if we're in agency-specific view
+  const isAgencyView = filters.selectedAgency !== 'all';
+  const selectedAgencyName = filters.selectedAgency;
+
+  // If in agency view, filter competitive data to show relevant context
+  const agencyContextualData = useMemo(() => {
+    if (!isAgencyView) return null;
+    
+    return {
+      ourPosition: competitiveAnalysis.agencyPositioning.find(a => a.agency === selectedAgencyName),
+      ourCompetitors: competitiveAnalysis.talentOverlap.filter(overlap => 
+        overlap.agencies.includes(selectedAgencyName)
+      ).slice(0, 5),
+      ourDominance: competitiveAnalysis.categoryDominance.filter(cat => 
+        cat.leadingAgency === selectedAgencyName
+      ).slice(0, 6),
+      challengingUs: competitiveAnalysis.categoryDominance.filter(cat => 
+        cat.leadingAgency !== selectedAgencyName && cat.competition > 1
+      ).slice(0, 6)
+    };
+  }, [isAgencyView, selectedAgencyName, competitiveAnalysis]);
 
   const getCategoryColor = (categoryName: string) => {
     const category = JOB_CATEGORIES.find(cat => cat.name === categoryName);
@@ -84,57 +103,250 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Competitive Intelligence</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {isAgencyView ? `${selectedAgencyName} - Competitive Position` : 'Competitive Intelligence'}
+        </h2>
         <div className="text-sm text-gray-600">
-          {competitiveAnalysis.agencyPositioning.length} agencies analyzed
+          {isAgencyView 
+            ? `Market position analysis for ${selectedAgencyName}`
+            : `${competitiveAnalysis.agencyPositioning.length} agencies analyzed`
+          }
         </div>
       </div>
 
-      {/* Key Competitive Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="metric-card">
-          <div className="metric-value">
-            {competitiveAnalysis.categoryDominance.length}
+      {/* Key Competitive Metrics - Agency Aware */}
+      {isAgencyView ? (
+        // AGENCY VIEW: Our competitive position
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="metric-card">
+            <div className="metric-value">
+              {agencyContextualData?.ourPosition?.volume || 0}
+            </div>
+            <div className="metric-label">
+              <Briefcase className="h-4 w-4 mr-1" />
+              Our Job Volume
+            </div>
           </div>
-          <div className="metric-label">
-            <Target className="h-4 w-4 mr-1" />
-            Active Categories
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {Math.round(agencyContextualData?.ourPosition?.marketShare || 0)}%
+            </div>
+            <div className="metric-label">
+              <Target className="h-4 w-4 mr-1" />
+              Our Market Share
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {agencyContextualData?.ourDominance.length || 0}
+            </div>
+            <div className="metric-label">
+              <Award className="h-4 w-4 mr-1" />
+              Categories We Lead
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {agencyContextualData?.ourCompetitors.length || 0}
+            </div>
+            <div className="metric-label">
+              <Users className="h-4 w-4 mr-1" />
+              Direct Competitors
+            </div>
           </div>
         </div>
-
-        <div className="metric-card">
-          <div className="metric-value">
-            {competitiveAnalysis.competitiveIntensity.filter(c => c.intensity === 'High').length}
+      ) : (
+        // MARKET VIEW: Overall competitive landscape
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="metric-card">
+            <div className="metric-value">
+              {competitiveAnalysis.categoryDominance.length}
+            </div>
+            <div className="metric-label">
+              <Target className="h-4 w-4 mr-1" />
+              Active Categories
+            </div>
           </div>
-          <div className="metric-label">
-            <Zap className="h-4 w-4 mr-1" />
-            High Competition Zones
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {competitiveAnalysis.competitiveIntensity.filter(c => c.intensity === 'High').length}
+            </div>
+            <div className="metric-label">
+              <Zap className="h-4 w-4 mr-1" />
+              High Competition Zones
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {competitiveAnalysis.talentOverlap.length}
+            </div>
+            <div className="metric-label">
+              <Users className="h-4 w-4 mr-1" />
+              Talent Overlaps
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-value">
+              {Math.round(competitiveAnalysis.agencyPositioning[0]?.marketShare || 0)}%
+            </div>
+            <div className="metric-label">
+              <Award className="h-4 w-4 mr-1" />
+              Market Leader Share
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="metric-card">
-          <div className="metric-value">
-            {competitiveAnalysis.talentOverlap.length}
-          </div>
-          <div className="metric-label">
-            <Users className="h-4 w-4 mr-1" />
-            Talent Overlaps
-          </div>
+      {/* Main Analysis - Agency Aware */}
+      {isAgencyView ? (
+        // AGENCY VIEW: Our competitive insights
+        <div className="space-y-8">
+          {/* Our Competitive Position */}
+          {agencyContextualData?.ourPosition && (
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Target className="h-6 w-6 text-un-blue" />
+                  <h3 className="text-lg font-semibold text-gray-900">Our Market Position</h3>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-un-blue mb-2">
+                      #{competitiveAnalysis.agencyPositioning.findIndex(a => a.agency === selectedAgencyName) + 1}
+                    </div>
+                    <div className="text-sm text-gray-600">Market Ranking</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {agencyContextualData.ourPosition.diversity}
+                    </div>
+                    <div className="text-sm text-gray-600">Categories Active</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">
+                      {agencyContextualData.ourPosition.marketShare.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-gray-600">Market Share</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Categories We Dominate */}
+          {agencyContextualData?.ourDominance && agencyContextualData.ourDominance.length > 0 && (
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Award className="h-6 w-6 text-green-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Categories We Lead</h3>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {agencyContextualData.ourDominance.map((category, index) => (
+                    <div key={category.category} className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: getCategoryColor(category.category) }}
+                        ></div>
+                        <h4 className="font-semibold text-green-800">👑 {category.category}</h4>
+                      </div>
+                      <div className="text-sm text-green-700">
+                        {category.marketShare.toFixed(1)}% market share • {category.competition} competitors
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Our Direct Competitors */}
+          {agencyContextualData?.ourCompetitors && agencyContextualData.ourCompetitors.length > 0 && (
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Eye className="h-6 w-6 text-orange-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Our Direct Competitors</h3>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  {agencyContextualData.ourCompetitors.map((overlap, index) => (
+                    <div key={`${overlap.agencies[0]}-${overlap.agencies[1]}`} className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="flex items-center gap-4">
+                        <div className="font-medium text-orange-800">
+                          {overlap.agencies.find(a => a !== selectedAgencyName)}
+                        </div>
+                        <div className="text-sm text-orange-600">
+                          {overlap.commonCategories.length} shared categories • {overlap.commonLocations.length} shared locations
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-orange-600">
+                          {overlap.overlapScore.toFixed(1)}%
+                        </div>
+                        <div className="text-xs text-orange-500">overlap</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Categories Where We Face Competition */}
+          {agencyContextualData?.challengingUs && agencyContextualData.challengingUs.length > 0 && (
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-6 w-6 text-red-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Competitive Challenges</h3>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {agencyContextualData.challengingUs.map((category, index) => (
+                    <div key={category.category} className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: getCategoryColor(category.category) }}
+                        ></div>
+                        <h4 className="font-semibold text-red-800">{category.category}</h4>
+                      </div>
+                      <div className="text-sm text-red-700 mb-1">
+                        Led by: <span className="font-medium">{category.leadingAgency}</span>
+                      </div>
+                      <div className="text-xs text-red-600">
+                        {category.competition} agencies competing
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="metric-card">
-          <div className="metric-value">
-            {Math.round(competitiveAnalysis.agencyPositioning[0]?.marketShare || 0)}%
-          </div>
-          <div className="metric-label">
-            <Award className="h-4 w-4 mr-1" />
-            Market Leader Share
-          </div>
-        </div>
-      </div>
-
-      {/* Agency Positioning Analysis */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      ) : (
+        // MARKET VIEW: Full competitive analysis
+        <div className="space-y-8">
+          {/* Agency Positioning Analysis */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Volume vs Diversity Scatter */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
@@ -447,32 +659,34 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
         </div>
       </div>
 
-      {/* Strategic Intelligence Summary */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow text-white">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Competitive Intelligence Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-2">Market Dynamics</h4>
-              <ul className="text-sm space-y-1 opacity-90">
-                <li>• Top agency holds {Math.round(competitiveAnalysis.agencyPositioning[0]?.marketShare || 0)}% market share</li>
-                <li>• {competitiveAnalysis.competitiveIntensity.filter(c => c.intensity === 'High').length} high-competition zones identified</li>
-                <li>• {competitiveAnalysis.talentOverlap.length} significant talent overlaps detected</li>
-                <li>• Average {Math.round(competitiveAnalysis.categoryDominance.reduce((sum, cat) => sum + cat.competition, 0) / competitiveAnalysis.categoryDominance.length)} agencies per category</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Strategic Opportunities</h4>
-              <ul className="text-sm space-y-1 opacity-90">
-                <li>• Target low-competition locations for expansion</li>
-                <li>• Monitor high-overlap agencies for talent competition</li>
-                <li>• Focus on categories with fragmented leadership</li>
-                <li>• Consider first-mover advantage in emerging areas</li>
-              </ul>
+          {/* Strategic Intelligence Summary */}
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow text-white">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Competitive Intelligence Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium mb-2">Market Dynamics</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• Top agency holds {Math.round(competitiveAnalysis.agencyPositioning[0]?.marketShare || 0)}% market share</li>
+                    <li>• {competitiveAnalysis.competitiveIntensity.filter(c => c.intensity === 'High').length} high-competition zones identified</li>
+                    <li>• {competitiveAnalysis.talentOverlap.length} significant talent overlaps detected</li>
+                    <li>• Average {Math.round(competitiveAnalysis.categoryDominance.reduce((sum, cat) => sum + cat.competition, 0) / competitiveAnalysis.categoryDominance.length)} agencies per category</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Strategic Opportunities</h4>
+                  <ul className="text-sm space-y-1 opacity-90">
+                    <li>• Target low-competition locations for expansion</li>
+                    <li>• Monitor high-overlap agencies for talent competition</li>
+                    <li>• Focus on categories with fragmented leadership</li>
+                    <li>• Consider first-mover advantage in emerging areas</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
