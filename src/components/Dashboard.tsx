@@ -4,6 +4,7 @@ import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity } f
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 import CategoryInsights from './CategoryInsights';
+import DataExplorer from './DataExplorer';
 
 interface DashboardProps {
   data: ProcessedJobData[];
@@ -96,6 +97,9 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             </p>
           </div>
 
+          {/* Data Explorer for debugging */}
+          <DataExplorer data={data} />
+
           {/* Controls */}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -164,6 +168,12 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
               
               <div className="p-6">
+                {/* Debug info */}
+                <div className="mb-4 p-2 bg-gray-100 text-xs rounded">
+                  <strong>Chart Debug:</strong> {topCategoriesChartData.length} categories, 
+                  Data: {JSON.stringify(topCategoriesChartData.slice(0, 3), null, 1)}
+                </div>
+                
                 {topCategoriesChartData.length === 0 ? (
                   <div className="flex items-center justify-center h-96 text-gray-500">
                     <div className="text-center">
@@ -173,9 +183,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={topCategoriesChartData} layout="horizontal">
+                    <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
+                    <XAxis 
+                      type="number" 
+                      domain={[0, 'dataMax']}
+                      tickFormatter={(value) => Math.round(value).toString()}
+                    />
                     <YAxis 
                       dataKey="category" 
                       type="category" 
@@ -183,7 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                       fontSize={12}
                     />
                     <Tooltip 
-                      formatter={(value: any, name: any) => [value, 'Job Postings']}
+                      formatter={(value: any, name: any) => [`${value} jobs`, 'Job Postings']}
                       labelFormatter={(label: any) => {
                         const item = topCategoriesChartData.find(d => d.category === label);
                         return item?.fullCategory || label;
