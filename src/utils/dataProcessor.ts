@@ -74,7 +74,7 @@ export const processJobData = (jobs: JobData[]): ProcessedJobData[] => {
 
     // Count languages (split by common delimiters and filter out empty strings)
     const languageCount = job.languages 
-      ? job.languages.split(/[,;\/\|]/).filter(lang => lang.trim().length > 0).length
+      ? job.languages.split(/[,;/|]/).filter(lang => lang.trim().length > 0).length
       : 0;
 
     // Check if home-based (look for common indicators in duty station)

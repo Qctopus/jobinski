@@ -36,4 +36,62 @@ export interface ProcessedJobData extends JobData {
   is_home_based: boolean;
   formatted_posting_date: string;
   formatted_apply_until: string;
+  // New analytics fields
+  primary_category: string;
+  secondary_categories: string[];
+  skill_domain: 'Technical' | 'Operational' | 'Strategic' | 'Mixed';
+  seniority_level: 'Junior' | 'Mid' | 'Senior' | 'Executive';
+  location_type: 'Headquarters' | 'Regional' | 'Field' | 'Home-based';
+  posting_month: string;
+  posting_year: number;
+  posting_quarter: string;
+}
+
+export interface JobCategory {
+  id: string;
+  name: string;
+  keywords: string[];
+  color: string;
+  description: string;
+}
+
+export interface AgencyInsight {
+  agency: string;
+  totalJobs: number;
+  topCategories: { category: string; count: number; percentage: number }[];
+  growthRate: number;
+  specializations: string[];
+}
+
+export interface CategoryInsight {
+  category: string;
+  totalJobs: number;
+  leadingAgency: string;
+  growthRate: number;
+  recentAppearances: number;
+  skillDemand: 'High' | 'Medium' | 'Low';
+  agencies: { agency: string; count: number; percentage: number }[];
+}
+
+export interface TimeSeriesData {
+  period: string;
+  categories: { [category: string]: number };
+  total: number;
+}
+
+export interface DashboardMetrics {
+  totalJobs: number;
+  totalAgencies: number;
+  topCategories: { category: string; count: number; percentage: number }[];
+  agencyInsights: AgencyInsight[];
+  categoryInsights: CategoryInsight[];
+  timeSeriesData: TimeSeriesData[];
+  emergingCategories: { category: string; growthRate: number; isNew: boolean }[];
+}
+
+export interface FilterOptions {
+  selectedAgency: string;
+  timeRange: '3months' | '6months' | '1year' | 'all';
+  startDate?: string;
+  endDate?: string;
 } 
