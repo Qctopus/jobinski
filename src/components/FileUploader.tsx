@@ -49,14 +49,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileLoad, loading }) => {
   const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   }, []);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
@@ -79,11 +80,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileLoad, loading }) => {
         console.error('Error loading default file:', err);
       });
   }, [onFileLoad]);
-
-  // Auto-load the sample data when component mounts
-  React.useEffect(() => {
-    loadDefaultFile();
-  }, [loadDefaultFile]);
 
   if (loading) {
     return (

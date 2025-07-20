@@ -31,38 +31,9 @@ export interface JobData {
 
 export interface ProcessedJobData extends JobData {
   application_window_days: number;
-  posting_age_days: number;
-  quarter: number;
-  month: number;
-  year: number;
   relevant_experience: number;
-  is_home_based: boolean;
   language_count: number;
-}
-
-export interface DashboardMetrics {
-  totalPostings: number;
-  agencyDistribution: { agency: string; count: number; percentage: number }[];
-  geographicDistribution: { continent: string; country: string; count: number }[];
-  gradeDistribution: { grade: string; count: number; percentage: number }[];
-  monthlyTrends: { month: string; count: number; year: number }[];
-  avgApplicationWindow: { agency: string; avgDays: number }[];
-}
-
-export interface FilterOptions {
-  agencies: string[];
-  grades: string[];
-  countries: string[];
-  continents: string[];
-  dateRange: {
-    start: string;
-    end: string;
-  };
-  searchTerm: string;
-}
-
-export interface ChartDataItem {
-  name: string;
-  value: number;
-  [key: string]: any;
+  is_home_based: boolean;
+  formatted_posting_date: string;
+  formatted_apply_until: string;
 } 

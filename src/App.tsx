@@ -1,50 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { Download, BarChart3, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, Database, Calendar, MapPin } from 'lucide-react';
 import FileUploader from './components/FileUploader';
-import DashboardOverview from './components/DashboardOverview';
-import FilterPanel from './components/FilterPanel';
-import AgencyBenchmarking from './components/AgencyBenchmarking';
-import DetailedAnalytics from './components/DetailedAnalytics';
-import UNCareerIntelligence from './components/UNCareerIntelligence';
-import { ProcessedJobData, FilterOptions } from './types';
-import { 
-  parseCSVData, 
-  processJobData, 
-  calculateDashboardMetrics, 
-  applyFilters, 
-  exportToCSV, 
-  generateInsights 
-} from './utils/dataProcessor';
-
-type TabType = 'overview' | 'agency-benchmarking' | 'workforce-intelligence' | 'detailed-analytics';
+import { ProcessedJobData } from './types';
+import { parseCSVData, processJobData } from './utils/dataProcessor';
 
 function App() {
   const [processedData, setProcessedData] = useState<ProcessedJobData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [showFilters, setShowFilters] = useState(false);
-  
-  const [filters, setFilters] = useState<FilterOptions>({
-    agencies: [],
-    grades: [],
-    countries: [],
-    continents: [],
-    dateRange: { start: '', end: '' },
-    searchTerm: ''
-  });
-
-  const filteredData = useMemo(() => {
-    return applyFilters(processedData, filters);
-  }, [processedData, filters]);
-
-  const metrics = useMemo(() => {
-    return calculateDashboardMetrics(filteredData);
-  }, [filteredData]);
-
-  const insights = useMemo(() => {
-    return generateInsights(filteredData);
-  }, [filteredData]);
 
   const handleFileLoad = async (csvData: string) => {
     setLoading(true);
@@ -63,40 +26,7 @@ function App() {
     }
   };
 
-  const handleClearFilters = () => {
-    setFilters({
-      agencies: [],
-      grades: [],
-      countries: [],
-      continents: [],
-      dateRange: { start: '', end: '' },
-      searchTerm: ''
-    });
-  };
-
-  const handleExportData = () => {
-    exportToCSV(filteredData, `un_jobs_filtered_${new Date().toISOString().split('T')[0]}.csv`);
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return <DashboardOverview metrics={metrics} insights={insights} />;
-      
-      case 'agency-benchmarking':
-        return <AgencyBenchmarking data={filteredData} />;
-      
-      case 'workforce-intelligence':
-        return <UNCareerIntelligence data={filteredData} />;
-      
-      case 'detailed-analytics':
-        return <DetailedAnalytics data={filteredData} />;
-      
-      default:
-        return <DashboardOverview metrics={metrics} insights={insights} />;
-    }
-  };
-
+  // If no data is loaded, show the file uploader
   if (processedData.length === 0 && !loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -104,10 +34,10 @@ function App() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                UN Jobs Market Analytics Dashboard
+                UN Jobs Data Viewer
               </h1>
               <p className="text-xl text-gray-600">
-                Comprehensive insights for UN agency HR departments
+                Load your UN jobs CSV data to get started
               </p>
             </div>
             
@@ -124,99 +54,114 @@ function App() {
     );
   }
 
+  // Show basic data overview once loaded
+  const totalJobs = processedData.length;
+  const agencies = new Set(processedData.map(job => job.short_agency || job.long_agency)).size;
+  const countries = new Set(processedData.map(job => job.duty_country)).size;
+  const recentJobs = processedData.slice(0, 10); // Show first 10 jobs
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                UN Jobs Market Analytics
-              </h1>
-              <p className="text-sm text-gray-600">
-                {filteredData.length.toLocaleString()} of {processedData.length.toLocaleString()} jobs shown
-              </p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              UN Jobs Data Loaded Successfully
+            </h1>
+            <p className="text-xl text-gray-600">
+              Your CSV data has been processed and is ready for analysis
+            </p>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <Database className="h-12 w-12 text-un-blue mx-auto mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{totalJobs.toLocaleString()}</div>
+              <div className="text-gray-600">Total Job Postings</div>
             </div>
             
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`btn-secondary ${showFilters ? 'bg-gray-200' : ''}`}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Filters
-              </button>
-              
-              <button
-                onClick={handleExportData}
-                className="btn-primary"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Data
-              </button>
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <FileText className="h-12 w-12 text-un-blue mx-auto mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{agencies}</div>
+              <div className="text-gray-600">UN Agencies</div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <MapPin className="h-12 w-12 text-un-blue mx-auto mb-4" />
+              <div className="text-3xl font-bold text-gray-900">{countries}</div>
+              <div className="text-gray-600">Countries</div>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar - Filters */}
-          {showFilters && (
-            <div className="lg:w-80 order-2 lg:order-1">
-              <FilterPanel
-                data={processedData}
-                filters={filters}
-                onFiltersChange={setFilters}
-                onClearFilters={handleClearFilters}
-              />
+          {/* Sample Data Preview */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Data Preview</h2>
+              <p className="text-sm text-gray-600">Showing first 10 job postings from your data</p>
             </div>
-          )}
-
-          {/* Main Content */}
-          <div className={`flex-1 order-1 lg:order-2 ${showFilters ? '' : 'max-w-none'}`}>
-            {/* Navigation Tabs */}
-            <div className="mb-6">
-              <nav className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`nav-tab ${
-                    activeTab === 'overview' ? 'nav-tab-active' : 'nav-tab-inactive'
-                  }`}
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Overview
-                </button>
-                <button
-                  onClick={() => setActiveTab('agency-benchmarking')}
-                  className={`nav-tab ${
-                    activeTab === 'agency-benchmarking' ? 'nav-tab-active' : 'nav-tab-inactive'
-                  }`}
-                >
-                  Agency Benchmarking
-                </button>
-                <button
-                  onClick={() => setActiveTab('workforce-intelligence')}
-                  className={`nav-tab ${
-                    activeTab === 'workforce-intelligence' ? 'nav-tab-active' : 'nav-tab-inactive'
-                  }`}
-                >
-                  UN Career Intelligence
-                </button>
-                <button
-                  onClick={() => setActiveTab('detailed-analytics')}
-                  className={`nav-tab ${
-                    activeTab === 'detailed-analytics' ? 'nav-tab-active' : 'nav-tab-inactive'
-                  }`}
-                >
-                  Detailed Analytics
-                </button>
-              </nav>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Job Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Agency
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Grade
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Posted Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {recentJobs.map((job, index) => (
+                    <tr key={job.id || index}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{job.title}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{job.short_agency || job.long_agency}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{job.duty_station}</div>
+                        <div className="text-sm text-gray-500">{job.duty_country}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {job.up_grade}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {job.formatted_posting_date}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* Tab Content */}
-            {renderTabContent()}
+          {/* Load New Data Button */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => {
+                setProcessedData([]);
+                setError(null);
+              }}
+              className="btn-secondary"
+            >
+              Load Different CSV File
+            </button>
           </div>
         </div>
       </div>
