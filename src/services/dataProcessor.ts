@@ -308,7 +308,9 @@ export class JobAnalyticsProcessor {
 
   // Calculate comprehensive dashboard metrics
   calculateDashboardMetrics(data: ProcessedJobData[], filters: FilterOptions): DashboardMetrics {
+    console.log('calculateDashboardMetrics: Input data length:', data.length);
     const filteredData = this.applyFilters(data, filters);
+    console.log('calculateDashboardMetrics: Filtered data length:', filteredData.length);
     
     // Basic metrics
     const totalJobs = filteredData.length;
@@ -321,10 +323,14 @@ export class JobAnalyticsProcessor {
       categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
     });
 
+    console.log('calculateDashboardMetrics: Category counts:', Object.fromEntries(categoryCount));
+
     const topCategories = Array.from(categoryCount.entries())
       .map(([category, count]) => ({ category, count, percentage: (count / totalJobs) * 100 }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
+
+    console.log('calculateDashboardMetrics: Top categories:', topCategories);
 
     // Agency insights
     const agencyInsights = this.calculateAgencyInsights(filteredData);

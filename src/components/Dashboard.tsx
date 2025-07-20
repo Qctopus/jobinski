@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
-// import CategoryInsights from './CategoryInsights';
+import CategoryInsights from './CategoryInsights';
 
 interface DashboardProps {
   data: ProcessedJobData[];
@@ -36,12 +36,15 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
   // Prepare data for charts
   const topCategoriesChartData = useMemo(() => {
-    return metrics.topCategories.map(item => ({
+    console.log('Preparing chart data. metrics.topCategories:', metrics.topCategories);
+    const chartData = metrics.topCategories.map(item => ({
       category: item.category.length > 20 ? item.category.substring(0, 17) + '...' : item.category,
       fullCategory: item.category,
       jobs: item.count,
       percentage: item.percentage
     }));
+    console.log('Chart data prepared:', chartData);
+    return chartData;
   }, [metrics.topCategories]);
 
   const agencyCategoryData = useMemo(() => {
@@ -161,8 +164,16 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
               
               <div className="p-6">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={topCategoriesChartData} layout="horizontal">
+                {topCategoriesChartData.length === 0 ? (
+                  <div className="flex items-center justify-center h-96 text-gray-500">
+                    <div className="text-center">
+                      <div className="text-lg font-medium">No data available</div>
+                      <div className="text-sm">Check console for debugging info</div>
+                    </div>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={topCategoriesChartData} layout="horizontal">
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
                     <YAxis 
@@ -185,6 +196,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </div>
 
@@ -311,13 +323,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           </div>
 
           {/* Category Intelligence Component */}
-          {/* CategoryInsights temporarily disabled for debugging
           <CategoryInsights 
             metrics={metrics}
             data={data}
             filters={filters}
           />
-          */}
 
           {/* Agency Performance Table */}
           <div className="bg-white rounded-lg shadow">
