@@ -6,48 +6,84 @@ import { JOB_CATEGORIES } from '../services/dataProcessor';
 
 interface CategoryInsightsProps {
   metrics: DashboardMetrics;
+  marketMetrics: DashboardMetrics;
   data: ProcessedJobData[];
   filters: FilterOptions;
+  isAgencyView: boolean;
 }
 
-const CategoryInsights: React.FC<CategoryInsightsProps> = ({ metrics, data, filters }) => {
+const CategoryInsights: React.FC<CategoryInsightsProps> = ({ metrics, marketMetrics, data, filters, isAgencyView }) => {
   
-  // Generate smart insights based on the data
+  // Generate smart insights based on the data - agency aware
   const smartInsights = useMemo(() => {
     const insights: { icon: React.ReactNode; title: string; description: string; type: 'success' | 'warning' | 'info' }[] = [];
     
-    // Top category insight
+    // Top category insight - different for agency vs market view
     if (metrics.topCategories.length > 0) {
       const topCategory = metrics.topCategories[0];
-      const leadingAgency = metrics.categoryInsights.find(c => c.category === topCategory.category)?.leadingAgency;
       
-      insights.push({
-        icon: <Award className="h-5 w-5" />,
-        title: `${topCategory.category} dominates the job market`,
-        description: `${topCategory.count} positions (${topCategory.percentage.toFixed(1)}% of all jobs)${leadingAgency ? `, led by ${leadingAgency}` : ''}`,
-        type: 'success'
-      });
+      if (isAgencyView) {
+        // For agency view: show their top category and market context
+        const marketCategory = marketMetrics.categoryInsights.find(c => c.category === topCategory.category);
+        const marketLeader = marketCategory?.leadingAgency;
+        const isMarketLeader = marketLeader === filters.selectedAgency;
+        
+        insights.push({
+          icon: <Award className="h-5 w-5" />,
+          title: `Our focus: ${topCategory.category}`,
+          description: `Our top category with ${topCategory.count} positions (${topCategory.percentage.toFixed(1)}% of our jobs). ${
+            isMarketLeader ? '👑 We lead this market!' : `Market led by ${marketLeader}.`
+          }`,
+          type: isMarketLeader ? 'success' : 'info'
+        });
+      } else {
+        // For market view: show overall market dominance
+        const leadingAgency = marketMetrics.categoryInsights.find(c => c.category === topCategory.category)?.leadingAgency;
+        
+        insights.push({
+          icon: <Award className="h-5 w-5" />,
+          title: `${topCategory.category} dominates the job market`,
+          description: `${topCategory.count} positions (${topCategory.percentage.toFixed(1)}% of all jobs)${leadingAgency ? `, led by ${leadingAgency}` : ''}`,
+          type: 'success'
+        });
+      }
     }
 
-    // Digital transformation insight
-    const digitalCategory = metrics.categoryInsights.find(c => c.category === 'Digital & Technology');
-    if (digitalCategory && digitalCategory.totalJobs > 100) {
+    // Digital transformation insight - agency aware
+    const digitalCategory = isAgencyView 
+      ? metrics.categoryInsights.find(c => c.category === 'Digital & Technology')
+      : marketMetrics.categoryInsights.find(c => c.category === 'Digital & Technology');
+      
+    if (digitalCategory && digitalCategory.totalJobs > (isAgencyView ? 5 : 100)) {
       insights.push({
         icon: <Brain className="h-5 w-5" />,
-        title: 'Digital transformation accelerating',
-        description: `${digitalCategory.totalJobs} digital/tech positions across ${digitalCategory.agencies.length} agencies - ${digitalCategory.leadingAgency} leads the charge`,
+        title: isAgencyView ? 'Our digital capabilities' : 'Digital transformation accelerating',
+        description: isAgencyView 
+          ? `${digitalCategory.totalJobs} digital/tech positions in our portfolio - ${
+              marketMetrics.categoryInsights.find(c => c.category === 'Digital & Technology')?.leadingAgency === filters.selectedAgency 
+                ? 'we lead the market!' : 'growing internal capability'
+            }`
+          : `${digitalCategory.totalJobs} digital/tech positions across ${digitalCategory.agencies.length} agencies - ${digitalCategory.leadingAgency} leads the charge`,
         type: 'info'
       });
     }
 
-    // Climate insight
-    const climateCategory = metrics.categoryInsights.find(c => c.category === 'Climate & Environment');
-    if (climateCategory && climateCategory.totalJobs > 50) {
-      const climatePercentage = (climateCategory.totalJobs / metrics.totalJobs) * 100;
+    // Climate insight - agency aware
+    const climateCategory = isAgencyView 
+      ? metrics.categoryInsights.find(c => c.category === 'Climate & Environment')
+      : marketMetrics.categoryInsights.find(c => c.category === 'Climate & Environment');
+      
+    if (climateCategory && climateCategory.totalJobs > (isAgencyView ? 3 : 50)) {
+      const climatePercentage = (climateCategory.totalJobs / (isAgencyView ? metrics.totalJobs : marketMetrics.totalJobs)) * 100;
       insights.push({
         icon: <Globe className="h-5 w-5" />,
-        title: 'Climate action gaining momentum',
-        description: `${climateCategory.totalJobs} climate-related positions (${climatePercentage.toFixed(1)}% of all jobs) - significant focus on sustainability`,
+        title: isAgencyView ? 'Our climate commitment' : 'Climate action gaining momentum',
+        description: isAgencyView 
+          ? `${climateCategory.totalJobs} climate positions (${climatePercentage.toFixed(1)}% of our jobs) - ${
+              marketMetrics.categoryInsights.find(c => c.category === 'Climate & Environment')?.leadingAgency === filters.selectedAgency 
+                ? 'leading the sustainability agenda' : 'contributing to global climate action'
+            }`
+          : `${climateCategory.totalJobs} climate-related positions (${climatePercentage.toFixed(1)}% of all jobs) - significant focus on sustainability`,
         type: 'success'
       });
     }
@@ -87,7 +123,7 @@ const CategoryInsights: React.FC<CategoryInsightsProps> = ({ metrics, data, filt
     }
 
     return insights;
-  }, [metrics]);
+  }, [metrics, marketMetrics, isAgencyView, filters.selectedAgency]);
 
   // Prepare pie chart data for category distribution
   const categoryPieData = useMemo(() => {

@@ -432,8 +432,9 @@ export class JobAnalyticsProcessor {
 
     console.log('calculateDashboardMetrics: Top categories:', topCategories);
 
-    // Agency insights
-    const agencyInsights = this.calculateAgencyInsights(filteredData);
+    // Agency insights - expand Secretariat for market view
+    const isMarketView = filters.selectedAgency === 'all';
+    const agencyInsights = this.calculateAgencyInsights(filteredData, isMarketView);
 
     // Department insights  
     const departmentInsights = this.calculateDepartmentInsights(filteredData);
@@ -692,7 +693,7 @@ export class JobAnalyticsProcessor {
   }
 
   // Competitive analysis methods
-  calculateCompetitiveIntelligence(data: ProcessedJobData[]): {
+  calculateCompetitiveIntelligence(data: ProcessedJobData[], expandSecretariat: boolean = true): {
     agencyPositioning: { agency: string; volume: number; diversity: number; marketShare: number }[];
     categoryDominance: { category: string; leadingAgency: string; marketShare: number; competition: number }[];
     talentOverlap: { 
@@ -711,7 +712,13 @@ export class JobAnalyticsProcessor {
     }>();
     
     data.forEach(job => {
-      const agency = job.short_agency || job.long_agency || 'Unknown';
+      let agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      // For market analysis, break down UN Secretariat by departments
+      if (expandSecretariat && agency === 'UN Secretariat' && job.department) {
+        agency = `UN Secretariat - ${job.department}`;
+      }
+      
       if (!agencyMap.has(agency)) {
         agencyMap.set(agency, { jobs: [], categories: new Set(), locations: new Set() });
       }
@@ -735,7 +742,12 @@ export class JobAnalyticsProcessor {
     const categoryAgencyMap = new Map<string, Map<string, number>>();
     data.forEach(job => {
       const category = job.primary_category;
-      const agency = job.short_agency || job.long_agency || 'Unknown';
+      let agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      // For market analysis, break down UN Secretariat by departments
+      if (expandSecretariat && agency === 'UN Secretariat' && job.department) {
+        agency = `UN Secretariat - ${job.department}`;
+      }
       
       if (!categoryAgencyMap.has(category)) {
         categoryAgencyMap.set(category, new Map());
@@ -876,11 +888,17 @@ export class JobAnalyticsProcessor {
     return filtered;
   }
 
-  private calculateAgencyInsights(data: ProcessedJobData[]): AgencyInsight[] {
+  private calculateAgencyInsights(data: ProcessedJobData[], expandSecretariat: boolean = false): AgencyInsight[] {
     const agencyMap = new Map<string, ProcessedJobData[]>();
     
     data.forEach(job => {
-      const agency = job.short_agency || job.long_agency || 'Unknown';
+      let agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      // For market view, break down UN Secretariat by departments
+      if (expandSecretariat && agency === 'UN Secretariat' && job.department) {
+        agency = `UN Secretariat - ${job.department}`;
+      }
+      
       if (!agencyMap.has(agency)) {
         agencyMap.set(agency, []);
       }
@@ -909,8 +927,15 @@ export class JobAnalyticsProcessor {
       // Calculate department insights for this agency
       const departments = this.calculateDepartmentInsightsForAgency(jobs, agency);
 
-      // Determine organization level
-      const longName = jobs[0]?.long_agency || agency;
+      // Determine organization level and long name
+      let longName = jobs[0]?.long_agency || agency;
+      
+      // For expanded Secretariat departments, adjust the long name
+      if (agency.startsWith('UN Secretariat - ')) {
+        const deptName = agency.replace('UN Secretariat - ', '');
+        longName = `United Nations Secretariat - ${deptName}`;
+      }
+      
       const organizationLevel = this.getOrganizationLevel(agency, longName);
 
       return {
@@ -1137,5 +1162,579 @@ export class JobAnalyticsProcessor {
       }))
       .sort((a, b) => b.growthRate - a.growthRate)
       .slice(0, 5);
+  }
+
+  /**
+   * Comprehensive language analysis - extracts required and desired languages
+   */
+  analyzeLanguageRequirements(data: ProcessedJobData[]) {
+    const languageStats = {
+      requiredLanguages: new Map<string, number>(),
+      desiredLanguages: new Map<string, number>(),
+      multilingualJobs: 0,
+      averageLanguageCount: 0,
+      languagePairs: new Map<string, number>(),
+      agencyLanguageProfiles: new Map<string, { required: string[], desired: string[], count: number }>()
+    };
+
+    data.forEach(job => {
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      // Initialize agency profile if not exists
+      if (!languageStats.agencyLanguageProfiles.has(agency)) {
+        languageStats.agencyLanguageProfiles.set(agency, { required: [], desired: [], count: 0 });
+      }
+      
+      const agencyProfile = languageStats.agencyLanguageProfiles.get(agency)!;
+      agencyProfile.count++;
+
+      // Parse languages from the dedicated languages field
+      const languagesFromField = this.parseLanguagesField(job.languages || '');
+      
+      // Parse languages from job description text
+      const languagesFromDescription = this.parseLanguagesFromDescription(job.description + ' ' + job.ideal_candidate);
+      
+      // Combine and categorize languages
+      const combinedLanguages = {
+        required: [...new Set([...languagesFromField.required, ...languagesFromDescription.required])],
+        desired: [...new Set([...languagesFromField.desired, ...languagesFromDescription.desired])]
+      };
+
+      // Update language statistics
+      combinedLanguages.required.forEach(lang => {
+        languageStats.requiredLanguages.set(lang, (languageStats.requiredLanguages.get(lang) || 0) + 1);
+        if (!agencyProfile.required.includes(lang)) {
+          agencyProfile.required.push(lang);
+        }
+      });
+
+      combinedLanguages.desired.forEach(lang => {
+        languageStats.desiredLanguages.set(lang, (languageStats.desiredLanguages.get(lang) || 0) + 1);
+        if (!agencyProfile.desired.includes(lang)) {
+          agencyProfile.desired.push(lang);
+        }
+      });
+
+      // Track multilingual positions
+      const totalLanguages = combinedLanguages.required.length + combinedLanguages.desired.length;
+      if (totalLanguages > 1) {
+        languageStats.multilingualJobs++;
+      }
+
+      // Track common language pairs for required languages
+      if (combinedLanguages.required.length === 2) {
+        const pair = combinedLanguages.required.sort().join(' + ');
+        languageStats.languagePairs.set(pair, (languageStats.languagePairs.get(pair) || 0) + 1);
+      }
+    });
+
+    // Calculate average language count
+    const totalLanguageRequirements = Array.from(languageStats.requiredLanguages.values()).reduce((sum, count) => sum + count, 0) +
+                                     Array.from(languageStats.desiredLanguages.values()).reduce((sum, count) => sum + count, 0);
+    languageStats.averageLanguageCount = totalLanguageRequirements / Math.max(data.length, 1);
+
+    return {
+      requiredLanguages: Array.from(languageStats.requiredLanguages.entries())
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10),
+      desiredLanguages: Array.from(languageStats.desiredLanguages.entries())
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10),
+      multilingualJobsPercentage: (languageStats.multilingualJobs / data.length) * 100,
+      averageLanguageCount: Math.round(languageStats.averageLanguageCount * 10) / 10,
+      topLanguagePairs: Array.from(languageStats.languagePairs.entries())
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5),
+      agencyLanguageProfiles: Array.from(languageStats.agencyLanguageProfiles.entries())
+        .map(([agency, profile]) => ({
+          agency,
+          requiredLanguages: [...new Set(profile.required)],
+          desiredLanguages: [...new Set(profile.desired)],
+          totalJobs: profile.count,
+          languageDiversity: [...new Set([...profile.required, ...profile.desired])].length
+        }))
+        .sort((a, b) => b.totalJobs - a.totalJobs)
+        .slice(0, 10)
+    };
+  }
+
+  /**
+   * Parse languages from the dedicated languages field
+   */
+  private parseLanguagesField(languagesField: string): { required: string[], desired: string[] } {
+    const languages = languagesField.split(/[,;/|]/).map(lang => lang.trim()).filter(Boolean);
+    
+    return {
+      required: languages, // Languages field typically contains required languages
+      desired: [] // Desired languages are usually in job descriptions
+    };
+  }
+
+  /**
+   * Parse languages from job description text
+   */
+  private parseLanguagesFromDescription(text: string): { required: string[], desired: string[] } {
+    const commonLanguages = ['English', 'French', 'Spanish', 'Arabic', 'Chinese', 'Russian', 'Portuguese', 'German', 'Italian', 'Japanese', 'Korean', 'Hindi', 'Swahili', 'Dutch'];
+    
+    const required: string[] = [];
+    const desired: string[] = [];
+    
+    const textLower = text.toLowerCase();
+    
+    commonLanguages.forEach(language => {
+      const langLower = language.toLowerCase();
+      
+      // Patterns for required languages
+      const requiredPatterns = [
+        `${langLower} is required`,
+        `${langLower} required`,
+        `fluency in ${langLower}`,
+        `excellent ${langLower}`,
+        `proficiency in ${langLower} is required`,
+        `command of ${langLower}`
+      ];
+      
+      // Patterns for desired languages
+      const desiredPatterns = [
+        `${langLower} is desirable`,
+        `${langLower} desirable`,
+        `${langLower} would be an asset`,
+        `${langLower} is an asset`,
+        `knowledge of ${langLower}`,
+        `${langLower} preferred`,
+        `working knowledge of ${langLower}`
+      ];
+      
+      if (requiredPatterns.some(pattern => textLower.includes(pattern))) {
+        required.push(language);
+      } else if (desiredPatterns.some(pattern => textLower.includes(pattern))) {
+        desired.push(language);
+      }
+    });
+    
+    return { required, desired };
+  }
+
+  // ========== NEW BENCHMARKING ANALYTICS METHODS ==========
+  
+  /**
+   * Calculate comprehensive agency benchmarking metrics for radar chart comparison
+   */
+  calculateAgencyBenchmarkingMetrics(data: ProcessedJobData[]) {
+    const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
+    
+    return agencies.map(agency => {
+      const agencyJobs = data.filter(job => (job.short_agency || job.long_agency) === agency);
+      
+      // 1. Hiring Volume (total jobs posted)
+      const hiringVolume = agencyJobs.length;
+      
+      // 2. Geographic Reach (number of unique countries)
+      const uniqueCountries = new Set(agencyJobs.map(job => job.duty_country).filter(Boolean)).size;
+      
+      // 3. Role Diversity (number of unique job categories)
+      const uniqueCategories = new Set(agencyJobs.map(job => job.primary_category)).size;
+      
+      // 4. Digital Maturity (% of jobs requiring digital/tech skills from job_labels)
+      const digitalSkillKeywords = ['digital', 'technology', 'it', 'software', 'data', 'cyber', 'innovation', 'ai', 'machine learning', 'blockchain', 'programming', 'analytics', 'automation'];
+      const digitalJobs = agencyJobs.filter(job => {
+        const jobLabels = (job.job_labels || '').toLowerCase();
+        return digitalSkillKeywords.some(keyword => jobLabels.includes(keyword)) ||
+               job.primary_category === 'Digital & Technology';
+      }).length;
+      const digitalMaturity = hiringVolume > 0 ? (digitalJobs / hiringVolume) * 100 : 0;
+      
+      // 5. Field Presence (% of field vs HQ positions)
+      const fieldJobs = agencyJobs.filter(job => job.location_type === 'Field').length;
+      const fieldPresence = hiringVolume > 0 ? (fieldJobs / hiringVolume) * 100 : 0;
+      
+      // 6. Senior Talent Ratio (percentage of senior/executive positions - indicates investment in experienced talent)
+      const seniorJobs = agencyJobs.filter(job => 
+        job.seniority_level === 'Senior' || job.seniority_level === 'Executive'
+      ).length;
+      const juniorJobs = agencyJobs.filter(job => job.seniority_level === 'Junior').length;
+      const midJobs = agencyJobs.filter(job => job.seniority_level === 'Mid').length;
+      const totalClassifiedJobs = seniorJobs + juniorJobs + midJobs;
+      
+      // Calculate as percentage of classified positions - represents investment in senior expertise
+      const talentInvestment = totalClassifiedJobs > 0 ? (seniorJobs / totalClassifiedJobs) * 100 : 0;
+      
+      return {
+        agency,
+        metrics: {
+          hiringVolume,
+          geographicReach: uniqueCountries,
+          roleDiversity: uniqueCategories,
+          digitalMaturity: Math.round(digitalMaturity),
+          fieldPresence: Math.round(fieldPresence),
+          talentInvestment: Math.round(talentInvestment)
+        },
+        totalJobs: hiringVolume
+      };
+    }).filter(item => item.totalJobs >= 5); // Filter out agencies with very few jobs
+  }
+
+  /**
+   * Calculate efficiency benchmarks for agencies
+   */
+  calculateEfficiencyBenchmarks(data: ProcessedJobData[]) {
+    const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
+    
+    return agencies.map(agency => {
+      const agencyJobs = data.filter(job => (job.short_agency || job.long_agency) === agency);
+      
+      if (agencyJobs.length === 0) return null;
+      
+      // Application window comparison (average days from posting to deadline)
+      const avgApplicationWindow = agencyJobs.reduce((sum, job) => sum + job.application_window_days, 0) / agencyJobs.length;
+      
+      // Posting velocity (jobs per month - last 12 months)
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const recentJobs = agencyJobs.filter(job => new Date(job.posting_date) >= oneYearAgo);
+      const postingVelocity = recentJobs.length / 12;
+      
+      // Urgent hiring indicator (% with <14 day window)
+      const urgentJobs = agencyJobs.filter(job => job.application_window_days < 14).length;
+      const urgentHiringRate = (urgentJobs / agencyJobs.length) * 100;
+      
+      // Time-to-fill estimates (based on application window patterns)
+      const quickFillJobs = agencyJobs.filter(job => job.application_window_days <= 21).length;
+      const standardFillJobs = agencyJobs.filter(job => job.application_window_days > 21 && job.application_window_days <= 45).length;
+      const extendedFillJobs = agencyJobs.filter(job => job.application_window_days > 45).length;
+      
+      return {
+        agency,
+        avgApplicationWindow: Math.round(avgApplicationWindow),
+        postingVelocity: Math.round(postingVelocity * 10) / 10,
+        urgentHiringRate: Math.round(urgentHiringRate),
+        fillPatterns: {
+          quick: Math.round((quickFillJobs / agencyJobs.length) * 100),
+          standard: Math.round((standardFillJobs / agencyJobs.length) * 100),
+          extended: Math.round((extendedFillJobs / agencyJobs.length) * 100)
+        },
+        totalJobs: agencyJobs.length
+      };
+    }).filter(Boolean);
+  }
+
+  /**
+   * Identify best practices and top performers
+   */
+  identifyBestPractices(data: ProcessedJobData[]) {
+    const benchmarks = this.calculateAgencyBenchmarkingMetrics(data);
+    const efficiency = this.calculateEfficiencyBenchmarks(data);
+    
+    // Sort agencies by each metric to find leaders
+    const insights = {
+      digitalLeaders: benchmarks.sort((a, b) => b.metrics.digitalMaturity - a.metrics.digitalMaturity).slice(0, 3),
+      geographicLeaders: benchmarks.sort((a, b) => b.metrics.geographicReach - a.metrics.geographicReach).slice(0, 3),
+      diversityLeaders: benchmarks.sort((a, b) => b.metrics.roleDiversity - a.metrics.roleDiversity).slice(0, 3),
+      efficiencyLeaders: efficiency.filter((e): e is NonNullable<typeof e> => e !== null).sort((a, b) => a.avgApplicationWindow - b.avgApplicationWindow).slice(0, 3),
+      rapidResponseLeaders: efficiency.filter((e): e is NonNullable<typeof e> => e !== null).sort((a, b) => b.urgentHiringRate - a.urgentHiringRate).slice(0, 3)
+    };
+    
+    // Generate actionable insights
+    const actionableInsights = [];
+    
+    if (insights.digitalLeaders.length > 0) {
+      const leader = insights.digitalLeaders[0];
+      if (leader) {
+        actionableInsights.push({
+          category: 'Digital Transformation',
+          insight: `${leader.agency} leads digital hiring with ${leader.metrics.digitalMaturity}% tech roles`,
+          metric: leader.metrics.digitalMaturity,
+          agency: leader.agency
+        });
+      }
+    }
+    
+    if (insights.efficiencyLeaders.length > 0) {
+      const leader = insights.efficiencyLeaders[0];
+      if (leader) {
+        actionableInsights.push({
+          category: 'Hiring Efficiency',
+          insight: `${leader.agency} fastest hiring: ${leader.avgApplicationWindow}-day average window`,
+          metric: leader.avgApplicationWindow,
+          agency: leader.agency
+        });
+      }
+    }
+    
+    return {
+      topPerformers: insights,
+      actionableInsights,
+      quartileRankings: this.calculateQuartileRankings(benchmarks)
+    };
+  }
+
+  /**
+   * Calculate quartile rankings for all metrics
+   */
+  calculateQuartileRankings(benchmarks: any[]) {
+    const metrics = ['hiringVolume', 'geographicReach', 'roleDiversity', 'digitalMaturity', 'fieldPresence', 'talentInvestment'];
+    const rankings: any = {};
+    
+    metrics.forEach(metric => {
+      const values = benchmarks.map(b => b.metrics[metric]).sort((a, b) => a - b);
+      const q1 = values[Math.floor(values.length * 0.25)];
+      const q2 = values[Math.floor(values.length * 0.5)];
+      const q3 = values[Math.floor(values.length * 0.75)];
+      
+      rankings[metric] = {
+        q1, q2, q3,
+        agencies: benchmarks.map(b => ({
+          agency: b.agency,
+          value: b.metrics[metric],
+          quartile: b.metrics[metric] <= q1 ? 1 : 
+                   b.metrics[metric] <= q2 ? 2 : 
+                   b.metrics[metric] <= q3 ? 3 : 4
+        }))
+      };
+    });
+    
+    return rankings;
+  }
+
+  /**
+   * Deep skill comparison analysis across agencies
+   */
+  analyzeSkillComparison(data: ProcessedJobData[]) {
+    const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
+    
+    // Same role, different requirements analysis
+    const commonRoles = this.findCommonRoles(data);
+    const roleComparisons = commonRoles.map(role => {
+      const agencyVariations = agencies.map(agency => {
+        const agencyRoleJobs = data.filter(job => 
+          (job.short_agency || job.long_agency) === agency &&
+          job.title.toLowerCase().includes(role.toLowerCase())
+        );
+        
+        if (agencyRoleJobs.length === 0) return null;
+        
+        const avgGrade = this.calculateAverageGrade(agencyRoleJobs);
+        const uniqueLocations = new Set(agencyRoleJobs.map(j => j.duty_country)).size;
+        const skillPattern = this.extractSkillPattern(agencyRoleJobs);
+        
+        return {
+          agency,
+          count: agencyRoleJobs.length,
+          avgGrade,
+          uniqueLocations,
+          skillPattern,
+          jobs: agencyRoleJobs.slice(0, 3) // Sample jobs
+        };
+      }).filter(Boolean);
+      
+      return {
+        role,
+        variations: agencyVariations
+      };
+    });
+    
+    // Skill cluster analysis
+    const skillClusters = this.analyzeSkillClusters(data);
+    
+    return {
+      roleComparisons: roleComparisons.slice(0, 10), // Top 10 most common roles
+      skillClusters
+    };
+  }
+
+  /**
+   * Find most common job roles across agencies using meaningful job_labels
+   */
+  findCommonRoles(data: ProcessedJobData[]) {
+    const roleSkillFrequency: { [key: string]: number } = {};
+    
+    data.forEach(job => {
+      if (!job.job_labels) return;
+      
+      // Extract meaningful skills from job_labels instead of generic keywords
+      const skills = job.job_labels.split(',').map(s => s.trim());
+      
+      // Focus on role-defining skills that appear frequently
+      const roleDefiningSkills = skills.filter(skill => {
+        const skillLower = skill.toLowerCase();
+        return skillLower.includes('management') || 
+               skillLower.includes('analysis') || 
+               skillLower.includes('coordination') || 
+               skillLower.includes('communication') ||
+               skillLower.includes('administration') ||
+               skillLower.includes('project') ||
+               skillLower.includes('development') ||
+               skillLower.includes('policy');
+      });
+      
+      roleDefiningSkills.forEach(skill => {
+        roleSkillFrequency[skill] = (roleSkillFrequency[skill] || 0) + 1;
+      });
+    });
+    
+    return Object.entries(roleSkillFrequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 8)
+      .map(([skill]) => skill);
+  }
+
+  /**
+   * Calculate average grade level for a set of jobs
+   */
+  calculateAverageGrade(jobs: ProcessedJobData[]) {
+    const gradeNumbers = jobs.map(job => job.grade_numeric).filter(grade => grade > 0);
+    return gradeNumbers.length > 0 ? Math.round(gradeNumbers.reduce((sum, grade) => sum + grade, 0) / gradeNumbers.length) : 0;
+  }
+
+  /**
+   * Extract skill pattern from a set of jobs
+   */
+  extractSkillPattern(jobs: ProcessedJobData[]) {
+    const allSkills: string[] = [];
+    jobs.forEach(job => {
+      if (job.job_labels) {
+        allSkills.push(...job.job_labels.split(',').map(s => s.trim()));
+      }
+    });
+    
+    const skillFreq: { [key: string]: number } = {};
+    allSkills.forEach(skill => {
+      skillFreq[skill] = (skillFreq[skill] || 0) + 1;
+    });
+    
+    return Object.entries(skillFreq)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([skill, count]) => ({ skill, frequency: count }));
+  }
+
+  /**
+   * Analyze skill clusters and relationships
+   */
+  analyzeSkillClusters(data: ProcessedJobData[]) {
+    const agencySkillPatterns: { [agency: string]: { [skill: string]: number } } = {};
+    
+    data.forEach(job => {
+      const agency = job.short_agency || job.long_agency;
+      if (!agency || !job.job_labels) return;
+      
+      if (!agencySkillPatterns[agency]) {
+        agencySkillPatterns[agency] = {};
+      }
+      
+      const skills = job.job_labels.split(',').map(s => s.trim().toLowerCase());
+      skills.forEach(skill => {
+        agencySkillPatterns[agency][skill] = (agencySkillPatterns[agency][skill] || 0) + 1;
+      });
+    });
+    
+    // Find unique skill combinations per agency
+    const uniqueCombinations: { [agency: string]: string[] } = {};
+    
+    Object.entries(agencySkillPatterns).forEach(([agency, skills]) => {
+      const topSkills = Object.entries(skills)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10)
+        .map(([skill]) => skill);
+      
+      uniqueCombinations[agency] = topSkills;
+    });
+    
+    return {
+      agencySkillPatterns,
+      uniqueCombinations,
+      crossAgencySkills: this.findCrossAgencySkills(agencySkillPatterns)
+    };
+  }
+
+  /**
+   * Find skills that appear across multiple agencies
+   */
+  findCrossAgencySkills(agencySkillPatterns: { [agency: string]: { [skill: string]: number } }) {
+    const skillAgencyCount: { [skill: string]: string[] } = {};
+    
+    Object.entries(agencySkillPatterns).forEach(([agency, skills]) => {
+      Object.keys(skills).forEach(skill => {
+        if (!skillAgencyCount[skill]) {
+          skillAgencyCount[skill] = [];
+        }
+        skillAgencyCount[skill].push(agency);
+      });
+    });
+    
+    return Object.entries(skillAgencyCount)
+      .filter(([, agencies]) => agencies.length >= 3) // Skills in 3+ agencies
+      .sort(([,a], [,b]) => b.length - a.length)
+      .slice(0, 20)
+      .map(([skill, agencies]) => ({ skill, agencies: agencies.length, agencyList: agencies }));
+  }
+
+  /**
+   * Analyze strategy matrix positioning for agencies
+   */
+  analyzeStrategyMatrix(data: ProcessedJobData[]) {
+    const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
+    
+    return agencies.map(agency => {
+      const agencyJobs = data.filter(job => (job.short_agency || job.long_agency) === agency);
+      
+      if (agencyJobs.length < 5) return null;
+      
+      // X-axis: Specialization (focused vs diverse hiring)
+      const uniqueCategories = new Set(agencyJobs.map(job => job.primary_category)).size;
+      const specializationScore = Math.max(0, 100 - (uniqueCategories * 10)); // Lower categories = higher specialization
+      
+      // Y-axis: Innovation (traditional vs emerging skills)
+      const emergingSkillKeywords = ['digital', 'innovation', 'blockchain', 'ai', 'machine learning', 'climate', 'green', 'sustainable'];
+      const emergingJobs = agencyJobs.filter(job => 
+        emergingSkillKeywords.some(keyword => 
+          (job.job_labels || '').toLowerCase().includes(keyword) ||
+          job.title.toLowerCase().includes(keyword)
+        )
+      ).length;
+      const innovationScore = (emergingJobs / agencyJobs.length) * 100;
+      
+      // Geographic strategy
+      const uniqueCountries = new Set(agencyJobs.map(job => job.duty_country)).size;
+      const hqJobs = agencyJobs.filter(job => job.location_type === 'Headquarters').length;
+      
+      const geographicConcentration = 100 - Math.min(100, uniqueCountries * 5); // Fewer countries = higher concentration
+      const hqFocus = (hqJobs / agencyJobs.length) * 100;
+      
+      return {
+        agency,
+        talentStrategy: {
+          specialization: Math.round(specializationScore),
+          innovation: Math.round(innovationScore),
+          quadrant: this.determineStrategyQuadrant(specializationScore, innovationScore)
+        },
+        locationStrategy: {
+          geographicConcentration: Math.round(geographicConcentration),
+          hqFocus: Math.round(hqFocus),
+          quadrant: this.determineLocationQuadrant(geographicConcentration, hqFocus)
+        },
+        totalJobs: agencyJobs.length
+      };
+    }).filter(Boolean);
+  }
+
+  /**
+   * Determine strategy quadrant based on specialization and innovation scores
+   */
+  determineStrategyQuadrant(specialization: number, innovation: number) {
+    if (specialization >= 50 && innovation >= 50) return 'Specialized Innovator';
+    if (specialization >= 50 && innovation < 50) return 'Traditional Specialist';
+    if (specialization < 50 && innovation >= 50) return 'Diverse Innovator';
+    return 'Traditional Generalist';
+  }
+
+  /**
+   * Determine location quadrant based on concentration and HQ focus
+   */
+  determineLocationQuadrant(concentration: number, hqFocus: number) {
+    if (concentration >= 50 && hqFocus >= 50) return 'HQ Concentrated';
+    if (concentration >= 50 && hqFocus < 50) return 'Field Concentrated';
+    if (concentration < 50 && hqFocus >= 50) return 'HQ Distributed';
+    return 'Field Distributed';
   }
 } 

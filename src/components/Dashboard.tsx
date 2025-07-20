@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Building2, Calendar, Users, Target, Award, Briefcase, BarChart3, Clock, Eye, Activity } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
@@ -7,6 +7,7 @@ import CategoryInsights from './CategoryInsights';
 import TemporalTrends from './TemporalTrends';
 import CompetitiveIntel from './CompetitiveIntel';
 import ExecutiveSummary from './ExecutiveSummary';
+import AgencyBenchmarking from './AgencyBenchmarking';
 
 
 interface DashboardProps {
@@ -523,9 +524,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'categories':
         return (
           <CategoryInsights 
-            metrics={metrics}
+            metrics={isAgencyView ? metrics : marketMetrics}
+            marketMetrics={marketMetrics}
             data={processedData}
             filters={filters}
+            isAgencyView={isAgencyView}
           />
         );
 
@@ -547,13 +550,10 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
       case 'benchmarking':
         return (
-          <div className="space-y-8">
-            <div className="text-center py-16">
-              <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Agency Benchmarking</h3>
-              <p className="text-gray-600">Comprehensive agency performance comparison coming soon...</p>
-            </div>
-          </div>
+          <AgencyBenchmarking 
+            data={processedData}
+            filters={filters}
+          />
         );
 
       case 'summary':

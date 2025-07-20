@@ -23,7 +23,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ data, filters }) =>
   }, [data, processor]);
 
   const competitiveIntel = useMemo(() => {
-    return processor.calculateCompetitiveIntelligence(data);
+    return processor.calculateCompetitiveIntelligence(data, true);
   }, [data, processor]);
 
   // Agency-specific context for personalized insights
@@ -118,7 +118,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({ data, filters }) =>
     }
 
     return insights.slice(0, 5); // Top 5 insights
-  }, [dashboardMetrics, temporalTrends, competitiveIntel]);
+  }, [dashboardMetrics, temporalTrends, competitiveIntel, isAgencyView, selectedAgencyName]);
 
   // Key performance indicators
   const kpis = useMemo(() => {

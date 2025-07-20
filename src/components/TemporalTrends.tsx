@@ -12,13 +12,24 @@ interface TemporalTrendsProps {
 const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
   
-  const filteredData = useMemo(() => {
-    return processor.applyFilters ? processor.applyFilters(data, filters) : data;
-  }, [data, filters, processor]);
+  const isAgencyView = filters.selectedAgency !== 'all';
+  
+  // For temporal trends: 
+  // - Agency view: Use filtered data to show internal trends
+  // - Market view: Use unfiltered data to show market trends
+  const dataToAnalyze = useMemo(() => {
+    if (isAgencyView) {
+      // Show agency's internal temporal patterns
+      return processor.applyFilters(data, filters);
+    } else {
+      // Show market-wide temporal patterns
+      return data;
+    }
+  }, [data, filters, processor, isAgencyView]);
 
   const temporalAnalysis = useMemo(() => {
-    return processor.calculateTemporalTrends(filteredData, 18); // 18 months of data
-  }, [filteredData, processor]);
+    return processor.calculateTemporalTrends(dataToAnalyze, 18); // 18 months of data
+  }, [dataToAnalyze, processor]);
 
   const getCategoryColor = (categoryName: string) => {
     const category = JOB_CATEGORIES.find(cat => cat.name === categoryName);

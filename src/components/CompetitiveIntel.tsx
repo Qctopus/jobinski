@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Target, Users, Zap, TrendingUp, Eye, ArrowRight, Award, MapPin, Briefcase } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Target, Users, Zap, Eye, ArrowRight, Award, MapPin, Briefcase } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 
@@ -13,9 +13,9 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
   
-  // Always use unfiltered data for competitive analysis
+  // Always use unfiltered data for competitive analysis with Secretariat breakdown
   const competitiveAnalysis = useMemo(() => {
-    return processor.calculateCompetitiveIntelligence(data);
+    return processor.calculateCompetitiveIntelligence(data, true);
   }, [data, processor]);
 
   // Determine if we're in agency-specific view
@@ -43,15 +43,6 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
   const getCategoryColor = (categoryName: string) => {
     const category = JOB_CATEGORIES.find(cat => cat.name === categoryName);
     return category?.color || '#94A3B8';
-  };
-
-  const getIntensityColor = (intensity: 'High' | 'Medium' | 'Low') => {
-    switch (intensity) {
-      case 'High': return '#EF4444';
-      case 'Medium': return '#F59E0B';
-      case 'Low': return '#10B981';
-      default: return '#6B7280';
-    }
   };
 
   const handleAgencyToggle = (agency: string) => {
