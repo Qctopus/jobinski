@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-gray-50 text-gray-900;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  
+  .btn-primary {
+    @apply bg-un-blue hover:bg-un-dark-blue text-white px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+  
+  .metric-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center;
+  }
+  
+  .metric-value {
+    @apply text-3xl font-bold text-un-blue mb-2;
+  }
+  
+  .metric-label {
+    @apply text-sm text-gray-600 uppercase tracking-wide;
+  }
+  
+  .insight-card {
+    @apply bg-blue-50 border-l-4 border-un-blue p-4 rounded-r-lg;
+  }
+  
+  .nav-tab {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
+  }
+  
+  .nav-tab-active {
+    @apply bg-un-blue text-white;
+  }
+  
+  .nav-tab-inactive {
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100;
+  }
+  
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-un-blue;
+  }
+  
+  .filter-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-un-blue focus:border-transparent;
+  }
+  
+  .chart-container {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+} 
