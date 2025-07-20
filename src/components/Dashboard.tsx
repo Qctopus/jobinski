@@ -1,15 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from 'recharts';
-import { Building2, TrendingUp, Calendar, Users, Target, Lightbulb, Activity, MapPin, Award, Briefcase } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell } from 'recharts';
+import { Building2, Calendar, Users, Target, Award, Briefcase, BarChart3, Clock, Eye, Activity } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
 import CategoryInsights from './CategoryInsights';
+import TemporalTrends from './TemporalTrends';
+import CompetitiveIntel from './CompetitiveIntel';
+import ExecutiveSummary from './ExecutiveSummary';
+
 
 interface DashboardProps {
   data: ProcessedJobData[];
 }
 
+type TabType = 'overview' | 'categories' | 'temporal' | 'competitive' | 'summary' | 'benchmarking';
+
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [filters, setFilters] = useState<FilterOptions>({
     selectedAgency: 'all',
     timeRange: 'all'
@@ -109,6 +116,399 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       .map(([grade, count]) => ({ grade, count }));
   };
 
+  const tabs = [
+    {
+      id: 'overview' as TabType,
+      name: 'Overview',
+      icon: <BarChart3 className="h-5 w-5" />,
+      description: 'Core hiring metrics and patterns'
+    },
+    {
+      id: 'categories' as TabType,
+      name: 'Categories',
+      icon: <Target className="h-5 w-5" />,
+      description: 'Deep-dive into job categories'
+    },
+    {
+      id: 'temporal' as TabType,
+      name: 'Trends',
+      icon: <Clock className="h-5 w-5" />,
+      description: 'Time-based analysis and forecasting'
+    },
+    {
+      id: 'competitive' as TabType,
+      name: 'Intelligence',
+      icon: <Eye className="h-5 w-5" />,
+      description: 'Competitive landscape and positioning'
+    },
+    {
+      id: 'benchmarking' as TabType,
+      name: 'Benchmarking',
+      icon: <Activity className="h-5 w-5" />,
+      description: 'Agency performance comparison'
+    },
+    {
+      id: 'summary' as TabType,
+      name: 'Executive',
+      icon: <Award className="h-5 w-5" />,
+      description: 'Strategic insights and recommendations'
+    }
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-8">
+            {/* Key Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="metric-card">
+                <div className="metric-value">{metrics.totalJobs}</div>
+                <div className="metric-label">
+                  <Briefcase className="h-4 w-4 mr-1" />
+                  Total Positions
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-value">
+                  {isAgencyView ? metrics.totalDepartments : metrics.totalAgencies}
+                </div>
+                <div className="metric-label">
+                  <Building2 className="h-4 w-4 mr-1" />
+                  {isAgencyView ? 'Departments' : 'Agencies'}
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-value">{metrics.topCategories.length}</div>
+                <div className="metric-label">
+                  <Target className="h-4 w-4 mr-1" />
+                  Active Categories
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-value">
+                  {metrics.topCategories[0]?.percentage.toFixed(1)}%
+                </div>
+                <div className="metric-label">
+                  <Award className="h-4 w-4 mr-1" />
+                  Top Category Share
+                </div>
+              </div>
+            </div>
+
+            {/* Main Dashboard Panels - Agency-Aware */}
+            {isAgencyView ? (
+              // AGENCY VIEW: Internal Analysis
+              <>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  {/* Agency Panel 1: Our Job Categories */}
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Target className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Our Hiring Focus</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">What we're hiring for</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          type="number" 
+                          domain={[0, 'dataMax']}
+                          tickFormatter={(value) => Math.round(value).toString()}
+                        />
+                        <YAxis 
+                          dataKey="category" 
+                          type="category" 
+                          width={150}
+                          fontSize={12}
+                        />
+                        <Tooltip 
+                          formatter={(value: any, name: any) => [`${value} positions`, 'Positions']}
+                          labelFormatter={(label: any) => {
+                            const item = topCategoriesChartData.find(d => d.category === label);
+                            return item?.fullCategory || label;
+                          }}
+                        />
+                        <Bar dataKey="jobs" radius={4}>
+                          {topCategoriesChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={getCategoryColor(entry.fullCategory)} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Agency Panel 2: Our Department Breakdown */}
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Building2 className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Department Activity</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">Internal breakdown</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={agencyInsights?.departmentBreakdown || []} margin={{ bottom: 80 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="department" 
+                            fontSize={11}
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis fontSize={12} />
+                          <Tooltip 
+                            formatter={(value: any, name: any) => [`${value} positions`, 'Positions']}
+                          />
+                          <Bar 
+                            dataKey="totalJobs" 
+                            fill="#009edb"
+                            name="Positions"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Agency Panel 3: Geographic & Grade Strategy */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Building2 className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Our Location Strategy</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">Where we hire</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={formatLocationData(agencyInsights?.locationStrategy || {})} layout="horizontal">
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" />
+                          <YAxis 
+                            dataKey="location" 
+                            type="category" 
+                            width={120}
+                            fontSize={11}
+                          />
+                          <Tooltip formatter={(value: any) => [`${value} positions`, 'Positions']} />
+                          <Bar dataKey="count" fill="#10B981" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Award className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Our Grade Distribution</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">Seniority levels</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={formatGradeData(agencyInsights?.gradeDistribution || {})}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="grade" fontSize={12} />
+                          <YAxis fontSize={12} />
+                          <Tooltip formatter={(value: any) => [`${value} positions`, 'Positions']} />
+                          <Bar dataKey="count" fill="#8B5CF6" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // MARKET VIEW: Cross-Agency Analysis
+              <>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  {/* Market Panel 1: Overall Categories */}
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Target className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Market Hiring Trends</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">System-wide categories</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          type="number" 
+                          domain={[0, 'dataMax']}
+                          tickFormatter={(value) => Math.round(value).toString()}
+                        />
+                        <YAxis 
+                          dataKey="category" 
+                          type="category" 
+                          width={150}
+                          fontSize={12}
+                        />
+                        <Tooltip 
+                          formatter={(value: any, name: any) => [`${value} jobs`, 'Total positions']}
+                          labelFormatter={(label: any) => {
+                            const item = topCategoriesChartData.find(d => d.category === label);
+                            return item?.fullCategory || label;
+                          }}
+                        />
+                        <Bar dataKey="jobs" radius={4}>
+                          {topCategoriesChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={getCategoryColor(entry.fullCategory)} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Market Panel 2: Agency Leaders */}
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Users className="h-6 w-6 text-un-blue" />
+                          <h3 className="text-lg font-semibold text-gray-900">Leading Agencies</h3>
+                        </div>
+                        <span className="text-sm text-gray-500">Most active hirers</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={marketInsights?.topAgencies || []} layout="horizontal">
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" />
+                          <YAxis 
+                            dataKey="agency" 
+                            type="category" 
+                            width={100}
+                            fontSize={11}
+                          />
+                          <Tooltip formatter={(value: any) => [`${value} positions`, 'Total positions']} />
+                          <Bar dataKey="totalJobs" fill="#F59E0B" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Market Panel 3: Category Leaders */}
+                <div className="bg-white rounded-lg shadow">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Target className="h-6 w-6 text-un-blue" />
+                        <h3 className="text-lg font-semibold text-gray-900">Category Leadership</h3>
+                      </div>
+                      <span className="text-sm text-gray-500">Which agencies lead in what</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {marketInsights?.categoryLeaders.map((category, index) => (
+                        <div key={category.category} className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: getCategoryColor(category.category) }}
+                            ></div>
+                            <h4 className="font-semibold text-gray-900">{category.category}</h4>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-1">
+                            Led by: <span className="font-medium">{category.leadingAgency}</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {category.totalJobs} total positions
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        );
+
+      case 'categories':
+        return (
+          <CategoryInsights 
+            metrics={metrics}
+            data={processedData}
+            filters={filters}
+          />
+        );
+
+      case 'temporal':
+        return (
+          <TemporalTrends 
+            data={processedData}
+            filters={filters}
+          />
+        );
+
+      case 'competitive':
+        return (
+          <CompetitiveIntel 
+            data={processedData}
+            filters={filters}
+          />
+        );
+
+      case 'benchmarking':
+        return (
+          <div className="space-y-8">
+            <div className="text-center py-16">
+              <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Agency Benchmarking</h3>
+              <p className="text-gray-600">Comprehensive agency performance comparison coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case 'summary':
+        return (
+          <ExecutiveSummary 
+            data={processedData}
+            filters={filters}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -167,310 +567,39 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             </div>
           </div>
 
-          {/* Key Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="metric-card">
-              <div className="metric-value">{metrics.totalJobs}</div>
-              <div className="metric-label">
-                <Briefcase className="h-4 w-4 mr-1" />
-                Total Positions
-              </div>
+          {/* Tab Navigation */}
+          <div className="bg-white rounded-lg shadow mb-8">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6" aria-label="Tabs">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${
+                      activeTab === tab.id
+                        ? 'border-un-blue text-un-blue'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                  >
+                    {tab.icon}
+                    <span className="hidden sm:inline">{tab.name}</span>
+                  </button>
+                ))}
+              </nav>
             </div>
-
-            <div className="metric-card">
-              <div className="metric-value">
-                {isAgencyView ? metrics.totalDepartments : metrics.totalAgencies}
-              </div>
-              <div className="metric-label">
-                <Building2 className="h-4 w-4 mr-1" />
-                {isAgencyView ? 'Departments' : 'Agencies'}
-              </div>
-            </div>
-
-            <div className="metric-card">
-              <div className="metric-value">{metrics.topCategories.length}</div>
-              <div className="metric-label">
-                <Target className="h-4 w-4 mr-1" />
-                Active Categories
-              </div>
-            </div>
-
-            <div className="metric-card">
-              <div className="metric-value">
-                {metrics.topCategories[0]?.percentage.toFixed(1)}%
-              </div>
-              <div className="metric-label">
-                <Award className="h-4 w-4 mr-1" />
-                Top Category Share
+            
+            {/* Tab descriptions */}
+            <div className="px-6 py-3 bg-gray-50">
+              <div className="text-sm text-gray-600">
+                {tabs.find(tab => tab.id === activeTab)?.description}
               </div>
             </div>
           </div>
 
-          {/* Main Dashboard Panels - Agency-Aware */}
-          {isAgencyView ? (
-            // AGENCY VIEW: Internal Analysis
-            <>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                {/* Agency Panel 1: Our Job Categories */}
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Target className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Our Hiring Focus</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">What we're hiring for</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        type="number" 
-                        domain={[0, 'dataMax']}
-                        tickFormatter={(value) => Math.round(value).toString()}
-                      />
-                      <YAxis 
-                        dataKey="category" 
-                        type="category" 
-                        width={150}
-                        fontSize={12}
-                      />
-                      <Tooltip 
-                        formatter={(value: any, name: any) => [`${value} positions`, 'Positions']}
-                        labelFormatter={(label: any) => {
-                          const item = topCategoriesChartData.find(d => d.category === label);
-                          return item?.fullCategory || label;
-                        }}
-                      />
-                      <Bar dataKey="jobs" radius={4}>
-                        {topCategoriesChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={getCategoryColor(entry.fullCategory)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Agency Panel 2: Our Department Breakdown */}
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Building2 className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Department Activity</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">Internal breakdown</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={agencyInsights?.departmentBreakdown || []} margin={{ bottom: 80 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="department" 
-                          fontSize={11}
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                        />
-                        <YAxis fontSize={12} />
-                        <Tooltip 
-                          formatter={(value: any, name: any) => [`${value} positions`, 'Positions']}
-                        />
-                        <Bar 
-                          dataKey="totalJobs" 
-                          fill="#009edb"
-                          name="Positions"
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* Agency Panel 3: Geographic & Grade Strategy */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Our Location Strategy</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">Where we hire</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={formatLocationData(agencyInsights?.locationStrategy || {})} layout="horizontal">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis 
-                          dataKey="location" 
-                          type="category" 
-                          width={120}
-                          fontSize={11}
-                        />
-                        <Tooltip formatter={(value: any) => [`${value} positions`, 'Positions']} />
-                        <Bar dataKey="count" fill="#10B981" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Award className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Our Grade Distribution</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">Seniority levels</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={formatGradeData(agencyInsights?.gradeDistribution || {})}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="grade" fontSize={12} />
-                        <YAxis fontSize={12} />
-                        <Tooltip formatter={(value: any) => [`${value} positions`, 'Positions']} />
-                        <Bar dataKey="count" fill="#8B5CF6" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            // MARKET VIEW: Cross-Agency Analysis
-            <>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-                {/* Market Panel 1: Overall Categories */}
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Target className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Market Hiring Trends</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">System-wide categories</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={topCategoriesChartData} layout="horizontal" margin={{ left: 20, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        type="number" 
-                        domain={[0, 'dataMax']}
-                        tickFormatter={(value) => Math.round(value).toString()}
-                      />
-                      <YAxis 
-                        dataKey="category" 
-                        type="category" 
-                        width={150}
-                        fontSize={12}
-                      />
-                      <Tooltip 
-                        formatter={(value: any, name: any) => [`${value} jobs`, 'Total positions']}
-                        labelFormatter={(label: any) => {
-                          const item = topCategoriesChartData.find(d => d.category === label);
-                          return item?.fullCategory || label;
-                        }}
-                      />
-                      <Bar dataKey="jobs" radius={4}>
-                        {topCategoriesChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={getCategoryColor(entry.fullCategory)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Market Panel 2: Agency Leaders */}
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Users className="h-6 w-6 text-un-blue" />
-                        <h3 className="text-lg font-semibold text-gray-900">Leading Agencies</h3>
-                      </div>
-                      <span className="text-sm text-gray-500">Most active hirers</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={marketInsights?.topAgencies || []} layout="horizontal">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis 
-                          dataKey="agency" 
-                          type="category" 
-                          width={100}
-                          fontSize={11}
-                        />
-                        <Tooltip formatter={(value: any) => [`${value} positions`, 'Total positions']} />
-                        <Bar dataKey="totalJobs" fill="#F59E0B" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* Market Panel 3: Category Leaders */}
-              <div className="bg-white rounded-lg shadow mb-8">
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Lightbulb className="h-6 w-6 text-un-blue" />
-                      <h3 className="text-lg font-semibold text-gray-900">Category Leadership</h3>
-                    </div>
-                    <span className="text-sm text-gray-500">Which agencies lead in what</span>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {marketInsights?.categoryLeaders.map((category, index) => (
-                      <div key={category.category} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: getCategoryColor(category.category) }}
-                          ></div>
-                          <h4 className="font-semibold text-gray-900">{category.category}</h4>
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          Led by: <span className="font-medium">{category.leadingAgency}</span>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {category.totalJobs} total positions
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Category Intelligence Component - Universal */}
-          <CategoryInsights 
-            metrics={metrics}
-            data={processedData}
-            filters={filters}
-          />
+          {/* Tab Content */}
+          <div className="tab-content">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
     </div>

@@ -353,8 +353,8 @@ export class JobAnalyticsProcessor {
       const skillDomain = this.determineSkillDomain(job);
       const seniorityLevel = this.determineSeniorityLevel(job.up_grade);
       const locationType = this.determineLocationType(job.duty_station, job.duty_country);
-      const gradeAnalysis = this.categorizeGradeLevel(job.up_grade);
-      const geoCluster = this.getGeographicCluster(job.duty_country, job.duty_continent);
+      const gradeAnalysis = this.categorizeGradeLevel(job.up_grade || '');
+      const geoCluster = this.getGeographicCluster(job.duty_country || '', job.duty_continent || '');
 
       // Debug first few jobs
       if (index < 3) {
@@ -461,7 +461,380 @@ export class JobAnalyticsProcessor {
     };
   }
 
-  private applyFilters(data: ProcessedJobData[], filters: FilterOptions): ProcessedJobData[] {
+  // Temporal analysis methods
+  calculateTemporalTrends(data: ProcessedJobData[], months: number = 12): {
+    agencyTimeSeries: { month: string; [agency: string]: any }[];
+    categoryTimeSeries: { month: string; [category: string]: any }[];
+    seasonalPatterns: { month: number; monthName: string; totalJobs: number; peakCategories: string[] }[];
+    emergingTrends: {
+      newCategories: { category: string; firstAppeared: string; growth: number }[];
+      decliningCategories: { category: string; decline: number; lastSeen: string }[];
+      velocityIndicators: { category: string; acceleration: number; trend: 'rising' | 'falling' | 'stable' }[];
+    };
+  } {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
+    
+    // Filter data to time range
+    const timeFilteredData = data.filter(job => {
+      const postingDate = new Date(job.posting_date);
+      return postingDate >= startDate;
+    });
+
+    // Agency time series
+    const agencyMonthMap = new Map<string, Map<string, number>>();
+    const categoryMonthMap = new Map<string, Map<string, number>>();
+    
+    timeFilteredData.forEach(job => {
+      const month = job.posting_month;
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      const category = job.primary_category;
+      
+      // Agency tracking
+      if (!agencyMonthMap.has(month)) {
+        agencyMonthMap.set(month, new Map());
+      }
+      const agencyData = agencyMonthMap.get(month)!;
+      agencyData.set(agency, (agencyData.get(agency) || 0) + 1);
+      
+      // Category tracking
+      if (!categoryMonthMap.has(month)) {
+        categoryMonthMap.set(month, new Map());
+      }
+      const categoryData = categoryMonthMap.get(month)!;
+      categoryData.set(category, (categoryData.get(category) || 0) + 1);
+    });
+
+    // Get top agencies for time series
+    const topAgencies = this.getTopAgencies(timeFilteredData, 5);
+    
+    // Build agency time series
+    const agencyTimeSeries = Array.from(agencyMonthMap.keys())
+      .sort()
+      .map(month => {
+        const monthData: any = { month };
+        const agencyData = agencyMonthMap.get(month)!;
+        
+        topAgencies.forEach(agency => {
+          monthData[agency] = agencyData.get(agency) || 0;
+        });
+        monthData.total = Array.from(agencyData.values()).reduce((sum, count) => sum + count, 0);
+        
+        return monthData;
+      });
+
+    // Build category time series
+    const topCategories = this.getTopCategories(timeFilteredData, 6);
+    const categoryTimeSeries = Array.from(categoryMonthMap.keys())
+      .sort()
+      .map(month => {
+        const monthData: any = { month };
+        const categoryData = categoryMonthMap.get(month)!;
+        
+        topCategories.forEach(category => {
+          monthData[category] = categoryData.get(category) || 0;
+        });
+        
+        return monthData;
+      });
+
+    // Seasonal patterns
+    const seasonalMap = new Map<number, { totalJobs: number; categories: Map<string, number> }>();
+    timeFilteredData.forEach(job => {
+      const postingDate = new Date(job.posting_date);
+      const month = postingDate.getMonth();
+      
+      if (!seasonalMap.has(month)) {
+        seasonalMap.set(month, { totalJobs: 0, categories: new Map() });
+      }
+      
+      const seasonal = seasonalMap.get(month)!;
+      seasonal.totalJobs++;
+      seasonal.categories.set(job.primary_category, (seasonal.categories.get(job.primary_category) || 0) + 1);
+    });
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const seasonalPatterns = Array.from(seasonalMap.entries())
+      .map(([month, data]) => ({
+        month,
+        monthName: monthNames[month],
+        totalJobs: data.totalJobs,
+        peakCategories: Array.from(data.categories.entries())
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 3)
+          .map(([category]) => category)
+      }))
+      .sort((a, b) => a.month - b.month);
+
+    // Emerging trends detection
+    const emergingTrends = this.detectEmergingTrends(timeFilteredData, months);
+
+    return {
+      agencyTimeSeries,
+      categoryTimeSeries,
+      seasonalPatterns,
+      emergingTrends
+    };
+  }
+
+  private getTopAgencies(data: ProcessedJobData[], limit: number): string[] {
+    const agencyCounts = new Map<string, number>();
+    data.forEach(job => {
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      agencyCounts.set(agency, (agencyCounts.get(agency) || 0) + 1);
+    });
+    
+    return Array.from(agencyCounts.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, limit)
+      .map(([agency]) => agency);
+  }
+
+  private getTopCategories(data: ProcessedJobData[], limit: number): string[] {
+    const categoryCounts = new Map<string, number>();
+    data.forEach(job => {
+      categoryCounts.set(job.primary_category, (categoryCounts.get(job.primary_category) || 0) + 1);
+    });
+    
+    return Array.from(categoryCounts.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, limit)
+      .map(([category]) => category);
+  }
+
+  private detectEmergingTrends(data: ProcessedJobData[], months: number): {
+    newCategories: { category: string; firstAppeared: string; growth: number }[];
+    decliningCategories: { category: string; decline: number; lastSeen: string }[];
+    velocityIndicators: { category: string; acceleration: number; trend: 'rising' | 'falling' | 'stable' }[];
+  } {
+    // Split data into periods for comparison
+    const now = new Date();
+    const midPoint = new Date(now.getFullYear(), now.getMonth() - Math.floor(months / 2), 1);
+    
+    const recentData = data.filter(job => new Date(job.posting_date) >= midPoint);
+    const earlierData = data.filter(job => new Date(job.posting_date) < midPoint);
+    
+    const recentCategories = new Map<string, { count: number; firstSeen: string }>();
+    const earlierCategories = new Map<string, number>();
+    
+    // Count recent categories
+    recentData.forEach(job => {
+      const category = job.primary_category;
+      if (!recentCategories.has(category)) {
+        recentCategories.set(category, { count: 0, firstSeen: job.posting_month });
+      }
+      const existing = recentCategories.get(category)!;
+      existing.count++;
+      if (job.posting_month < existing.firstSeen) {
+        existing.firstSeen = job.posting_month;
+      }
+    });
+    
+    // Count earlier categories
+    earlierData.forEach(job => {
+      const category = job.primary_category;
+      earlierCategories.set(category, (earlierCategories.get(category) || 0) + 1);
+    });
+
+    // Detect new categories
+    const newCategories = Array.from(recentCategories.entries())
+      .filter(([category]) => !earlierCategories.has(category))
+      .map(([category, data]) => ({
+        category,
+        firstAppeared: data.firstSeen,
+        growth: data.count
+      }))
+      .sort((a, b) => b.growth - a.growth);
+
+    // Detect declining categories
+    const decliningCategories = Array.from(earlierCategories.entries())
+      .filter(([category]) => {
+        const recentCount = recentCategories.get(category)?.count || 0;
+        const decline = ((earlierCategories.get(category)! - recentCount) / earlierCategories.get(category)!) * 100;
+        return decline > 50; // 50% decline threshold
+      })
+      .map(([category, earlierCount]) => {
+        const recentCount = recentCategories.get(category)?.count || 0;
+        const lastSeen = recentCount > 0 ? recentCategories.get(category)!.firstSeen : 'Not recently seen';
+        return {
+          category,
+          decline: ((earlierCount - recentCount) / earlierCount) * 100,
+          lastSeen
+        };
+      })
+      .sort((a, b) => b.decline - a.decline);
+
+    // Calculate velocity indicators
+    const velocityIndicators = Array.from(recentCategories.entries())
+      .filter(([category]) => earlierCategories.has(category))
+      .map(([category, recentData]) => {
+        const recentCount = recentData.count;
+        const earlierCount = earlierCategories.get(category)!;
+        const growth = ((recentCount - earlierCount) / earlierCount) * 100;
+        
+        let trend: 'rising' | 'falling' | 'stable' = 'stable';
+        if (growth > 25) trend = 'rising';
+        else if (growth < -25) trend = 'falling';
+        
+        return {
+          category,
+          acceleration: Math.abs(growth),
+          trend
+        };
+      })
+      .sort((a, b) => b.acceleration - a.acceleration);
+
+    return {
+      newCategories: newCategories.slice(0, 5),
+      decliningCategories: decliningCategories.slice(0, 5),
+      velocityIndicators: velocityIndicators.slice(0, 10)
+    };
+  }
+
+  // Competitive analysis methods
+  calculateCompetitiveIntelligence(data: ProcessedJobData[]): {
+    agencyPositioning: { agency: string; volume: number; diversity: number; marketShare: number }[];
+    categoryDominance: { category: string; leadingAgency: string; marketShare: number; competition: number }[];
+    talentOverlap: { 
+      agencies: [string, string]; 
+      overlapScore: number; 
+      commonCategories: string[]; 
+      commonLocations: string[] 
+    }[];
+    competitiveIntensity: { category: string; location: string; agencyCount: number; intensity: 'High' | 'Medium' | 'Low' }[];
+  } {
+    // Agency positioning analysis
+    const agencyMap = new Map<string, { 
+      jobs: ProcessedJobData[]; 
+      categories: Set<string>; 
+      locations: Set<string> 
+    }>();
+    
+    data.forEach(job => {
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      if (!agencyMap.has(agency)) {
+        agencyMap.set(agency, { jobs: [], categories: new Set(), locations: new Set() });
+      }
+      const agencyData = agencyMap.get(agency)!;
+      agencyData.jobs.push(job);
+      agencyData.categories.add(job.primary_category);
+      agencyData.locations.add(job.duty_country || 'Unknown');
+    });
+
+    const totalJobs = data.length;
+    const agencyPositioning = Array.from(agencyMap.entries())
+      .map(([agency, agencyData]) => ({
+        agency,
+        volume: agencyData.jobs.length,
+        diversity: agencyData.categories.size,
+        marketShare: (agencyData.jobs.length / totalJobs) * 100
+      }))
+      .sort((a, b) => b.volume - a.volume);
+
+    // Category dominance
+    const categoryAgencyMap = new Map<string, Map<string, number>>();
+    data.forEach(job => {
+      const category = job.primary_category;
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      if (!categoryAgencyMap.has(category)) {
+        categoryAgencyMap.set(category, new Map());
+      }
+      const agencies = categoryAgencyMap.get(category)!;
+      agencies.set(agency, (agencies.get(agency) || 0) + 1);
+    });
+
+    const categoryDominance = Array.from(categoryAgencyMap.entries())
+      .map(([category, agencies]) => {
+        const totalCategoryJobs = Array.from(agencies.values()).reduce((sum, count) => sum + count, 0);
+        const sortedAgencies = Array.from(agencies.entries()).sort(([,a], [,b]) => b - a);
+        const leadingAgency = sortedAgencies[0][0];
+        const leadingCount = sortedAgencies[0][1];
+        
+        return {
+          category,
+          leadingAgency,
+          marketShare: (leadingCount / totalCategoryJobs) * 100,
+          competition: agencies.size
+        };
+      })
+      .sort((a, b) => b.marketShare - a.marketShare);
+
+    // Talent overlap analysis
+    const agencies = Array.from(agencyMap.keys()).slice(0, 10); // Top 10 agencies
+    const talentOverlap: {
+      agencies: [string, string];
+      overlapScore: number;
+      commonCategories: string[];
+      commonLocations: string[];
+    }[] = [];
+
+    for (let i = 0; i < agencies.length; i++) {
+      for (let j = i + 1; j < agencies.length; j++) {
+        const agency1Data = agencyMap.get(agencies[i])!;
+        const agency2Data = agencyMap.get(agencies[j])!;
+        
+        const commonCategories = Array.from(agency1Data.categories)
+          .filter(cat => agency2Data.categories.has(cat));
+        const commonLocations = Array.from(agency1Data.locations)
+          .filter(loc => agency2Data.locations.has(loc));
+        
+        const overlapScore = (commonCategories.length + commonLocations.length) / 
+          (agency1Data.categories.size + agency1Data.locations.size + 
+           agency2Data.categories.size + agency2Data.locations.size - 
+           commonCategories.length - commonLocations.length) * 100;
+        
+        if (overlapScore > 10) { // Only include significant overlaps
+          talentOverlap.push({
+            agencies: [agencies[i], agencies[j]],
+            overlapScore,
+            commonCategories,
+            commonLocations
+          });
+        }
+      }
+    }
+
+    // Competitive intensity
+    const competitionMap = new Map<string, Map<string, Set<string>>>();
+    data.forEach(job => {
+      const category = job.primary_category;
+      const location = job.duty_country || 'Unknown';
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      
+      if (!competitionMap.has(category)) {
+        competitionMap.set(category, new Map());
+      }
+      const categoryData = competitionMap.get(category)!;
+      if (!categoryData.has(location)) {
+        categoryData.set(location, new Set());
+      }
+      categoryData.get(location)!.add(agency);
+    });
+
+    const competitiveIntensity = Array.from(competitionMap.entries())
+      .flatMap(([category, locations]) => 
+        Array.from(locations.entries()).map(([location, agencies]) => {
+          const agencyCount = agencies.size;
+          let intensity: 'High' | 'Medium' | 'Low' = 'Low';
+          if (agencyCount >= 5) intensity = 'High';
+          else if (agencyCount >= 3) intensity = 'Medium';
+          
+          return { category, location, agencyCount, intensity };
+        })
+      )
+      .filter(item => item.agencyCount > 1)
+      .sort((a, b) => b.agencyCount - a.agencyCount);
+
+    return {
+      agencyPositioning,
+      categoryDominance,
+      talentOverlap: talentOverlap.sort((a, b) => b.overlapScore - a.overlapScore),
+      competitiveIntensity
+    };
+  }
+
+  applyFilters(data: ProcessedJobData[], filters: FilterOptions): ProcessedJobData[] {
     let filtered = [...data];
 
     // Agency filter
