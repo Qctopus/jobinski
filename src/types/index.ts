@@ -45,6 +45,14 @@ export interface ProcessedJobData extends JobData {
   posting_month: string;
   posting_year: number;
   posting_quarter: string;
+  // Enhanced location & grade analytics (for upcoming location/grade components)
+  grade_level: 'Entry' | 'Mid' | 'Senior' | 'Executive' | 'Consultant' | 'Other';
+  grade_numeric: number;
+  is_consultant: boolean;
+  geographic_region: string;
+  geographic_subregion: string;
+  is_conflict_zone: boolean;
+  is_developing_country: boolean;
 }
 
 export interface JobCategory {

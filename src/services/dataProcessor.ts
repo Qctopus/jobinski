@@ -204,26 +204,114 @@ export class JobAnalyticsProcessor {
     return 'Mid'; // Default
   }
 
-  // Determine location type
-  determineLocationType(dutyStation: string): 'Headquarters' | 'Regional' | 'Field' | 'Home-based' {
+  // Enhanced location type determination for upcoming location analytics
+  determineLocationType(dutyStation: string, dutyCountry?: string): 'Headquarters' | 'Regional' | 'Field' | 'Home-based' {
     const station = dutyStation.toLowerCase();
+    const country = (dutyCountry || '').toLowerCase();
     
     if (station.includes('home based') || station.includes('remote') || station.includes('telecommuting')) {
       return 'Home-based';
     }
     
-    // Major UN headquarters
+    // Major UN headquarters locations
     const hqLocations = ['new york', 'geneva', 'vienna', 'nairobi', 'bangkok', 'addis ababa', 'beirut', 'santiago'];
-    if (hqLocations.some(hq => station.includes(hq))) {
+    if (hqLocations.some(hq => station.includes(hq) || country.includes(hq))) {
       return 'Headquarters';
     }
     
-    // Regional indicators
-    if (station.includes('regional') || station.includes('hub')) {
+    // Regional hubs and offices
+    if (station.includes('regional') || station.includes('hub') || 
+        station.includes('multi-country') || station.includes('sub-regional')) {
       return 'Regional';
     }
     
     return 'Field';
+  }
+
+  // Enhanced grade analysis for upcoming grade analytics
+  categorizeGradeLevel(grade: string): {
+    level: 'Entry' | 'Mid' | 'Senior' | 'Executive' | 'Consultant' | 'Other';
+    numeric: number;
+    isConsultant: boolean;
+  } {
+    if (!grade) return { level: 'Other', numeric: 0, isConsultant: false };
+    
+    const gradeUpper = grade.toUpperCase();
+    
+    // Consultant positions
+    if (gradeUpper.includes('CONSULTANT') || gradeUpper.includes('IC') || 
+        gradeUpper.includes('RETAINER') || gradeUpper.includes('SC')) {
+      return { level: 'Consultant', numeric: 0, isConsultant: true };
+    }
+    
+    // UN Professional grades
+    if (gradeUpper.includes('P1') || gradeUpper.includes('P2')) {
+      return { level: 'Entry', numeric: gradeUpper.includes('P1') ? 1 : 2, isConsultant: false };
+    }
+    if (gradeUpper.includes('P3') || gradeUpper.includes('P4')) {
+      return { level: 'Mid', numeric: gradeUpper.includes('P3') ? 3 : 4, isConsultant: false };
+    }
+    if (gradeUpper.includes('P5') || gradeUpper.includes('P6') || gradeUpper.includes('L6') || gradeUpper.includes('L7')) {
+      return { level: 'Senior', numeric: gradeUpper.includes('P5') ? 5 : 6, isConsultant: false };
+    }
+    if (gradeUpper.includes('D1') || gradeUpper.includes('D2') || gradeUpper.includes('ASG') || gradeUpper.includes('USG')) {
+      return { level: 'Executive', numeric: gradeUpper.includes('D1') ? 7 : 8, isConsultant: false };
+    }
+
+    // General service grades
+    if (gradeUpper.includes('G1') || gradeUpper.includes('G2') || gradeUpper.includes('G3')) {
+      return { level: 'Entry', numeric: 1, isConsultant: false };
+    }
+    if (gradeUpper.includes('G4') || gradeUpper.includes('G5') || gradeUpper.includes('G6')) {
+      return { level: 'Mid', numeric: 3, isConsultant: false };
+    }
+    if (gradeUpper.includes('G7') || gradeUpper.includes('G8')) {
+      return { level: 'Senior', numeric: 5, isConsultant: false };
+    }
+
+    // National Officer grades  
+    if (gradeUpper.includes('NOA') || gradeUpper.includes('NOB')) {
+      return { level: 'Entry', numeric: 1, isConsultant: false };
+    }
+    if (gradeUpper.includes('NOC') || gradeUpper.includes('NOD')) {
+      return { level: 'Mid', numeric: 3, isConsultant: false };
+    }
+
+    return { level: 'Other', numeric: 0, isConsultant: false };
+  }
+
+  // Geographic clustering for location analytics
+  getGeographicCluster(dutyCountry: string, dutyContinent: string): {
+    region: string;
+    subRegion: string;
+    isConflictZone: boolean;
+    isDevelopingCountry: boolean;
+  } {
+    const country = (dutyCountry || '').toLowerCase();
+    const continent = (dutyContinent || '').toLowerCase();
+    
+    // Simplified regional mapping - can be enhanced with real data
+    const conflictZones = ['afghanistan', 'syria', 'yemen', 'south sudan', 'somalia', 'libya'];
+    const developedCountries = ['united states', 'switzerland', 'austria', 'denmark', 'norway', 'canada', 'australia'];
+    
+    let region = continent || 'Unknown';
+    let subRegion = 'Other';
+    
+    if (continent === 'africa') {
+      if (['kenya', 'ethiopia', 'uganda'].includes(country)) subRegion = 'East Africa';
+      else if (['senegal', 'mali', 'burkina faso'].includes(country)) subRegion = 'West Africa';
+      else if (['south africa', 'botswana', 'zambia'].includes(country)) subRegion = 'Southern Africa';
+    } else if (continent === 'asia') {
+      if (['thailand', 'philippines', 'vietnam'].includes(country)) subRegion = 'Southeast Asia';
+      else if (['afghanistan', 'bangladesh', 'nepal'].includes(country)) subRegion = 'South Asia';
+    }
+    
+    return {
+      region,
+      subRegion,
+      isConflictZone: conflictZones.includes(country),
+      isDevelopingCountry: !developedCountries.includes(country)
+    };
   }
 
   // Process job data with enhanced analytics
@@ -264,7 +352,9 @@ export class JobAnalyticsProcessor {
       const categories = this.categorizeJob(job);
       const skillDomain = this.determineSkillDomain(job);
       const seniorityLevel = this.determineSeniorityLevel(job.up_grade);
-      const locationType = this.determineLocationType(job.duty_station);
+      const locationType = this.determineLocationType(job.duty_station, job.duty_country);
+      const gradeAnalysis = this.categorizeGradeLevel(job.up_grade);
+      const geoCluster = this.getGeographicCluster(job.duty_country, job.duty_continent);
 
       // Debug first few jobs
       if (index < 3) {
@@ -291,7 +381,15 @@ export class JobAnalyticsProcessor {
         location_type: locationType,
         posting_month: format(postingDate, 'yyyy-MM'),
         posting_year: postingDate.getFullYear(),
-        posting_quarter: `${postingDate.getFullYear()}-Q${Math.floor(postingDate.getMonth() / 3) + 1}`
+        posting_quarter: `${postingDate.getFullYear()}-Q${Math.floor(postingDate.getMonth() / 3) + 1}`,
+        // Enhanced location & grade analytics
+        grade_level: gradeAnalysis.level,
+        grade_numeric: gradeAnalysis.numeric,
+        is_consultant: gradeAnalysis.isConsultant,
+        geographic_region: geoCluster.region,
+        geographic_subregion: geoCluster.subRegion,
+        is_conflict_zone: geoCluster.isConflictZone,
+        is_developing_country: geoCluster.isDevelopingCountry
       };
     });
 
