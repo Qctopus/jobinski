@@ -65,8 +65,55 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
       competitiveAnalysis.agencyPositioning.find(a => a.agency === agency)
     ).filter(Boolean);
     
-    return agencyData;
-  }, [selectedAgencies, competitiveAnalysis.agencyPositioning]);
+    // Find overlap data between selected agencies
+    const overlaps = competitiveAnalysis.talentOverlap.filter(overlap => 
+      selectedAgencies.includes(overlap.agencies[0]) && selectedAgencies.includes(overlap.agencies[1])
+    );
+    
+    // Get detailed agency data from original data
+    const detailedAgencyData = selectedAgencies.map(agency => {
+      const agencyJobs = data.filter(job => {
+        const jobAgency = job.short_agency || job.long_agency || 'Unknown';
+        return jobAgency === agency;
+      });
+      
+      // Count jobs per category and country for proper ranking
+      const categoryCount = new Map<string, number>();
+      const countryCount = new Map<string, number>();
+      
+      agencyJobs.forEach(job => {
+        const category = job.primary_category;
+        const country = job.duty_country;
+        
+        categoryCount.set(category, (categoryCount.get(category) || 0) + 1);
+        if (country) {
+          countryCount.set(country, (countryCount.get(country) || 0) + 1);
+        }
+      });
+      
+      // Sort by job count and get top 5
+      const topCategories = Array.from(categoryCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([category, count]) => ({ name: category, count }));
+        
+      const topCountries = Array.from(countryCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([country, count]) => ({ name: country, count }));
+      
+      return {
+        agency,
+        topCategories,
+        topCountries,
+        totalCategories: categoryCount.size,
+        totalCountries: countryCount.size,
+        totalJobs: agencyJobs.length
+      };
+    });
+    
+    return { agencyData, overlaps, detailedAgencyData };
+  }, [selectedAgencies, competitiveAnalysis.agencyPositioning, competitiveAnalysis.talentOverlap, data]);
 
   // Market share pie chart data
   const marketShareData = useMemo(() => {
@@ -338,55 +385,63 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
         <div className="space-y-8">
           {/* Agency Positioning Analysis */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Volume vs Diversity Scatter */}
+        {/* Agency Market Position Rankings */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Target className="h-6 w-6 text-un-blue" />
-                <h3 className="text-lg font-semibold text-gray-900">Agency Positioning</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Market Leaders</h3>
               </div>
-              <span className="text-sm text-gray-500">Volume vs Diversity</span>
+              <span className="text-sm text-gray-500">Top agencies by hiring volume</span>
             </div>
           </div>
           
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={400}>
-              <ScatterChart data={competitiveAnalysis.agencyPositioning.slice(0, 15)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  type="number" 
-                  dataKey="diversity" 
-                  name="Role Diversity"
-                  label={{ value: 'Role Diversity (# categories)', position: 'insideBottom', offset: -10 }}
-                />
-                <YAxis 
-                  type="number" 
-                  dataKey="volume" 
-                  name="Job Volume"
-                  label={{ value: 'Job Volume', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip 
-                  cursor={{ strokeDasharray: '3 3' }}
-                  formatter={(value: any, name: any) => [
-                    name === 'diversity' ? `${value} categories` : `${value} jobs`,
-                    name === 'diversity' ? 'Role Diversity' : 'Job Volume'
-                  ]}
-                  labelFormatter={(label: any, payload: any) => {
-                    if (payload && payload[0]) {
-                      const data = payload[0].payload;
-                      return `${data.agency} (${data.marketShare.toFixed(1)}% market share)`;
-                    }
-                    return label;
-                  }}
-                />
-                <Scatter 
-                  dataKey="volume" 
-                  fill="#009edb"
-                  r={6}
-                />
-              </ScatterChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {competitiveAnalysis.agencyPositioning.slice(0, 8).map((agency, index) => (
+                <div key={agency.agency} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
+                      index === 0 ? 'bg-yellow-500' : 
+                      index === 1 ? 'bg-gray-400' : 
+                      index === 2 ? 'bg-yellow-600' : 
+                      'bg-gray-300'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">
+                        {agency.agency}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {agency.diversity} job categories • {agency.volume} total jobs
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-un-blue">
+                      {agency.marketShare.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-500">market share</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Market Concentration Insight */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <div className="font-medium text-blue-900 mb-1">Market Concentration</div>
+                  <div className="text-sm text-blue-800">
+                    Top 3 agencies control {(competitiveAnalysis.agencyPositioning.slice(0, 3).reduce((sum, agency) => sum + agency.marketShare, 0)).toFixed(1)}% 
+                    of the market. {competitiveAnalysis.agencyPositioning[0].marketShare > 20 ? 'Highly concentrated market with clear leader.' : 'Moderately fragmented market with opportunities.'}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -456,46 +511,198 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
             ))}
           </div>
 
-          {headToHeadData && headToHeadData.length >= 2 && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900">Metric</th>
-                    {headToHeadData.map(agency => (
-                      <th key={agency?.agency} className="text-center py-3 px-4 font-semibold text-gray-900">
-                        {agency?.agency}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-4 font-medium">Total Job Volume</td>
-                    {headToHeadData.map(agency => (
-                      <td key={agency?.agency} className="py-3 px-4 text-center">
-                        {agency?.volume}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <td className="py-3 px-4 font-medium">Role Diversity</td>
-                    {headToHeadData.map(agency => (
-                      <td key={agency?.agency} className="py-3 px-4 text-center">
-                        {agency?.diversity} categories
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 px-4 font-medium">Market Share</td>
-                    {headToHeadData.map(agency => (
-                      <td key={agency?.agency} className="py-3 px-4 text-center font-semibold text-un-blue">
-                        {agency?.marketShare.toFixed(1)}%
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
+          {headToHeadData && headToHeadData.agencyData.length >= 2 && (
+            <div className="space-y-8">
+              {/* Basic Metrics Comparison */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900">Metric</th>
+                      {headToHeadData.agencyData.map(agency => (
+                        <th key={agency?.agency} className="text-center py-3 px-4 font-semibold text-gray-900">
+                          {agency?.agency}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 px-4 font-medium">Total Job Volume</td>
+                      {headToHeadData.agencyData.map(agency => (
+                        <td key={agency?.agency} className="py-3 px-4 text-center">
+                          {agency?.volume}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <td className="py-3 px-4 font-medium">Role Diversity</td>
+                      {headToHeadData.agencyData.map(agency => (
+                        <td key={agency?.agency} className="py-3 px-4 text-center">
+                          {agency?.diversity} categories
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 px-4 font-medium">Market Share</td>
+                      {headToHeadData.agencyData.map(agency => (
+                        <td key={agency?.agency} className="py-3 px-4 text-center font-semibold text-un-blue">
+                          {agency?.marketShare.toFixed(1)}%
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Geographic Presence */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  Geographic Presence
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {headToHeadData.detailedAgencyData.map(agency => (
+                    <div key={agency.agency} className="bg-white rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-medium text-gray-900">{agency.agency}</h5>
+                        <span className="text-sm text-blue-600 font-medium">
+                          {agency.totalCountries} countries
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">Top 5 hiring locations:</div>
+                      <div className="space-y-2">
+                        {agency.topCountries.map((country, index) => (
+                          <div key={country.name} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center justify-center font-medium">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm text-gray-700">{country.name}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">{country.count} jobs</span>
+                          </div>
+                        ))}
+                      </div>
+                      {agency.totalCountries > 5 && (
+                        <div className="text-xs text-gray-500 mt-2 text-center">
+                          +{agency.totalCountries - 5} other countries
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sector Competition - Show overlap focus */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-green-600" />
+                  Category Competition Overview
+                </h4>
+                
+                {/* Show overlapping categories prominently */}
+                {headToHeadData.overlaps.length > 0 && (
+                  <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <h5 className="font-medium text-yellow-800 mb-2">🔥 Direct Competition Categories</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {headToHeadData.overlaps[0].commonCategories.slice(0, 8).map(category => (
+                        <span key={category} className="px-3 py-1 bg-yellow-200 text-yellow-800 text-sm rounded-full">
+                          {category.length > 20 ? category.substring(0, 17) + '...' : category}
+                        </span>
+                      ))}
+                      {headToHeadData.overlaps[0].commonCategories.length > 8 && (
+                        <span className="px-3 py-1 bg-yellow-100 text-yellow-600 text-sm rounded-full">
+                          +{headToHeadData.overlaps[0].commonCategories.length - 8} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {headToHeadData.detailedAgencyData.map(agency => (
+                    <div key={agency.agency} className="bg-white rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-medium text-gray-900">{agency.agency}</h5>
+                        <span className="text-sm text-green-600 font-medium">
+                          {agency.totalCategories} categories
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">Top 5 hiring categories:</div>
+                      <div className="space-y-2">
+                        {agency.topCategories.map((category, index) => (
+                          <div key={category.name} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 bg-green-100 text-green-800 text-xs rounded-full flex items-center justify-center font-medium">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm text-gray-700">
+                                {category.name.length > 20 ? category.name.substring(0, 17) + '...' : category.name}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">{category.count} jobs</span>
+                          </div>
+                        ))}
+                      </div>
+                      {agency.totalCategories > 5 && (
+                        <div className="text-xs text-gray-500 mt-2 text-center">
+                          +{agency.totalCategories - 5} other categories
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Competition Overlap Analysis */}
+              {headToHeadData.overlaps.length > 0 && (
+                <div className="bg-yellow-50 rounded-lg p-6 border-l-4 border-yellow-400">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-yellow-600" />
+                    Direct Competition Analysis
+                  </h4>
+                  {headToHeadData.overlaps.map(overlap => (
+                    <div key={`${overlap.agencies[0]}-${overlap.agencies[1]}`} className="mb-4 last:mb-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-gray-900">
+                          {overlap.agencies[0]} vs {overlap.agencies[1]}
+                        </div>
+                        <div className="text-lg font-bold text-yellow-600">
+                          {overlap.overlapScore.toFixed(1)}% overlap
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="font-medium text-gray-700 mb-1">Competing in {overlap.commonCategories.length} sectors:</div>
+                          <div className="text-gray-600">
+                            {overlap.commonCategories.slice(0, 3).join(', ')}
+                            {overlap.commonCategories.length > 3 && ` (+${overlap.commonCategories.length - 3} more)`}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-700 mb-1">Competing in {overlap.commonLocations.length} countries:</div>
+                          <div className="text-gray-600">
+                            {overlap.commonLocations.slice(0, 3).join(', ')}
+                            {overlap.commonLocations.length > 3 && ` (+${overlap.commonLocations.length - 3} more)`}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* HR Strategic Insights */}
+                  <div className="mt-4 p-3 bg-white rounded border border-yellow-200">
+                    <div className="font-medium text-yellow-800 mb-2">💡 Strategic HR Insights</div>
+                    <ul className="text-sm text-yellow-700 space-y-1">
+                      <li>• Monitor salary benchmarks in overlapping categories to stay competitive</li>
+                      <li>• Consider talent pipeline strategies in shared geographic markets</li>
+                      <li>• Leverage unique categories/locations for differentiated recruitment</li>
+                      <li>• Track competitor hiring patterns in high-overlap areas</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -504,144 +711,188 @@ const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) =>
       {/* Category Dominance */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Target className="h-6 w-6 text-un-blue" />
-            <h3 className="text-lg font-semibold text-gray-900">Category Dominance</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Target className="h-6 w-6 text-un-blue" />
+              <h3 className="text-lg font-semibold text-gray-900">Top 5 Category Leaders</h3>
+            </div>
+            <span className="text-sm text-gray-500">Largest job categories by market share</span>
           </div>
         </div>
         
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {competitiveAnalysis.categoryDominance.slice(0, 9).map((category, index) => (
-              <div key={category.category} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: getCategoryColor(category.category) }}
-                  ></div>
-                  <h4 className="font-semibold text-gray-900">
-                    {category.category.length > 25 ? category.category.substring(0, 22) + '...' : category.category}
-                  </h4>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Leader:</span>
-                    <span className="font-medium text-un-blue">{category.leadingAgency}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Market Share:</span>
-                    <span className="font-semibold">{category.marketShare.toFixed(1)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Competition:</span>
-                    <span className="text-sm">{category.competition} agencies</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Talent Overlap Analysis */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Eye className="h-6 w-6 text-un-blue" />
-            <h3 className="text-lg font-semibold text-gray-900">Talent Overlap Analysis</h3>
-          </div>
-        </div>
-        
-        <div className="p-6">
+          {/* Market Share Rankings */}
           <div className="space-y-4">
-            {competitiveAnalysis.talentOverlap.slice(0, 8).map((overlap, index) => (
-              <div key={`${overlap.agencies[0]}-${overlap.agencies[1]}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            {competitiveAnalysis.categoryDominance.slice(0, 5).map((category, index) => (
+              <div key={category.category} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{overlap.agencies[0]}</span>
-                    <ArrowRight className="h-4 w-4 text-gray-400" />
-                    <span className="font-medium text-gray-900">{overlap.agencies[1]}</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
+                    index === 0 ? 'bg-yellow-500' : 
+                    index === 1 ? 'bg-gray-400' : 
+                    index === 2 ? 'bg-yellow-600' : 
+                    'bg-gray-300'
+                  }`}>
+                    {index + 1}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {overlap.commonCategories.length} common categories, {overlap.commonLocations.length} common locations
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full" 
+                      style={{ backgroundColor: getCategoryColor(category.category) }}
+                    ></div>
+                    <div>
+                      <div className="font-semibold text-gray-900">
+                        {category.category}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Led by <span className="font-medium text-un-blue">{category.leadingAgency}</span> • {category.competition} competing agencies
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-un-blue">
-                    {overlap.overlapScore.toFixed(1)}%
+                  <div className="text-xl font-bold text-un-blue">
+                    {category.marketShare.toFixed(1)}%
                   </div>
-                  <div className="text-xs text-gray-500">overlap score</div>
+                  <div className="text-xs text-gray-500">market share</div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Market Insights */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="font-medium text-green-900">Fragmented Categories</div>
+              </div>
+              <div className="text-sm text-green-800 mb-2">
+                {competitiveAnalysis.categoryDominance.filter(cat => cat.marketShare < 30 && cat.competition > 3).length} categories 
+                with no dominant leader:
+              </div>
+              <div className="text-xs text-green-700">
+                {competitiveAnalysis.categoryDominance
+                  .filter(cat => cat.marketShare < 30 && cat.competition > 3)
+                  .slice(0, 3)
+                  .map(cat => cat.category.length > 20 ? cat.category.substring(0, 17) + '...' : cat.category)
+                  .join(', ')}
+                {competitiveAnalysis.categoryDominance.filter(cat => cat.marketShare < 30 && cat.competition > 3).length > 3 && '...'}
+              </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="font-medium text-blue-900">Market Leadership</div>
+              </div>
+              <div className="text-sm text-blue-800">
+                {(() => {
+                  // Calculate proper proportions based on job counts
+                  const totalJobs = data.length;
+                  const top5Categories = competitiveAnalysis.categoryDominance.slice(0, 5);
+                  const top5JobCount = top5Categories.reduce((sum, cat) => {
+                    const categoryJobs = data.filter(job => job.primary_category === cat.category).length;
+                    return sum + categoryJobs;
+                  }, 0);
+                  const percentage = (top5JobCount / totalJobs * 100).toFixed(1);
+                  return `Top 5 categories represent ${percentage}% of total hiring activity`;
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Category Performance Breakdown */}
+          <div className="mt-6">
+            <h4 className="font-semibold text-gray-900 mb-4">Competition Intensity Overview</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">
+                  {competitiveAnalysis.categoryDominance.filter(cat => cat.competition >= 5).length}
+                </div>
+                <div className="text-sm text-red-700">High Competition</div>
+                <div className="text-xs text-red-600">5+ agencies</div>
+              </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {competitiveAnalysis.categoryDominance.filter(cat => cat.competition >= 3 && cat.competition < 5).length}
+                </div>
+                <div className="text-sm text-yellow-700">Medium Competition</div>
+                <div className="text-xs text-yellow-600">3-4 agencies</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {competitiveAnalysis.categoryDominance.filter(cat => cat.competition < 3).length}
+                </div>
+                <div className="text-sm text-green-700">Low Competition</div>
+                <div className="text-xs text-green-600">&lt;3 agencies</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Competitive Intensity Heat Map */}
+
+
+      {/* Market Intelligence Summary */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Zap className="h-6 w-6 text-un-blue" />
-            <h3 className="text-lg font-semibold text-gray-900">Competitive Intensity</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Market Intelligence Summary</h3>
           </div>
         </div>
         
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* High Competition Areas */}
+            {/* High Competition Hotspots */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">High Competition Zones</h4>
-              <div className="space-y-3">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                Competitive Hotspots
+              </h4>
+              <div className="space-y-2">
                 {competitiveAnalysis.competitiveIntensity
                   .filter(item => item.intensity === 'High')
-                  .slice(0, 6)
+                  .slice(0, 5)
                   .map((item, index) => (
-                  <div key={`${item.category}-${item.location}`} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {item.category.length > 30 ? item.category.substring(0, 27) + '...' : item.category}
+                  <div key={`${item.category}-${item.location}`} className="flex items-center justify-between p-2 bg-red-50 rounded">
+                    <div className="text-sm">
+                      <div className="font-medium text-red-900">
+                        {item.category.length > 25 ? item.category.substring(0, 22) + '...' : item.category}
                       </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-1">
+                      <div className="text-xs text-red-700 flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {item.location}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-red-600">
-                        {item.agencyCount} agencies
-                      </div>
-                      <div className="text-xs text-red-500">High intensity</div>
-                    </div>
+                    <span className="text-sm font-semibold text-red-600">{item.agencyCount} agencies</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Medium Competition Areas */}
+            {/* Strategic Opportunities */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Medium Competition Zones</h4>
-              <div className="space-y-3">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                Strategic Opportunities
+              </h4>
+              <div className="space-y-2">
                 {competitiveAnalysis.competitiveIntensity
-                  .filter(item => item.intensity === 'Medium')
-                  .slice(0, 6)
+                  .filter(item => item.intensity === 'Low')
+                  .slice(0, 5)
                   .map((item, index) => (
-                  <div key={`${item.category}-${item.location}`} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {item.category.length > 30 ? item.category.substring(0, 27) + '...' : item.category}
+                  <div key={`${item.category}-${item.location}`} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                    <div className="text-sm">
+                      <div className="font-medium text-green-900">
+                        {item.category.length > 25 ? item.category.substring(0, 22) + '...' : item.category}
                       </div>
-                      <div className="text-sm text-gray-600 flex items-center gap-1">
+                      <div className="text-xs text-green-700 flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         {item.location}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-yellow-600">
-                        {item.agencyCount} agencies
-                      </div>
-                      <div className="text-xs text-yellow-500">Medium intensity</div>
-                    </div>
+                    <span className="text-sm font-semibold text-green-600">{item.agencyCount} agencies</span>
                   </div>
                 ))}
               </div>

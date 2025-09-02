@@ -34,7 +34,7 @@
   }
   
   .metric-label {
-    @apply text-sm text-gray-600 uppercase tracking-wide;
+    @apply text-sm text-gray-600 uppercase tracking-wide flex items-center justify-center gap-1;
   }
   
   .insight-card {

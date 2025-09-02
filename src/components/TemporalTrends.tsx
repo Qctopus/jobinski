@@ -73,50 +73,123 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
 
       {/* Key Temporal Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="metric-card">
-          <div className="metric-value">
-            {temporalAnalysis.emergingTrends.newCategories.length}
+        {/* Market Growth Rate */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <TrendingUp className="h-5 w-5 text-un-blue" />
+            <div className={`text-2xl font-bold ${(() => {
+              const recentTotal = temporalAnalysis.agencyTimeSeries.slice(-3).reduce((sum, month) => sum + (month.total || 0), 0);
+              const earlierTotal = temporalAnalysis.agencyTimeSeries.slice(0, 3).reduce((sum, month) => sum + (month.total || 0), 0);
+              const growthRate = earlierTotal > 0 ? ((recentTotal - earlierTotal) / earlierTotal * 100) : 0;
+              return growthRate > 0 ? 'text-green-600' : growthRate < 0 ? 'text-red-600' : 'text-gray-600';
+            })()}`}>
+              {(() => {
+                const recentTotal = temporalAnalysis.agencyTimeSeries.slice(-3).reduce((sum, month) => sum + (month.total || 0), 0);
+                const earlierTotal = temporalAnalysis.agencyTimeSeries.slice(0, 3).reduce((sum, month) => sum + (month.total || 0), 0);
+                const growthRate = earlierTotal > 0 ? ((recentTotal - earlierTotal) / earlierTotal * 100) : 0;
+                return growthRate > 0 ? `+${growthRate.toFixed(1)}%` : `${growthRate.toFixed(1)}%`;
+              })()}
+            </div>
           </div>
-          <div className="metric-label">
-            <Zap className="h-4 w-4 mr-1" />
-            New Categories
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            {isAgencyView ? 'Agency Growth' : 'Market Growth'}
+          </div>
+          <div className="text-xs text-gray-500">
+            {isAgencyView ? 'vs. previous quarter' : 'Overall hiring trend'}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-value">
-            {temporalAnalysis.emergingTrends.velocityIndicators.filter(v => v.trend === 'rising').length}
+        {/* Most Active Category */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <Zap className="h-5 w-5 text-yellow-600" />
+            <div className="text-right">
+              <div className="text-lg font-semibold text-gray-900">
+                {(() => {
+                  if (temporalAnalysis.categoryTimeSeries.length === 0) return 'No data';
+                  const recentMonth = temporalAnalysis.categoryTimeSeries[temporalAnalysis.categoryTimeSeries.length - 1];
+                  const categories = Object.entries(recentMonth).filter(([key]) => key !== 'month');
+                  if (categories.length === 0) return 'No data';
+                  const topCategory = categories.reduce((max, curr) => curr[1] > max[1] ? curr : max);
+                  return `${topCategory[1]} jobs`;
+                })()}
+              </div>
+            </div>
           </div>
-          <div className="metric-label">
-            <TrendingUp className="h-4 w-4 mr-1" />
-            Rising Trends
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Top Category
+          </div>
+          <div className="text-xs text-gray-500 leading-tight">
+            {(() => {
+              if (temporalAnalysis.categoryTimeSeries.length === 0) return 'No data available';
+              const recentMonth = temporalAnalysis.categoryTimeSeries[temporalAnalysis.categoryTimeSeries.length - 1];
+              const categories = Object.entries(recentMonth).filter(([key]) => key !== 'month');
+              if (categories.length === 0) return 'No data available';
+              const topCategory = categories.reduce((max, curr) => curr[1] > max[1] ? curr : max);
+              return topCategory[0];
+            })()}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-value">
+        {/* Peak Season Info */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            <div className="text-2xl font-bold text-blue-600">
+              {temporalAnalysis.seasonalPatterns.length > 0 
+                ? temporalAnalysis.seasonalPatterns.reduce((max, month) => 
+                    month.totalJobs > max.totalJobs ? month : max, temporalAnalysis.seasonalPatterns[0]).monthName
+                : 'N/A'
+              }
+            </div>
+          </div>
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Peak Season
+          </div>
+          <div className="text-xs text-gray-500">
             {temporalAnalysis.seasonalPatterns.length > 0 
-              ? temporalAnalysis.seasonalPatterns.reduce((max, month) => 
-                  month.totalJobs > max.totalJobs ? month : max, temporalAnalysis.seasonalPatterns[0]).monthName
-              : 'N/A'
+              ? `${temporalAnalysis.seasonalPatterns.reduce((max, month) => 
+                  month.totalJobs > max.totalJobs ? month : max, temporalAnalysis.seasonalPatterns[0]).totalJobs} avg jobs`
+              : 'Historical average'
             }
           </div>
-          <div className="metric-label">
-            <Calendar className="h-4 w-4 mr-1" />
-            Peak Hiring Month
-          </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-value">
-            {temporalAnalysis.emergingTrends.velocityIndicators.length > 0
-              ? Math.round(temporalAnalysis.emergingTrends.velocityIndicators[0].acceleration)
-              : 0
-            }%
+        {/* Fastest Growing */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <Eye className="h-5 w-5 text-green-600" />
+            <div className="text-right">
+              <div className="text-lg font-semibold text-green-600">
+                {(() => {
+                  const fastestGrowing = temporalAnalysis.emergingTrends.velocityIndicators
+                    .filter(v => v.trend === 'rising')
+                    .sort((a, b) => b.acceleration - a.acceleration)[0];
+                  
+                  if (!fastestGrowing) return 'No growth';
+                  
+                  const displayVelocity = Math.min(fastestGrowing.acceleration, 500);
+                  if (fastestGrowing.acceleration > 500) {
+                    return '500%+';
+                  }
+                  return `+${displayVelocity.toFixed(0)}%`;
+                })()}
+              </div>
+            </div>
           </div>
-          <div className="metric-label">
-            <Eye className="h-4 w-4 mr-1" />
-            Top Velocity
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Fastest Growing
+          </div>
+          <div className="text-xs text-gray-500 leading-tight">
+            {(() => {
+              const fastestGrowing = temporalAnalysis.emergingTrends.velocityIndicators
+                .filter(v => v.trend === 'rising')
+                .sort((a, b) => b.acceleration - a.acceleration)[0];
+              
+              if (!fastestGrowing) return 'All categories stable';
+              
+              return fastestGrowing.category;
+            })()}
           </div>
         </div>
       </div>
