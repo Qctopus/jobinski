@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Target, Users, Zap, Eye, ArrowRight, Award, MapPin, Briefcase } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
+import { JOB_CATEGORIES } from '../services/dataProcessor';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 interface CompetitiveIntelProps {
   data: ProcessedJobData[];
@@ -11,16 +12,14 @@ interface CompetitiveIntelProps {
 
 const CompetitiveIntel: React.FC<CompetitiveIntelProps> = ({ data, filters }) => {
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
+  
+  // Use shared hook for common dashboard data
+  const { processor, isAgencyView, selectedAgencyName } = useDashboardData(data, filters);
   
   // Always use unfiltered data for competitive analysis with Secretariat breakdown
   const competitiveAnalysis = useMemo(() => {
     return processor.calculateCompetitiveIntelligence(data, true);
   }, [data, processor]);
-
-  // Determine if we're in agency-specific view
-  const isAgencyView = filters.selectedAgency !== 'all';
-  const selectedAgencyName = filters.selectedAgency;
 
   // If in agency view, filter competitive data to show relevant context
   const agencyContextualData = useMemo(() => {

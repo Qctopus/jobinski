@@ -1,14 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, RadarChart, Radar,
-  PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter
+  LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { 
   TrendingUp, Award, Users, Globe, MapPin, Clock, 
-  Zap, Target, Brain, BookOpen, Calendar, Briefcase,
-  ChevronRight, Search, Filter, ArrowUp, ArrowDown,
-  AlertTriangle
+  Zap, Target, Brain, BookOpen, Briefcase,
+  ArrowUp, ArrowDown, AlertTriangle,
+  Lightbulb, Star, Activity, BarChart3
 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JobAnalyticsProcessor } from '../services/dataProcessor';
@@ -18,83 +17,56 @@ interface SkillsProps {
   filters: FilterOptions;
 }
 
-type SkillsTab = 'demand' | 'progression' | 'emerging' | 'geographic' | 'benchmarking' | 'intelligence';
-
 const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
-  const [selectedTab, setSelectedTab] = useState<SkillsTab>('demand');
-  const [selectedSkillFilter, setSelectedSkillFilter] = useState('all');
   const processor = useMemo(() => new JobAnalyticsProcessor(), []);
 
   const isAgencyView = filters.selectedAgency !== 'all';
   const filteredData = useMemo(() => processor.applyFilters(data, filters), [data, filters, processor]);
 
-  // Define types for the skills analysis
-  interface SkillDemandData {
-    skill: string;
-    count: number;
-    agencies: number;
-    locations: number;
-    avgGrade: number;
-    demandLevel: 'High' | 'Medium' | 'Low';
-    category: string;
-    gradeDistribution: Array<{ grade: string; count: number }>;
-  }
-
-  interface SkillsAnalysisType {
-    skillDemand: {
-      topSkills: SkillDemandData[];
-      byCategory: any;
-      demandTrends: any;
-      criticalSkills: SkillDemandData[];
-    };
-    careerProgression: any;
-    emergingSkills: any;
-    geographicDistribution: any;
-    agencyBenchmarking: any;
-    skillIntelligence: any;
-  }
-
-  // Comprehensive skills analysis
-  const skillsAnalysis: SkillsAnalysisType = useMemo(() => {
-    const analysis: SkillsAnalysisType = {
-      skillDemand: calculateSkillDemand(),
-      careerProgression: calculateCareerProgression(),
-      emergingSkills: calculateEmergingSkills(),
-      geographicDistribution: calculateGeographicDistribution(),
-      agencyBenchmarking: calculateAgencyBenchmarking(),
-      skillIntelligence: calculateSkillIntelligence()
-    };
-    return analysis;
-  }, [filteredData]);
-
-  function calculateSkillDemand(): any {
+  // Enhanced skills analysis using real CSV data
+  const skillsAnalysis = useMemo(() => {
+    console.log('Analyzing skills for', filteredData.length, 'jobs');
+    
+    // Extract skills from job_labels field - this is our primary data source
     const skillFrequency = new Map<string, {
       count: number;
       agencies: Set<string>;
-      grades: Map<string, number>;
       locations: Set<string>;
-      avgSalaryGrade: number;
-      recentTrend: number;
+      jobIds: Set<string>;
+      grades: string[];
+      years: number[];
+      recentCount: number;
+      olderCount: number;
     }>();
 
+    const currentYear = new Date().getFullYear();
+    
     filteredData.forEach(job => {
       if (!job.job_labels) return;
       
-      const skills = job.job_labels.split(',').map(s => s.trim()).filter(s => s.length > 2);
+      // Parse skills from comma-separated job_labels
+      const skills = job.job_labels
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 1 && !s.toLowerCase().includes('unknown'));
+      
       const agency = job.short_agency || job.long_agency || 'Unknown';
-      const grade = job.up_grade || 'Unknown';
       const location = job.duty_country || 'Unknown';
-      const gradeNumeric = job.grade_numeric || 0;
+      const grade = job.up_grade || 'Unknown';
+      const year = job.posting_year || currentYear;
+      const isRecent = year >= currentYear - 1;
 
       skills.forEach(skill => {
         if (!skillFrequency.has(skill)) {
           skillFrequency.set(skill, {
             count: 0,
             agencies: new Set(),
-            grades: new Map(),
             locations: new Set(),
-            avgSalaryGrade: 0,
-            recentTrend: 0
+            jobIds: new Set(),
+            grades: [],
+            years: [],
+            recentCount: 0,
+            olderCount: 0
           });
         }
         
@@ -102,73 +74,76 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
         skillData.count++;
         skillData.agencies.add(agency);
         skillData.locations.add(location);
-        skillData.grades.set(grade, (skillData.grades.get(grade) || 0) + 1);
-        skillData.avgSalaryGrade += gradeNumeric;
+        skillData.jobIds.add(job.id);
+        skillData.grades.push(grade);
+        skillData.years.push(year);
+        
+        if (isRecent) {
+          skillData.recentCount++;
+        } else {
+          skillData.olderCount++;
+        }
       });
     });
 
-    // Calculate averages and trends
-    const skillDemandData = Array.from(skillFrequency.entries()).map(([skill, data]) => {
-      const avgGrade = data.count > 0 ? data.avgSalaryGrade / data.count : 0;
-      
-      // Calculate demand level based on frequency and spread
-      let demandLevel: 'High' | 'Medium' | 'Low' = 'Low';
-      if (data.count > 50 && data.agencies.size > 3) demandLevel = 'High';
-      else if (data.count > 20 && data.agencies.size > 2) demandLevel = 'Medium';
+    // Process into analysis structure
+    const allSkills = Array.from(skillFrequency.entries())
+      .map(([skill, data]) => {
+        // Real scarcity: high demand (many positions) but concentrated in few agencies
+        const demandToAgencyRatio = data.agencies.size > 0 ? data.count / data.agencies.size : 0;
+        const scarcityIndex = demandToAgencyRatio > 10 ? Math.min(100, (demandToAgencyRatio - 10) * 5) : 0;
+        const growth = data.olderCount > 0 ? ((data.recentCount - data.olderCount) / data.olderCount) * 100 : 
+                       data.recentCount > 0 ? 100 : 0;
+        
+        return {
+          skill,
+          count: data.count,
+          agencies: data.agencies.size,
+          locations: data.locations.size,
+          frequency: (data.count / filteredData.length) * 100,
+          scarcityIndex: Math.round(scarcityIndex),
+          growthRate: Math.round(growth),
+          isDigital: isDigitalSkill(skill),
+          isEmerging: growth > 50 && data.recentCount >= 2,
+          uniqueJobs: data.jobIds.size,
+          avgGrade: calculateAvgGrade(data.grades)
+        };
+      })
+      .filter(skill => skill.count >= 2) // Filter out rare skills
+      .sort((a, b) => b.count - a.count);
 
-      // Determine skill category
-      const skillLower = skill.toLowerCase();
-      let category = 'General';
-      if (skillLower.includes('digital') || skillLower.includes('technology') || skillLower.includes('data')) {
-        category = 'Digital & Technology';
-      } else if (skillLower.includes('management') || skillLower.includes('leadership')) {
-        category = 'Leadership & Management';
-      } else if (skillLower.includes('communication') || skillLower.includes('language')) {
-        category = 'Communication';
-      } else if (skillLower.includes('analysis') || skillLower.includes('research')) {
-        category = 'Analytical';
-      }
-
-      return {
-        skill,
-        count: data.count,
-        agencies: data.agencies.size,
-        locations: data.locations.size,
-        avgGrade: Math.round(avgGrade * 10) / 10,
-        demandLevel,
-        category,
-        gradeDistribution: Array.from(data.grades.entries())
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 5)
-          .map(([grade, count]) => ({ grade, count }))
-      };
-    }).sort((a, b) => b.count - a.count);
+    console.log('Processed', allSkills.length, 'skills from', filteredData.length, 'jobs');
 
     return {
-      topSkills: skillDemandData.slice(0, 20),
-      byCategory: groupByCategory(skillDemandData.slice(0, 100)),
-      demandTrends: calculateDemandTrends(skillDemandData.slice(0, 50)),
-      criticalSkills: skillDemandData.filter(s => s.demandLevel === 'High').slice(0, 15)
+      topSkills: allSkills.slice(0, 15),
+      allSkills,
+      digitalSkills: allSkills.filter(s => s.isDigital).slice(0, 8),
+      talentCompetition: calculateTalentCompetition(allSkills, filteredData),
+      skillTrends: calculateSkillTrends(filteredData),
+      emergingSkills: allSkills.filter(s => s.isEmerging).slice(0, 8),
+      skillsByCategory: categorizeSkills(filteredData)
     };
-  }
+  }, [filteredData]);
 
-  function calculateCareerProgression(): any {
-    const gradeGroups = {
-      'Entry (P1-P2)': (job: ProcessedJobData) => ['P1', 'P2', 'G1', 'G2', 'G3'].some(g => job.up_grade?.includes(g)),
-      'Mid (P3-P4)': (job: ProcessedJobData) => ['P3', 'P4', 'G4', 'G5', 'G6'].some(g => job.up_grade?.includes(g)),
-      'Senior (P5+)': (job: ProcessedJobData) => ['P5', 'P6', 'D1', 'D2', 'L6', 'L7'].some(g => job.up_grade?.includes(g))
+  // Career progression analysis with real data
+  const careerProgression = useMemo(() => {
+    const gradeMapping = {
+      'Entry Level': (grade: string) => ['P1', 'P2', 'G1', 'G2', 'G3', 'NOA', 'NOB'].some(g => grade?.includes(g)),
+      'Mid Level': (grade: string) => ['P3', 'P4', 'G4', 'G5', 'G6', 'NOC', 'NOD'].some(g => grade?.includes(g)),
+      'Senior Level': (grade: string) => ['P5', 'P6', 'G7', 'G8', 'L6', 'L7'].some(g => grade?.includes(g)),
+      'Executive': (grade: string) => ['D1', 'D2', 'ASG', 'USG'].some(g => grade?.includes(g))
     };
 
-    const gradeSkills = Object.fromEntries(
-      Object.entries(gradeGroups).map(([grade, filter]) => {
-        const jobs = filteredData.filter(filter);
+    const progressionData = Object.fromEntries(
+      Object.entries(gradeMapping).map(([level, gradeFilter]) => {
+        const levelJobs = filteredData.filter(job => gradeFilter(job.up_grade || ''));
         const skillCounts = new Map<string, number>();
         
-        jobs.forEach(job => {
+        levelJobs.forEach(job => {
           if (job.job_labels) {
             job.job_labels.split(',').forEach(skill => {
               const cleanSkill = skill.trim();
-              if (cleanSkill.length > 2) {
+              if (cleanSkill.length > 1) {
                 skillCounts.set(cleanSkill, (skillCounts.get(cleanSkill) || 0) + 1);
               }
             });
@@ -177,166 +152,332 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
 
         const topSkills = Array.from(skillCounts.entries())
           .sort(([,a], [,b]) => b - a)
-          .slice(0, 10)
+          .slice(0, 6)
           .map(([skill, count]) => ({
             skill,
             count,
-            percentage: Math.round((count / jobs.length) * 100)
+            percentage: levelJobs.length > 0 ? Math.round((count / levelJobs.length) * 100) : 0
           }));
 
-        return [grade, {
-          totalJobs: jobs.length,
-          topSkills,
-          avgExperience: jobs.reduce((sum, job) => sum + (job.relevant_experience || 0), 0) / jobs.length
-        }];
+        return [level, { totalJobs: levelJobs.length, topSkills }];
       })
     );
 
-    // Identify skills that grow with career progression
-    const progressionSkills = identifyProgressionSkills(gradeSkills);
-    const competencyGaps = identifyCompetencyGaps(gradeSkills);
+    return progressionData;
+  }, [filteredData]);
 
-    return {
-      gradeSkills,
-      progressionSkills,
-      competencyGaps,
-      skillEvolution: calculateSkillEvolution(gradeSkills)
-    };
-  }
-
-  function calculateEmergingSkills(): any {
-    const currentYear = new Date().getFullYear();
-    const recentJobs = filteredData.filter(job => job.posting_year >= currentYear - 1);
-    const olderJobs = filteredData.filter(job => job.posting_year < currentYear - 1);
-
-    const recentSkills = extractSkillCounts(recentJobs);
-    const olderSkills = extractSkillCounts(olderJobs);
-
-    const emergingSkills = Array.from(recentSkills.entries())
-      .map(([skill, recentCount]) => {
-        const olderCount = olderSkills.get(skill) || 0;
-        const growth = olderCount > 0 ? ((recentCount - olderCount) / olderCount) * 100 : 100;
-        
-        return {
-          skill,
-          recentCount,
-          olderCount,
-          growth: Math.round(growth),
-          isNew: olderCount === 0,
-          velocity: recentCount / Math.max(recentJobs.length, 1) * 100
-        };
-      })
-      .filter(item => item.growth > 0 || item.isNew)
-      .sort((a, b) => b.growth - a.growth);
-
-    const decliningSkills = Array.from(olderSkills.entries())
-      .filter(([skill]) => !recentSkills.has(skill) || recentSkills.get(skill)! < olderSkills.get(skill)! * 0.5)
-      .map(([skill, count]) => ({
-        skill,
-        previousCount: count,
-        currentCount: recentSkills.get(skill) || 0,
-        decline: Math.round(((count - (recentSkills.get(skill) || 0)) / count) * 100)
-      }))
-      .sort((a, b) => b.decline - a.decline);
-
-    return {
-      emerging: emergingSkills.slice(0, 15),
-      declining: decliningSkills.slice(0, 10),
-      newSkills: emergingSkills.filter(s => s.isNew).slice(0, 8),
-      fastestGrowing: emergingSkills.filter(s => !s.isNew && s.growth > 50).slice(0, 12)
-    };
-  }
-
-  function calculateGeographicDistribution(): any {
-    const locationSkills = new Map<string, Map<string, number>>();
+  // Geographic distribution with real location data
+  const geographicDistribution = useMemo(() => {
+    const locationSkills = new Map<string, { skills: Map<string, number>; totalJobs: number }>();
     
     filteredData.forEach(job => {
       if (!job.job_labels || !job.duty_country) return;
       
       const location = job.duty_country;
       if (!locationSkills.has(location)) {
-        locationSkills.set(location, new Map());
+        locationSkills.set(location, { skills: new Map(), totalJobs: 0 });
       }
       
-      const skillMap = locationSkills.get(location)!;
+      const locationData = locationSkills.get(location)!;
+      locationData.totalJobs++;
+      
       job.job_labels.split(',').forEach(skill => {
         const cleanSkill = skill.trim();
-        if (cleanSkill.length > 2) {
-          skillMap.set(cleanSkill, (skillMap.get(cleanSkill) || 0) + 1);
+        if (cleanSkill.length > 1) {
+          locationData.skills.set(cleanSkill, (locationData.skills.get(cleanSkill) || 0) + 1);
         }
       });
     });
 
-    const locationData = Array.from(locationSkills.entries())
-      .filter(([, skills]) => skills.size > 0)
-      .map(([location, skills]) => {
-        const totalJobs = Array.from(skills.values()).reduce((sum, count) => sum + count, 0);
-        const topSkills = Array.from(skills.entries())
+    return Array.from(locationSkills.entries())
+      .filter(([, data]) => data.totalJobs >= 3) // Only locations with meaningful data
+      .map(([location, data]) => {
+        const topSkills = Array.from(data.skills.entries())
           .sort(([,a], [,b]) => b - a)
-          .slice(0, 5)
-          .map(([skill, count]) => ({ skill, count, percentage: (count / totalJobs) * 100 }));
+          .slice(0, 3)
+          .map(([skill, count]) => ({ 
+            skill, 
+            count, 
+            percentage: Math.round((count / data.totalJobs) * 100) 
+          }));
         
         return {
           location,
-          totalJobs,
-          skillCount: skills.size,
+          totalJobs: data.totalJobs,
           topSkills,
-          specialization: topSkills[0]?.percentage || 0
+          skillDiversity: data.skills.size
         };
       })
-      .sort((a, b) => b.totalJobs - a.totalJobs);
+      .sort((a, b) => b.totalJobs - a.totalJobs)
+      .slice(0, 12);
+  }, [filteredData]);
 
-    return {
-      locationData: locationData.slice(0, 20),
-      skillClusters: identifySkillClusters(locationSkills),
-      regionalSpecializations: identifyRegionalSpecializations(locationData)
-    };
-  }
-
-  function calculateAgencyBenchmarking(): any {
+  // Agency comparison analysis
+  const agencyAnalysis = useMemo(() => {
     if (isAgencyView) {
-      // For agency view, show how this agency compares to others
-      return compareAgencySkills();
+      // Single agency view - compare to market
+      const agencySkills = extractSkillCounts(filteredData);
+      const marketSkills = extractSkillCounts(data);
+      
+      const comparison = Array.from(agencySkills.entries())
+        .map(([skill, agencyCount]) => {
+          const marketCount = marketSkills.get(skill) || 0;
+          const agencyShare = (agencyCount / filteredData.length) * 100;
+          const marketShare = marketCount > 0 ? (marketCount / data.length) * 100 : 0;
+          const isStrength = agencyShare > marketShare;
+          
+          return {
+            skill,
+            agencyCount,
+            marketCount,
+            agencyShare: Math.round(agencyShare * 10) / 10,
+            marketShare: Math.round(marketShare * 10) / 10,
+            isStrength,
+            gap: Math.round(Math.abs(agencyShare - marketShare) * 10) / 10
+          };
+        })
+        .sort((a, b) => b.agencyCount - a.agencyCount);
+      
+      return {
+        isAgencyView: true,
+        agencyName: filters.selectedAgency,
+        strengths: comparison.filter(s => s.isStrength && s.gap > 1).slice(0, 6),
+        gaps: comparison.filter(s => !s.isStrength && s.gap > 1).slice(0, 6),
+        topSkills: comparison.slice(0, 8)
+      };
     } else {
-      // For market view, show cross-agency skill patterns
-      return analyzeAgencySkillPatterns();
+      // Market view - show agency specializations
+      const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
+      
+      return {
+        isAgencyView: false,
+        agencySpecializations: agencies
+          .map(agency => {
+            const agencyJobs = data.filter(job => (job.short_agency || job.long_agency) === agency);
+            if (agencyJobs.length < 5) return null; // Filter small agencies
+            
+            const skills = extractSkillCounts(agencyJobs);
+            const topSkills = Array.from(skills.entries())
+              .sort(([,a], [,b]) => b - a)
+              .slice(0, 4)
+              .map(([skill, count]) => ({ skill, count }));
+            
+            return {
+              agency,
+              totalJobs: agencyJobs.length,
+              topSkills
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => b!.totalJobs - a!.totalJobs)
+          .slice(0, 8)
+      };
     }
-  }
+  }, [filteredData, data, isAgencyView, filters.selectedAgency]);
 
-  function calculateSkillIntelligence(): any {
-    const analysis = {
-      skillGaps: identifySkillGaps(),
-      futureSkills: predictFutureSkills(),
-      recruitmentInsights: generateRecruitmentInsights(),
-      talentCompetition: analyzeTalentCompetition()
-    };
-    
-    return analysis;
-  }
+  // Language analysis using real data
+  const languageAnalysis = useMemo(() => {
+    return processor.analyzeLanguageRequirements(filteredData);
+  }, [filteredData, processor]);
 
   // Helper functions
-  function groupByCategory(skills: any[]) {
-    const categories = new Map<string, any[]>();
-    skills.forEach(skill => {
-      if (!categories.has(skill.category)) {
-        categories.set(skill.category, []);
-      }
-      categories.get(skill.category)!.push(skill);
-    });
-    return Array.from(categories.entries()).map(([category, skills]) => ({
-      category,
-      skills: skills.slice(0, 8),
-      totalDemand: skills.reduce((sum, s) => sum + s.count, 0)
-    }));
+  function isDigitalSkill(skill: string): boolean {
+    const digitalKeywords = ['digital', 'technology', 'data', 'software', 'analytics', 'programming', 'innovation', 'ai', 'machine learning', 'cybersecurity', 'automation'];
+    return digitalKeywords.some(keyword => skill.toLowerCase().includes(keyword));
   }
 
-  function calculateDemandTrends(skills: any[]) {
-    // Simplified trend calculation - in real implementation would use time series
-    return skills.map(skill => ({
-      skill: skill.skill,
-      trend: Math.random() > 0.5 ? 'rising' : 'stable',
-      velocity: Math.floor(Math.random() * 50)
-    }));
+  function calculateAvgGrade(grades: string[]): number {
+    const gradeValues: { [key: string]: number } = {
+      'P1': 1, 'P2': 2, 'P3': 3, 'P4': 4, 'P5': 5, 'P6': 6,
+      'G1': 1, 'G2': 2, 'G3': 3, 'G4': 4, 'G5': 5, 'G6': 6, 'G7': 7, 'G8': 8,
+      'D1': 7, 'D2': 8, 'NOA': 1, 'NOB': 2, 'NOC': 3, 'NOD': 4
+    };
+    
+    const validGrades = grades.filter(g => Object.keys(gradeValues).some(gv => g?.includes(gv)));
+    if (validGrades.length === 0) return 0;
+    
+    const total = validGrades.reduce((sum, grade) => {
+      const gradeKey = Object.keys(gradeValues).find(gv => grade.includes(gv));
+      return sum + (gradeKey ? gradeValues[gradeKey] : 0);
+    }, 0);
+    
+    return Math.round((total / validGrades.length) * 10) / 10;
+  }
+
+  function calculateTalentCompetition(skills: any[], jobs: ProcessedJobData[]) {
+    return skills.slice(0, 10).map(skill => {
+      // Find jobs requiring this skill
+      const skillJobs = jobs.filter(job => 
+        job.job_labels?.toLowerCase().includes(skill.skill.toLowerCase())
+      );
+      
+      // Get all grade levels for this skill
+      const skillGradeCounts = new Map<string, number>();
+      skillJobs.forEach(job => {
+        const grade = job.up_grade || '';
+        if (grade.trim()) {
+          skillGradeCounts.set(grade, (skillGradeCounts.get(grade) || 0) + 1);
+        }
+      });
+      
+      // Find most common grade
+      let mostCommonGrade = 'N/A';
+      let maxCount = 0;
+      skillGradeCounts.forEach((count, grade) => {
+        if (count > maxCount) {
+          maxCount = count;
+          mostCommonGrade = grade;
+        }
+      });
+      
+      // Calculate grade distribution percentage for most common grade
+      const gradeDistribution = skillJobs.length > 0 ? 
+        Math.round((maxCount / skillJobs.length) * 100) : 0;
+      
+      // Calculate urgency based on application window
+      const urgentJobs = skillJobs.filter(job => {
+        return job.application_window_days && job.application_window_days <= 21;
+      }).length;
+      
+      const urgencyRate = skillJobs.length > 0 ? 
+        Math.round((urgentJobs / skillJobs.length) * 100) : 0;
+      
+      // Calculate market heat (multiple agencies competing)
+      const competitionLevel = skill.agencies >= 5 ? 'High' : 
+                              skill.agencies >= 3 ? 'Medium' : 'Low';
+      
+      return {
+        skill: skill.skill,
+        positions: skill.count,
+        agencies: skill.agencies,
+        mostCommonGrade,
+        gradeDistribution,
+        urgencyRate,
+        competitionLevel
+      };
+    });
+  }
+
+  function calculateSkillTrends(jobs: ProcessedJobData[]) {
+    // Group jobs by year and skill
+    const skillsByYear = new Map<number, Map<string, number>>();
+    
+    jobs.forEach(job => {
+      const year = job.posting_year;
+      if (!year || !job.job_labels) return;
+      
+      if (!skillsByYear.has(year)) {
+        skillsByYear.set(year, new Map());
+      }
+      
+      const yearMap = skillsByYear.get(year)!;
+      const skills = job.job_labels.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 2);
+      
+      skills.forEach(skill => {
+        yearMap.set(skill, (yearMap.get(skill) || 0) + 1);
+      });
+    });
+    
+    // Calculate trends for top skills
+    const allYears = Array.from(skillsByYear.keys()).sort();
+    if (allYears.length < 2) return [];
+    
+    const firstYear = allYears[0];
+    const lastYear = allYears[allYears.length - 1];
+    
+    // Get skills that appear in both first and last year
+    const firstYearSkills = skillsByYear.get(firstYear) || new Map();
+    const lastYearSkills = skillsByYear.get(lastYear) || new Map();
+    
+    const trends: any[] = [];
+    
+    // Calculate growth for skills present in multiple years
+    firstYearSkills.forEach((firstCount, skill) => {
+      const lastCount = lastYearSkills.get(skill) || 0;
+      if (firstCount >= 5 && (lastCount > 0 || firstCount > 0)) { // Only include significant skills
+        const growthRate = firstCount > 0 ? 
+          Math.round(((lastCount - firstCount) / firstCount) * 100) : 0;
+        
+        trends.push({
+          skill,
+          firstYear,
+          lastYear,
+          firstYearCount: firstCount,
+          lastYearCount: lastCount,
+          growthRate,
+          totalPositions: firstCount + lastCount,
+          trend: growthRate > 20 ? 'Rising' : growthRate < -20 ? 'Declining' : 'Stable'
+        });
+      }
+    });
+    
+    // Also check for new skills (only in last year)
+    lastYearSkills.forEach((lastCount, skill) => {
+      if (!firstYearSkills.has(skill) && lastCount >= 3) {
+        trends.push({
+          skill,
+          firstYear,
+          lastYear,
+          firstYearCount: 0,
+          lastYearCount: lastCount,
+          growthRate: 999, // Mark as new
+          totalPositions: lastCount,
+          trend: 'Emerging'
+        });
+      }
+    });
+    
+    return trends
+      .sort((a, b) => Math.abs(b.growthRate) - Math.abs(a.growthRate))
+      .slice(0, 12);
+  }
+
+  function categorizeSkills(allJobs: ProcessedJobData[]) {
+    const categories = {
+      'Digital & Technology': ['digital', 'technology', 'data', 'software', 'analytics', 'programming', 'innovation', 'ai'],
+      'Leadership & Management': ['management', 'leadership', 'strategy', 'coordination', 'supervision', 'governance'],
+      'Communication & Advocacy': ['communication', 'advocacy', 'outreach', 'reporting', 'presentation', 'media'],
+      'Technical & Analytical': ['analysis', 'research', 'evaluation', 'assessment', 'monitoring', 'technical'],
+      'Operations & Administration': ['operations', 'logistics', 'administration', 'planning', 'implementation', 'support']
+    };
+    
+    // Count unique jobs per category (no double counting)
+    return Object.entries(categories).map(([categoryName, keywords]) => {
+      const categoryJobs = new Set<string>();
+      const categorySkills = new Map<string, number>();
+      
+      allJobs.forEach(job => {
+        if (!job.job_labels) return;
+        
+        const jobSkills = job.job_labels.split(',').map(s => s.trim().toLowerCase());
+        const hasRelevantSkill = jobSkills.some(skill => 
+          keywords.some(keyword => skill.includes(keyword))
+        );
+        
+        if (hasRelevantSkill) {
+          categoryJobs.add(job.id); // Count unique jobs only
+          
+          // Track individual skills within this category
+          jobSkills.forEach(skill => {
+            if (keywords.some(keyword => skill.includes(keyword))) {
+              categorySkills.set(skill, (categorySkills.get(skill) || 0) + 1);
+            }
+          });
+        }
+      });
+      
+      const topSkills = Array.from(categorySkills.entries())
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 6)
+        .map(([skill, count]) => ({ skill, count }));
+      
+      return {
+        category: categoryName,
+        totalPositions: categoryJobs.size, // Unique job count
+        skills: topSkills,
+        avgGrowth: 0 // Remove misleading growth calculation
+      };
+    }).filter(cat => cat.totalPositions > 0);
   }
 
   function extractSkillCounts(jobs: ProcessedJobData[]) {
@@ -345,7 +486,7 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
       if (job.job_labels) {
         job.job_labels.split(',').forEach(skill => {
           const cleanSkill = skill.trim();
-          if (cleanSkill.length > 2) {
+          if (cleanSkill.length > 1) {
             skillCounts.set(cleanSkill, (skillCounts.get(cleanSkill) || 0) + 1);
           }
         });
@@ -354,1090 +495,26 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
     return skillCounts;
   }
 
-  function identifyProgressionSkills(gradeSkills: any) {
-    const allGrades = Object.keys(gradeSkills);
-    const progressionSkills: any[] = [];
-    
-    // Find skills that appear more frequently at higher grades
-    const entrySkills = new Map<string, number>(gradeSkills['Entry (P1-P2)']?.topSkills.map((s: any) => [s.skill, s.percentage]) || []);
-    const seniorSkills = new Map<string, number>(gradeSkills['Senior (P5+)']?.topSkills.map((s: any) => [s.skill, s.percentage]) || []);
-    
-    seniorSkills.forEach((seniorPct: number, skill: string) => {
-      const entryPct = entrySkills.get(skill) || 0;
-      if (seniorPct > entryPct + 10) {
-        progressionSkills.push({
-          skill,
-          entryLevel: entryPct,
-          seniorLevel: seniorPct,
-          growth: seniorPct - entryPct
-        });
-      }
-    });
-    
-    return progressionSkills.sort((a, b) => b.growth - a.growth).slice(0, 10);
-  }
-
-  function identifyCompetencyGaps(gradeSkills: any) {
-    // Identify skills that are common at senior level but rare at entry
-    const gaps: any[] = [];
-    const seniorSkills = gradeSkills['Senior (P5+)']?.topSkills || [];
-    const entrySkills = new Set(gradeSkills['Entry (P1-P2)']?.topSkills.map((s: any) => s.skill) || []);
-    
-    seniorSkills.forEach((skill: any) => {
-      if (!entrySkills.has(skill.skill) && skill.percentage > 20) {
-        gaps.push({
-          skill: skill.skill,
-          seniorDemand: skill.percentage,
-          gap: 'Critical competency for advancement'
-        });
-      }
-    });
-    
-    return gaps.slice(0, 8);
-  }
-
-  function calculateSkillEvolution(gradeSkills: any) {
-    // Show how skill requirements change across career levels
-    const allSkills = new Set<string>();
-    Object.values(gradeSkills).forEach((grade: any) => {
-      grade.topSkills?.forEach((skill: any) => allSkills.add(skill.skill));
-    });
-    
-    return Array.from(allSkills).slice(0, 15).map(skill => {
-      const evolution = Object.entries(gradeSkills).map(([grade, data]: [string, any]) => {
-        const skillData = data.topSkills?.find((s: any) => s.skill === skill);
-        return {
-          grade: grade.replace(/\([^)]*\)/g, '').trim(),
-          percentage: skillData?.percentage || 0
-        };
-      });
-      
-      return { skill, evolution };
-    });
-  }
-
-  function identifySkillClusters(locationSkills: Map<string, Map<string, number>>) {
-    // Simplified clustering - group locations with similar skill patterns
-    const clusters: any[] = [];
-    const locations = Array.from(locationSkills.keys()).slice(0, 10);
-    
-    locations.forEach(location => {
-      const skills = locationSkills.get(location)!;
-      const topSkills = Array.from(skills.entries())
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 3)
-        .map(([skill]) => skill);
-      
-      clusters.push({
-        location,
-        cluster: topSkills.join(', ')
-      });
-    });
-    
-    return clusters;
-  }
-
-  function identifyRegionalSpecializations(locationData: any[]) {
-    return locationData
-      .filter(loc => loc.specialization > 30)
-      .map(loc => ({
-        location: loc.location,
-        specialization: loc.topSkills[0]?.skill || 'Unknown',
-        strength: loc.specialization
-      }))
-      .slice(0, 8);
-  }
-
-  function compareAgencySkills(): any {
-    // Compare current agency to market
-    const agencyName = filters.selectedAgency;
-    const marketSkills = extractSkillCounts(data);
-    const agencySkills = extractSkillCounts(filteredData);
-    
-    const comparison = Array.from(agencySkills.entries())
-      .map(([skill, agencyCount]) => {
-        const marketCount = marketSkills.get(skill) || 0;
-        const agencyShare = (agencyCount / filteredData.length) * 100;
-        const marketShare = (marketCount / data.length) * 100;
-        
-        return {
-          skill,
-          agencyShare: Math.round(agencyShare),
-          marketShare: Math.round(marketShare),
-          competitive: agencyShare > marketShare,
-          gap: Math.round(Math.abs(agencyShare - marketShare))
-        };
-      })
-      .sort((a, b) => b.agencyShare - a.agencyShare);
+  // Calculate key metrics for dashboard cards
+  const keyMetrics = useMemo(() => {
+    const topSkill = skillsAnalysis.topSkills[0];
+    const digitalPercentage = skillsAnalysis.digitalSkills.length > 0 ? 
+      Math.round((skillsAnalysis.digitalSkills.reduce((sum, s) => sum + s.count, 0) / filteredData.length) * 100) : 0;
+    const fastestGrowing = skillsAnalysis.skillTrends.find(s => s.growthRate > 0 && s.growthRate < 999);
+    const mostCompetitive = skillsAnalysis.topSkills.find(s => s.agencies >= 3);
     
     return {
-      agencyName,
-      strengths: comparison.filter(s => s.competitive).slice(0, 10),
-      gaps: comparison.filter(s => !s.competitive && s.gap > 2).slice(0, 10),
-      uniqueSkills: comparison.filter(s => s.marketShare === 0).slice(0, 5)
+      topSkill: topSkill?.skill || 'N/A',
+      topSkillCount: topSkill?.count || 0,
+      trendingSkill: fastestGrowing?.skill || 'N/A',
+      trendingGrowth: fastestGrowing?.growthRate || 0,
+      digitalMaturity: digitalPercentage,
+      mostCompetitive: mostCompetitive?.skill || 'N/A',
+      competitiveAgencies: mostCompetitive?.agencies || 0
     };
-  }
-
-  function analyzeAgencySkillPatterns(): any {
-    const agencies = [...new Set(data.map(job => job.short_agency || job.long_agency).filter(Boolean))];
-    
-    return agencies.slice(0, 10).map(agency => {
-      const agencyJobs = data.filter(job => (job.short_agency || job.long_agency) === agency);
-      const skills = extractSkillCounts(agencyJobs);
-      const topSkills = Array.from(skills.entries())
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([skill, count]) => ({ skill, count }));
-      
-      return {
-        agency,
-        totalJobs: agencyJobs.length,
-        topSkills,
-        specialization: topSkills[0]?.count || 0
-      };
-    });
-  }
-
-  function identifySkillGaps(): any {
-    // Identify skills with high demand but low supply
-    const skillDemand = skillsAnalysis.skillDemand.topSkills;
-    return skillDemand
-      .filter(skill => skill.demandLevel === 'High' && skill.agencies < 3)
-      .slice(0, 8)
-      .map(skill => ({
-        skill: skill.skill,
-        demand: skill.count,
-        supply: skill.agencies,
-        gapLevel: 'Critical'
-      }));
-  }
-
-  function predictFutureSkills(): any {
-    // Based on emerging trends, predict future important skills
-    const emerging = skillsAnalysis.emergingSkills.emerging;
-    return emerging
-      .filter((skill: any) => skill.growth > 100)
-      .slice(0, 6)
-      .map((skill: any) => ({
-        skill: skill.skill,
-        prediction: 'High growth expected',
-        confidence: skill.growth > 200 ? 'High' : 'Medium'
-      }));
-  }
-
-  function generateRecruitmentInsights(): any {
-    return {
-      hotSkills: skillsAnalysis.skillDemand.criticalSkills.slice(0, 5),
-      talentPools: ['Technology professionals', 'Policy experts', 'Project managers'],
-      competitiveLandscape: 'High competition for digital skills'
-    };
-  }
-
-  function analyzeTalentCompetition(): any {
-    const topSkills = skillsAnalysis.skillDemand.topSkills.slice(0, 10);
-    return topSkills.map(skill => ({
-      skill: skill.skill,
-      competition: skill.agencies > 5 ? 'High' : skill.agencies > 2 ? 'Medium' : 'Low',
-      agencies: skill.agencies
-    }));
-  }
+  }, [skillsAnalysis, filteredData.length]);
 
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#059669'];
-
-  const renderDemandAnalysis = () => (
-    <div className="space-y-8">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Award className="h-5 w-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900">Total Skills</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillDemand.topSkills.length}
-          </p>
-          <p className="text-sm text-gray-600">Identified across system</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="h-5 w-5 text-green-500" />
-            <h4 className="font-semibold text-gray-900">High Demand</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillDemand.criticalSkills.length}
-          </p>
-          <p className="text-sm text-gray-600">Critical skills shortage</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="h-5 w-5 text-purple-500" />
-            <h4 className="font-semibold text-gray-900">Global Reach</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {Math.max(...skillsAnalysis.skillDemand.topSkills.map(s => s.agencies))}
-          </p>
-          <p className="text-sm text-gray-600">Max agencies per skill</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="h-5 w-5 text-orange-500" />
-            <h4 className="font-semibold text-gray-900">Top Skill</h4>
-          </div>
-          <p className="text-lg font-bold text-gray-900">
-            {skillsAnalysis.skillDemand.topSkills[0]?.skill || 'N/A'}
-          </p>
-          <p className="text-sm text-gray-600">{skillsAnalysis.skillDemand.topSkills[0]?.count || 0} positions</p>
-        </div>
-      </div>
-
-      {/* Skills by Category */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Skills Demand by Category</h3>
-          <p className="text-sm text-gray-600 mt-1">Most sought-after skills organized by functional area</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {skillsAnalysis.skillDemand.byCategory.slice(0, 6).map((category: any, index: number) => (
-              <div key={category.category} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-gray-900">{category.category}</h4>
-                  <span className="text-sm text-gray-500">{category.totalDemand} total positions</span>
-                </div>
-                
-                <div className="space-y-2">
-                  {category.skills.slice(0, 5).map((skill: any, skillIndex: number) => (
-                    <div key={skill.skill} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: colors[skillIndex % colors.length] }}
-                        />
-                        <span className="text-sm text-gray-700">{skill.skill}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">{skill.count}</div>
-                        <div className="text-xs text-gray-500">{skill.agencies} agencies</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Skills Chart */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Top Skills in Demand</h3>
-          <p className="text-sm text-gray-600 mt-1">Most frequently requested skills across all positions</p>
-        </div>
-        
-        <div className="p-6">
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={skillsAnalysis.skillDemand.topSkills.slice(0, 15)} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="skill" type="category" width={120} fontSize={11} />
-              <Tooltip 
-                formatter={(value: any) => [`${value} positions`, 'Demand']}
-                labelFormatter={(skill: any) => `Skill: ${skill}`}
-              />
-              <Bar dataKey="count" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Critical Skills */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Skills Analysis</h3>
-          <p className="text-sm text-gray-600 mt-1">High-demand skills with significant market impact</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {skillsAnalysis.skillDemand.criticalSkills.map((skill, index) => (
-              <div key={skill.skill} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-red-500" />
-                    <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded">
-                      {skill.demandLevel}
-                    </span>
-                  </div>
-                  <span className="text-lg font-bold text-gray-900">{skill.count}</span>
-                </div>
-                
-                <h4 className="font-medium text-gray-900 mb-2">{skill.skill}</h4>
-                
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Agencies:</span>
-                    <span className="font-medium">{skill.agencies}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Locations:</span>
-                    <span className="font-medium">{skill.locations}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Avg Grade:</span>
-                    <span className="font-medium">{skill.avgGrade}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderProgressionAnalysis = () => (
-    <div className="space-y-8">
-      {/* Career Progression Overview */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Skills by Career Level</h3>
-          <p className="text-sm text-gray-600 mt-1">How skill requirements evolve across UN grade levels</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Object.entries(skillsAnalysis.careerProgression.gradeSkills).map(([grade, data]: [string, any]) => (
-              <div key={grade} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900">{grade}</h4>
-                  <span className="text-sm text-gray-600">{data.totalJobs} positions</span>
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Avg Experience:</span>
-                    <span className="font-medium">{Math.round(data.avgExperience)} years</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-xs text-gray-500 mb-2">Top Required Skills:</p>
-                  <div className="space-y-1">
-                    {data.topSkills.slice(0, 5).map((skill: any) => (
-                      <div key={skill.skill} className="flex justify-between text-xs">
-                        <span className="text-gray-700 truncate flex-1 mr-2">{skill.skill}</span>
-                        <span className="text-gray-500">{skill.percentage}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Skills that Grow with Career */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Career Progression Skills</h3>
-          <p className="text-sm text-gray-600 mt-1">Skills that become more important at higher levels</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="space-y-4">
-            {skillsAnalysis.careerProgression.progressionSkills.map((skill: any, index: number) => (
-              <div key={skill.skill} className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <div>
-                    <div className="font-medium text-gray-900">{skill.skill}</div>
-                    <div className="text-sm text-gray-600">
-                      Entry: {skill.entryLevel}% → Senior: {skill.seniorLevel}%
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">+{skill.growth}%</div>
-                  <div className="text-xs text-gray-500">growth</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Competency Gaps */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Competency Gaps</h3>
-          <p className="text-sm text-gray-600 mt-1">Critical skills for career advancement</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {skillsAnalysis.careerProgression.competencyGaps.map((gap: any, index: number) => (
-              <div key={gap.skill} className="border border-orange-200 rounded-lg p-4 bg-orange-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-orange-600" />
-                  <h4 className="font-medium text-orange-900">{gap.skill}</h4>
-                </div>
-                <p className="text-sm text-orange-700 mb-2">{gap.gap}</p>
-                <div className="text-sm text-orange-600">
-                  <strong>{gap.seniorDemand}%</strong> of senior positions require this skill
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Skill Evolution Chart */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Skill Evolution Across Grades</h3>
-          <p className="text-sm text-gray-600 mt-1">How specific skills change in importance by career level</p>
-        </div>
-        
-        <div className="p-6">
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={skillsAnalysis.careerProgression.skillEvolution[0]?.evolution || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="grade" />
-              <YAxis label={{ value: 'Requirement %', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              {skillsAnalysis.careerProgression.skillEvolution.slice(0, 5).map((skillData: any, index: number) => (
-                <Line
-                  key={skillData.skill}
-                  type="monotone"
-                  dataKey="percentage"
-                  data={skillData.evolution}
-                  stroke={colors[index % colors.length]}
-                  strokeWidth={2}
-                  name={skillData.skill}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderEmergingSkills = () => (
-    <div className="space-y-8">
-      {/* Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Zap className="h-5 w-5 text-green-500" />
-            <h4 className="font-semibold text-gray-900">Emerging</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.emergingSkills.emerging.length}
-          </p>
-          <p className="text-sm text-gray-600">Growing skills</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowUp className="h-5 w-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900">New Skills</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.emergingSkills.newSkills.length}
-          </p>
-          <p className="text-sm text-gray-600">First appeared recently</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowDown className="h-5 w-5 text-red-500" />
-            <h4 className="font-semibold text-gray-900">Declining</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.emergingSkills.declining.length}
-          </p>
-          <p className="text-sm text-gray-600">Reducing demand</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Clock className="h-5 w-5 text-purple-500" />
-            <h4 className="font-semibold text-gray-900">Fast Growing</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.emergingSkills.fastestGrowing.length}
-          </p>
-          <p className="text-sm text-gray-600">High velocity growth</p>
-        </div>
-      </div>
-
-      {/* Emerging Skills */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Fastest Growing Skills</h3>
-          <p className="text-sm text-gray-600 mt-1">Skills showing the highest growth in demand</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="space-y-4">
-            {skillsAnalysis.emergingSkills.emerging.slice(0, 10).map((skill: any, index: number) => (
-              <div key={skill.skill} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  {skill.isNew ? (
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">NEW</span>
-                    </div>
-                  ) : (
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                  )}
-                  <div>
-                    <div className="font-medium text-gray-900">{skill.skill}</div>
-                    <div className="text-sm text-gray-600">
-                      Current: {skill.recentCount} positions | Previous: {skill.olderCount}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-green-600">+{skill.growth}%</div>
-                  <div className="text-xs text-gray-500">growth</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* New Skills */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Newly Identified Skills</h3>
-          <p className="text-sm text-gray-600 mt-1">Skills that have appeared in recent job postings</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {skillsAnalysis.emergingSkills.newSkills.map((skill: any, index: number) => (
-              <div key={skill.skill} className="border border-green-200 rounded-lg p-4 bg-green-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="text-xs font-medium text-green-600">NEW SKILL</span>
-                </div>
-                <h4 className="font-medium text-green-900 mb-1">{skill.skill}</h4>
-                <p className="text-sm text-green-700">{skill.recentCount} recent positions</p>
-                <p className="text-xs text-green-600 mt-2">
-                  Velocity: {Math.round(skill.velocity)}% of recent jobs
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Declining Skills */}
-      {skillsAnalysis.emergingSkills.declining.length > 0 && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Declining Skills</h3>
-            <p className="text-sm text-gray-600 mt-1">Skills showing reduced demand</p>
-          </div>
-          
-          <div className="p-6">
-            <div className="space-y-3">
-              {skillsAnalysis.emergingSkills.declining.slice(0, 8).map((skill: any, index: number) => (
-                <div key={skill.skill} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <ArrowDown className="h-4 w-4 text-red-600" />
-                    <div>
-                      <div className="font-medium text-gray-900">{skill.skill}</div>
-                      <div className="text-sm text-gray-600">
-                        Previous: {skill.previousCount} → Current: {skill.currentCount}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-red-600">-{skill.decline}%</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderGeographicAnalysis = () => (
-    <div className="space-y-8">
-      {/* Geographic Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="h-5 w-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900">Locations</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.geographicDistribution.locationData.length}
-          </p>
-          <p className="text-sm text-gray-600">Countries with skill data</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Target className="h-5 w-5 text-green-500" />
-            <h4 className="font-semibold text-gray-900">Specializations</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.geographicDistribution.regionalSpecializations.length}
-          </p>
-          <p className="text-sm text-gray-600">Strong regional focuses</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <MapPin className="h-5 w-5 text-purple-500" />
-            <h4 className="font-semibold text-gray-900">Top Location</h4>
-          </div>
-          <p className="text-lg font-bold text-gray-900">
-            {skillsAnalysis.geographicDistribution.locationData[0]?.location || 'N/A'}
-          </p>
-          <p className="text-sm text-gray-600">
-            {skillsAnalysis.geographicDistribution.locationData[0]?.totalJobs || 0} positions
-          </p>
-        </div>
-      </div>
-
-      {/* Geographic Distribution */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Skills by Location</h3>
-          <p className="text-sm text-gray-600 mt-1">Geographic distribution of skill demand</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {skillsAnalysis.geographicDistribution.locationData.slice(0, 12).map((location: any, index: number) => (
-              <div key={location.location} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900">{location.location}</h4>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-gray-900">{location.totalJobs}</div>
-                    <div className="text-xs text-gray-500">positions</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Unique Skills:</span>
-                    <span className="font-medium">{location.skillCount}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Specialization:</span>
-                    <span className="font-medium">{Math.round(location.specialization)}%</span>
-                  </div>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 mb-2">Top Skills:</p>
-                  <div className="space-y-1">
-                    {location.topSkills.slice(0, 3).map((skill: any) => (
-                      <div key={skill.skill} className="flex justify-between text-xs">
-                        <span className="text-gray-700 truncate flex-1 mr-2">{skill.skill}</span>
-                        <span className="text-gray-500">{Math.round(skill.percentage)}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Regional Specializations */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Regional Specializations</h3>
-          <p className="text-sm text-gray-600 mt-1">Locations with strong focus on specific skills</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {skillsAnalysis.geographicDistribution.regionalSpecializations.map((spec: any, index: number) => (
-              <div key={spec.location} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">{spec.location}</h4>
-                </div>
-                <p className="text-sm text-blue-800 font-medium mb-1">{spec.specialization}</p>
-                <p className="text-xs text-blue-600">
-                  <strong>{Math.round(spec.strength)}%</strong> of positions focus on this skill
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Skill Clusters */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Geographic Skill Clusters</h3>
-          <p className="text-sm text-gray-600 mt-1">Common skill patterns by location</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="space-y-3">
-            {skillsAnalysis.geographicDistribution.skillClusters.map((cluster: any, index: number) => (
-              <div key={cluster.location} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">{cluster.location}</span>
-                </div>
-                <span className="text-sm text-gray-600">{cluster.cluster}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBenchmarkingAnalysis = () => {
-    if (isAgencyView) {
-      const comparison = skillsAnalysis.agencyBenchmarking as any;
-      return (
-        <div className="space-y-8">
-          {/* Agency Overview */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {comparison.agencyName} Skills Comparison
-            </h3>
-            <p className="text-gray-600">How your agency's skill portfolio compares to the broader UN system</p>
-          </div>
-
-          {/* Strengths vs Gaps */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Strengths */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h4 className="text-lg font-semibold text-green-700">Competitive Strengths</h4>
-                <p className="text-sm text-gray-600 mt-1">Skills where you outperform the market</p>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-3">
-                  {comparison.strengths.map((strength: any, index: number) => (
-                    <div key={strength.skill} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-gray-900">{strength.skill}</div>
-                        <div className="text-sm text-gray-600">
-                          You: {strength.agencyShare}% vs Market: {strength.marketShare}%
-                        </div>
-                      </div>
-                      <div className="text-green-600 font-bold">+{strength.gap}%</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Gaps */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h4 className="text-lg font-semibold text-red-700">Skill Gaps</h4>
-                <p className="text-sm text-gray-600 mt-1">Areas where the market leads</p>
-              </div>
-              
-              <div className="p-6">
-                <div className="space-y-3">
-                  {comparison.gaps.map((gap: any, index: number) => (
-                    <div key={gap.skill} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-gray-900">{gap.skill}</div>
-                        <div className="text-sm text-gray-600">
-                          You: {gap.agencyShare}% vs Market: {gap.marketShare}%
-                        </div>
-                      </div>
-                      <div className="text-red-600 font-bold">-{gap.gap}%</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Unique Skills */}
-          {comparison.uniqueSkills.length > 0 && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h4 className="text-lg font-semibold text-purple-700">Unique Skills</h4>
-                <p className="text-sm text-gray-600 mt-1">Skills exclusive to your agency</p>
-              </div>
-              
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {comparison.uniqueSkills.map((skill: any) => (
-                    <div key={skill.skill} className="border border-purple-200 rounded-lg p-4 bg-purple-50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Award className="h-4 w-4 text-purple-600" />
-                        <span className="text-xs font-medium text-purple-600">UNIQUE</span>
-                      </div>
-                      <h5 className="font-medium text-purple-900">{skill.skill}</h5>
-                      <p className="text-sm text-purple-700">{skill.agencyShare}% of your positions</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      const patterns = skillsAnalysis.agencyBenchmarking as any[];
-      return (
-        <div className="space-y-8">
-          {/* Cross-Agency Patterns */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Agency Skill Specializations</h3>
-              <p className="text-sm text-gray-600 mt-1">How different agencies focus on specific skill areas</p>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {patterns.slice(0, 10).map((agency, index) => (
-                  <div key={agency.agency} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900">{agency.agency}</h4>
-                      <span className="text-sm text-gray-600">{agency.totalJobs} positions</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Specialization Score:</span>
-                        <span className="font-medium">{agency.specialization}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-3">
-                      <p className="text-xs text-gray-500 mb-2">Top Skills:</p>
-                      <div className="space-y-1">
-                        {agency.topSkills.slice(0, 4).map((skill: any) => (
-                          <div key={skill.skill} className="flex justify-between text-xs">
-                            <span className="text-gray-700 truncate flex-1 mr-2">{skill.skill}</span>
-                            <span className="text-gray-500">{skill.count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-  };
-
-  const renderIntelligenceAnalysis = () => (
-    <div className="space-y-8">
-      {/* Strategic Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Brain className="h-5 w-5 text-purple-500" />
-            <h4 className="font-semibold text-gray-900">Skill Gaps</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillIntelligence.skillGaps.length}
-          </p>
-          <p className="text-sm text-gray-600">Critical shortages</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <BookOpen className="h-5 w-5 text-blue-500" />
-            <h4 className="font-semibold text-gray-900">Future Skills</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillIntelligence.futureSkills.length}
-          </p>
-          <p className="text-sm text-gray-600">Predicted growth</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Briefcase className="h-5 w-5 text-green-500" />
-            <h4 className="font-semibold text-gray-900">Hot Skills</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillIntelligence.recruitmentInsights.hotSkills.length}
-          </p>
-          <p className="text-sm text-gray-600">High demand</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="h-5 w-5 text-orange-500" />
-            <h4 className="font-semibold text-gray-900">Competition</h4>
-          </div>
-          <p className="text-2xl font-bold text-gray-900">
-            {skillsAnalysis.skillIntelligence.talentCompetition.filter((t: any) => t.competition === 'High').length}
-          </p>
-          <p className="text-sm text-gray-600">High competition skills</p>
-        </div>
-      </div>
-
-      {/* Skill Gaps */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Skill Gaps</h3>
-          <p className="text-sm text-gray-600 mt-1">Skills with high demand but limited supply</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {skillsAnalysis.skillIntelligence.skillGaps.map((gap: any, index: number) => (
-              <div key={gap.skill} className="border border-red-200 rounded-lg p-4 bg-red-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded">
-                    {gap.gapLevel}
-                  </span>
-                </div>
-                <h4 className="font-medium text-red-900 mb-2">{gap.skill}</h4>
-                <div className="space-y-1 text-sm text-red-700">
-                  <div className="flex justify-between">
-                    <span>Demand:</span>
-                    <span className="font-medium">{gap.demand} positions</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Supply:</span>
-                    <span className="font-medium">{gap.supply} agencies</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Future Skills */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Future Skill Predictions</h3>
-          <p className="text-sm text-gray-600 mt-1">Skills expected to become increasingly important</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {skillsAnalysis.skillIntelligence.futureSkills.map((skill: any, index: number) => (
-              <div key={skill.skill} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                  <span className={`text-xs font-medium px-2 py-1 rounded ${
-                    skill.confidence === 'High' 
-                      ? 'text-green-600 bg-green-100' 
-                      : 'text-yellow-600 bg-yellow-100'
-                  }`}>
-                    {skill.confidence} CONFIDENCE
-                  </span>
-                </div>
-                <h4 className="font-medium text-blue-900 mb-1">{skill.skill}</h4>
-                <p className="text-sm text-blue-700">{skill.prediction}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Talent Competition */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Talent Competition Analysis</h3>
-          <p className="text-sm text-gray-600 mt-1">Competition level for top skills across agencies</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="space-y-3">
-            {skillsAnalysis.skillIntelligence.talentCompetition.map((comp: any, index: number) => (
-              <div key={comp.skill} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    comp.competition === 'High' ? 'bg-red-500' :
-                    comp.competition === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
-                  }`} />
-                  <div>
-                    <div className="font-medium text-gray-900">{comp.skill}</div>
-                    <div className="text-sm text-gray-600">{comp.agencies} agencies competing</div>
-                  </div>
-                </div>
-                <span className={`text-sm font-medium px-2 py-1 rounded ${
-                  comp.competition === 'High' ? 'text-red-700 bg-red-100' :
-                  comp.competition === 'Medium' ? 'text-yellow-700 bg-yellow-100' :
-                  'text-green-700 bg-green-100'
-                }`}>
-                  {comp.competition}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Strategic Insights */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
-        <h4 className="font-semibold text-purple-900 mb-4">🎯 Strategic Skills Intelligence</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h5 className="font-medium text-purple-800 mb-2">Immediate Actions:</h5>
-            <ul className="text-sm text-purple-700 space-y-1">
-              <li>• Address critical skill gaps through targeted recruitment</li>
-              <li>• Invest in emerging technologies and digital skills</li>
-              <li>• Develop internal training for future skills</li>
-              <li>• Monitor competitor hiring in high-demand areas</li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-medium text-blue-800 mb-2">Medium-term Strategy:</h5>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Build partnerships with skill-specialized organizations</li>
-              <li>• Create career progression paths for in-demand skills</li>
-              <li>• Establish centers of excellence for critical competencies</li>
-              <li>• Develop cross-training programs</li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-medium text-indigo-800 mb-2">Long-term Planning:</h5>
-            <ul className="text-sm text-indigo-700 space-y-1">
-              <li>• Anticipate future skill requirements</li>
-              <li>• Build organizational learning capabilities</li>
-              <li>• Create adaptive workforce strategies</li>
-              <li>• Invest in continuous skill development</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const tabs = [
-    { id: 'demand', label: 'Skill Demand', icon: Award },
-    { id: 'progression', label: 'Career Progression', icon: TrendingUp },
-    { id: 'emerging', label: 'Emerging Skills', icon: Zap },
-    { id: 'geographic', label: 'Geographic Analysis', icon: Globe },
-    { id: 'benchmarking', label: 'Benchmarking', icon: Target },
-    { id: 'intelligence', label: 'Skills Intelligence', icon: Brain }
-  ];
 
   return (
     <div className="space-y-8">
@@ -1445,65 +522,612 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Comprehensive Skills Analysis</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Skills Intelligence Center</h2>
             <p className="text-gray-600 mt-1">
               {isAgencyView 
-                ? `Deep insights into ${filters.selectedAgency} skill portfolio and market positioning`
-                : "System-wide skill trends, emerging competencies, and strategic intelligence"
+                ? `Strategic skills analysis for ${filters.selectedAgency} (${filteredData.length} positions)`
+                : `Market-wide skills analysis (${filteredData.length} positions)`
               }
             </p>
           </div>
           
-          {/* Skills Filter */}
           <div className="flex items-center gap-3">
-            <select
-              value={selectedSkillFilter}
-              onChange={(e) => setSelectedSkillFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Skills</option>
-              <option value="digital">Digital & Technology</option>
-              <option value="leadership">Leadership & Management</option>
-              <option value="communication">Communication</option>
-              <option value="analytical">Analytical</option>
-            </select>
-            <Search className="h-5 w-5 text-gray-400" />
+            <div className="text-sm text-gray-500">
+              Analyzing {filteredData.length} positions
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedTab(tab.id as SkillsTab)}
-                className={`group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  selectedTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+      {/* SECTION 1: SKILLS MARKET INTELLIGENCE */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-blue-600" />
+          Skills Market Intelligence
+        </h3>
+
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              <h4 className="font-semibold text-gray-900">Top Skill</h4>
+            </div>
+            <p className="text-xl font-bold text-gray-900">{keyMetrics.topSkill}</p>
+            <p className="text-sm text-gray-600">{keyMetrics.topSkillCount} positions</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+              <h4 className="font-semibold text-gray-900">Trending Skills</h4>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">+{keyMetrics.trendingGrowth}%</p>
+            <p className="text-sm text-gray-600">{keyMetrics.trendingSkill}</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Zap className="h-5 w-5 text-blue-500" />
+              <h4 className="font-semibold text-gray-900">Digital Maturity</h4>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{keyMetrics.digitalMaturity}%</p>
+            <p className="text-sm text-gray-600">Tech skill adoption</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="h-5 w-5 text-purple-500" />
+              <h4 className="font-semibold text-gray-900">Most Competitive</h4>
+            </div>
+            <p className="text-lg font-bold text-gray-900">{keyMetrics.mostCompetitive}</p>
+            <p className="text-sm text-gray-600">{keyMetrics.competitiveAgencies} agencies</p>
+          </div>
         </div>
 
-        <div className="p-6">
-          {selectedTab === 'demand' && renderDemandAnalysis()}
-          {selectedTab === 'progression' && renderProgressionAnalysis()}
-          {selectedTab === 'emerging' && renderEmergingSkills()}
-          {selectedTab === 'geographic' && renderGeographicAnalysis()}
-          {selectedTab === 'benchmarking' && renderBenchmarkingAnalysis()}
-          {selectedTab === 'intelligence' && renderIntelligenceAnalysis()}
+        {/* Skills Demand Chart - Fixed implementation */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900">Top 15 Skills by Demand</h4>
+            <p className="text-sm text-gray-600 mt-1">Most frequently requested skills across positions</p>
+          </div>
+          
+          <div className="p-6">
+            {skillsAnalysis.topSkills.length > 0 ? (
+              <div className="space-y-3">
+                {skillsAnalysis.topSkills.map((skill, index) => (
+                  <div key={skill.skill} className="flex items-center gap-3">
+                    <div className="w-32 text-sm text-gray-700 truncate">{skill.skill}</div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                      <div 
+                        className="bg-blue-500 h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-300"
+                        style={{ 
+                          width: `${Math.max(5, (skill.count / skillsAnalysis.topSkills[0].count) * 100)}%` 
+                        }}
+                      >
+                        <span className="text-white text-xs font-medium">{skill.count}</span>
+                      </div>
+                    </div>
+                    <div className="w-16 text-xs text-gray-500 text-right">
+                      {skill.agencies} agencies
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No skill data available for current filters</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Skills by Category and Shortage Analysis */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Skills by Category */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Skills by Category</h4>
+              <p className="text-sm text-gray-600 mt-1">Demand organized by functional area</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {skillsAnalysis.skillsByCategory.map((category, index) => (
+                  <div key={category.category} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-medium text-gray-900">{category.category}</h5>
+                      <div className="text-right">
+                        <span className="text-sm text-gray-500">{category.totalPositions} positions</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      {category.skills.slice(0, 4).map((skill: any, skillIndex: number) => (
+                        <div key={skill.skill} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: colors[skillIndex % colors.length] }}
+                            />
+                            <span className="text-gray-700">{skill.skill}</span>
+                          </div>
+                          <span className="text-gray-500">{skill.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Talent Competition Analysis */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Talent Market Dynamics</h4>
+              <p className="text-sm text-gray-600 mt-1">Grade premiums, urgency rates, and competitive positioning for top skills</p>
+            </div>
+            
+            <div className="p-6">
+              {skillsAnalysis.talentCompetition.length > 0 ? (
+                <div className="space-y-3">
+                  {skillsAnalysis.talentCompetition.slice(0, 8).map((skill, index) => (
+                    <div key={skill.skill} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-gray-900">{skill.skill}</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            skill.competitionLevel === 'High' ? 'bg-red-100 text-red-700' :
+                            skill.competitionLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {skill.competitionLevel} Competition
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <div className="text-gray-500">Positions</div>
+                          <div className="font-medium">{skill.positions}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Common Grade</div>
+                          <div className="font-medium">{skill.mostCommonGrade}</div>
+                          <div className="text-xs text-gray-400">{skill.gradeDistribution}% of positions</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Agencies</div>
+                          <div className="font-medium">{skill.agencies} agencies</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Quick Hiring</div>
+                          <div className={`font-medium ${skill.urgencyRate > 20 ? 'text-orange-600' : 'text-gray-600'}`}>
+                            {skill.urgencyRate > 0 ? `${skill.urgencyRate}%` : 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-400">≤21 days window</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <Target className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>Insufficient data for talent market analysis</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 2: STRATEGIC WORKFORCE INSIGHTS */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <Users className="h-6 w-6 text-green-600" />
+          Strategic Workforce Insights
+        </h3>
+
+        {/* Career Progression Analysis */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900">Career Progression Skill Requirements</h4>
+            <p className="text-sm text-gray-600 mt-1">How skill requirements evolve across seniority levels</p>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {Object.entries(careerProgression).map(([level, data]: [string, any]) => (
+                <div key={level} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-semibold text-gray-900">{level}</h5>
+                    <span className="text-sm text-gray-600">{data.totalJobs} jobs</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500 mb-2">Top Skills:</p>
+                    {data.topSkills.map((skill: any) => (
+                      <div key={skill.skill} className="flex justify-between text-xs">
+                        <span className="text-gray-700 truncate flex-1 mr-2">{skill.skill}</span>
+                        <span className="text-gray-500">{skill.percentage}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Agency Analysis and Geographic Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Agency Skill Analysis */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">
+                {isAgencyView ? `${agencyAnalysis.agencyName} vs Market` : 'Agency Skill Specializations'}
+              </h4>
+              <p className="text-sm text-gray-600 mt-1">
+                {isAgencyView ? 'Competitive positioning analysis' : 'How different agencies specialize'}
+              </p>
+            </div>
+            
+            <div className="p-6">
+              {agencyAnalysis.isAgencyView ? (
+                <div className="space-y-4">
+                  <div>
+                    <h5 className="font-medium text-green-700 mb-2">Competitive Strengths</h5>
+                    <div className="space-y-2">
+                      {(agencyAnalysis.strengths || []).length > 0 ? (agencyAnalysis.strengths || []).map((strength: any) => (
+                        <div key={strength.skill} className="flex justify-between text-sm">
+                          <span className="text-gray-700">{strength.skill}</span>
+                          <span className="text-green-600 font-medium">+{strength.gap}%</span>
+                        </div>
+                      )) : (
+                        <p className="text-sm text-gray-500">No significant strengths detected</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-red-700 mb-2">Development Areas</h5>
+                    <div className="space-y-2">
+                      {(agencyAnalysis.gaps || []).length > 0 ? (agencyAnalysis.gaps || []).map((gap: any) => (
+                        <div key={gap.skill} className="flex justify-between text-sm">
+                          <span className="text-gray-700">{gap.skill}</span>
+                          <span className="text-red-600 font-medium">-{gap.gap}%</span>
+                        </div>
+                      )) : (
+                        <p className="text-sm text-gray-500">No significant gaps detected</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {agencyAnalysis.agencySpecializations?.map((agency: any) => (
+                    <div key={agency.agency} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-gray-900">{agency.agency}</h5>
+                        <span className="text-sm text-gray-600">{agency.totalJobs} jobs</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        {agency.topSkills.map((skill: any) => (
+                          <div key={skill.skill} className="text-gray-700 truncate">
+                            • {skill.skill}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Geographic Skill Distribution */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Geographic Skill Distribution</h4>
+              <p className="text-sm text-gray-600 mt-1">Where different expertise is concentrated globally</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-3">
+                {geographicDistribution.map((location, index) => (
+                  <div key={location.location} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-medium text-gray-900">{location.location}</h5>
+                      <span className="text-sm text-gray-600">{location.totalJobs} positions</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {location.topSkills.map((skill: any, skillIdx: number) => (
+                        <span 
+                          key={skill.skill}
+                          className="text-xs px-2 py-1 rounded"
+                          style={{ 
+                            backgroundColor: `${colors[skillIdx % colors.length]}20`,
+                            color: colors[skillIdx % colors.length]
+                          }}
+                        >
+                          {skill.skill} ({skill.percentage}%)
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Language Requirements Analysis */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900">Language Requirements Analysis</h4>
+            <p className="text-sm text-gray-600 mt-1">Multilingual opportunities and language skill demand</p>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h5 className="font-medium text-gray-900 mb-3">Required Languages</h5>
+                <div className="space-y-2">
+                  {languageAnalysis.requiredLanguages.slice(0, 5).map(([lang, count]: [string, number]) => (
+                    <div key={lang} className="flex justify-between text-sm">
+                      <span className="text-gray-700">{lang}</span>
+                      <span className="text-gray-500">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h5 className="font-medium text-gray-900 mb-3">Desired Languages</h5>
+                <div className="space-y-2">
+                  {languageAnalysis.desiredLanguages.slice(0, 5).map(([lang, count]: [string, number]) => (
+                    <div key={lang} className="flex justify-between text-sm">
+                      <span className="text-gray-700">{lang}</span>
+                      <span className="text-gray-500">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h5 className="font-medium text-gray-900 mb-3">Key Statistics</h5>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Multilingual Jobs:</span>
+                    <span className="font-medium">{Math.round(languageAnalysis.multilingualJobsPercentage)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Avg Languages:</span>
+                    <span className="font-medium">{languageAnalysis.averageLanguageCount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: EMERGING TRENDS & INTELLIGENCE */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <TrendingUp className="h-6 w-6 text-purple-600" />
+          Emerging Trends & Intelligence
+        </h3>
+
+        {/* Emerging Skills and Digital Maturity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Emerging Skills */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Emerging Skill Trends</h4>
+              <p className="text-sm text-gray-600 mt-1">Skills showing significant growth momentum</p>
+            </div>
+            
+            <div className="p-6">
+              {skillsAnalysis.emergingSkills.length > 0 ? (
+                <div className="space-y-3">
+                  {skillsAnalysis.emergingSkills.map((skill: any, index: number) => (
+                    <div key={skill.skill} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{skill.skill}</div>
+                          <div className="text-sm text-gray-600">{skill.count} positions</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-green-600">+{skill.growthRate}%</div>
+                        <div className="text-xs text-gray-500">growth</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>No significant emerging trends detected</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Digital Skills Analysis */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900">Digital Skills Landscape</h4>
+              <p className="text-sm text-gray-600 mt-1">Technology and digital transformation skills</p>
+            </div>
+            
+            <div className="p-6">
+              {skillsAnalysis.digitalSkills.length > 0 ? (
+                <div className="space-y-3">
+                  {skillsAnalysis.digitalSkills.map((skill: any, index: number) => (
+                    <div key={skill.skill} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Zap className="h-4 w-4 text-blue-600" />
+                        <div>
+                          <div className="font-medium text-gray-900">{skill.skill}</div>
+                          <div className="text-sm text-gray-600">
+                            {skill.count} positions • {skill.agencies} agencies
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-blue-600">{Math.round(skill.frequency)}%</div>
+                        <div className="text-xs text-gray-500">adoption</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <Zap className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>No digital skills detected in current dataset</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Skill Trends Over Time */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900">Skill Evolution Trends</h4>
+            <p className="text-sm text-gray-600 mt-1">
+              Skills momentum from {skillsAnalysis.skillTrends.length > 0 ? skillsAnalysis.skillTrends[0]?.firstYear : 'N/A'} to {skillsAnalysis.skillTrends.length > 0 ? skillsAnalysis.skillTrends[0]?.lastYear : 'N/A'}
+            </p>
+          </div>
+          
+          <div className="p-6">
+            {skillsAnalysis.skillTrends.length > 0 ? (
+              <div className="space-y-3">
+                {skillsAnalysis.skillTrends.map((trend, index) => (
+                  <div key={trend.skill} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium text-gray-900 capitalize">{trend.skill}</div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          trend.trend === 'Rising' ? 'bg-green-100 text-green-700' :
+                          trend.trend === 'Declining' ? 'bg-red-100 text-red-700' :
+                          trend.trend === 'Emerging' ? 'bg-blue-100 text-blue-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {trend.trend}
+                        </span>
+                        {trend.growthRate === 999 ? (
+                          <span className="text-lg font-bold text-blue-600">NEW</span>
+                        ) : (
+                          <span className={`text-lg font-bold ${
+                            trend.growthRate > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {trend.growthRate > 0 ? '+' : ''}{trend.growthRate}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-500">{trend.firstYear} Count</div>
+                        <div className="font-medium">{trend.firstYearCount}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">{trend.lastYear} Count</div>
+                        <div className="font-medium">{trend.lastYearCount}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Total Positions</div>
+                        <div className="font-medium">{trend.totalPositions}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Visual growth bar */}
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>{trend.firstYear}</span>
+                        <span>{trend.lastYear}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            trend.growthRate > 0 ? 'bg-green-500' : trend.growthRate < 0 ? 'bg-red-500' : 'bg-gray-400'
+                          }`}
+                          style={{ 
+                            width: `${Math.min(100, Math.max(10, 50 + (trend.growthRate / 2)))}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p>Insufficient historical data for trend analysis</p>
+                <p className="text-xs mt-1">Need data from multiple years to show trends</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Strategic Recommendations */}
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+          <h4 className="font-semibold text-purple-900 mb-4 flex items-center gap-2">
+            <Lightbulb className="h-5 w-5" />
+            Strategic Skills Intelligence & Recommendations
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h5 className="font-medium text-purple-800 mb-2">Immediate Priorities</h5>
+              <ul className="text-sm text-purple-700 space-y-1">
+                <li>• Address top skill shortages through targeted recruitment</li>
+                <li>• Accelerate digital transformation initiatives</li>
+                <li>• Strengthen multilingual capabilities globally</li>
+                <li>• Monitor emerging skill trends for early adoption</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h5 className="font-medium text-blue-800 mb-2">Strategic Development</h5>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Invest in cross-skill training programs</li>
+                <li>• Build regional centers of expertise</li>
+                <li>• Create clear career progression pathways</li>
+                <li>• Develop inter-agency talent exchange programs</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h5 className="font-medium text-indigo-800 mb-2">Future Readiness</h5>
+              <ul className="text-sm text-indigo-700 space-y-1">
+                <li>• Anticipate next-generation skill requirements</li>
+                <li>• Build adaptive learning and development capabilities</li>
+                <li>• Foster culture of innovation and experimentation</li>
+                <li>• Strengthen global talent mobility and deployment</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+
       </div>
     </div>
   );
 };
 
 export default Skills;
+

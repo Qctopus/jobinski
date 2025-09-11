@@ -44,10 +44,10 @@ function App() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="loading-spinner mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading UN Jobs Data</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading Baro Talent Data</h2>
           <p className="text-gray-600">Processing job categories and analytics...</p>
         </div>
       </div>
@@ -57,7 +57,7 @@ function App() {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="text-red-600 mb-4">
             <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,22 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Building2, Calendar, Users, Target, Award, Briefcase, BarChart3, Clock, Eye, Activity, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { BarChart3, Clock, Eye, Users, Briefcase, AlertTriangle, Target, TrendingUp, Activity, Zap, HelpCircle } from 'lucide-react';
+import { ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Tooltip } from 'recharts';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { getAgencyLogo } from '../utils/agencyLogos';
+import { JOB_CATEGORIES } from '../services/dataProcessor';
 import CategoryInsights from './CategoryInsights';
 import TemporalTrends from './TemporalTrends';
 import CompetitiveIntel from './CompetitiveIntel';
-import ExecutiveSummary from './ExecutiveSummary';
-import AgencyBenchmarking from './AgencyBenchmarking';
 import WorkforceComposition from './WorkforceComposition';
 import Skills from './Skills';
+import KPICards from './overview/KPICards';
+import CompetitiveRadarChart from './overview/CompetitiveRadarChart';
+import DashboardPanels from './overview/DashboardPanels';
 
 
 interface DashboardProps {
   data: ProcessedJobData[];
 }
 
-type TabType = 'overview' | 'categories' | 'temporal' | 'competitive' | 'workforce' | 'benchmarking' | 'skills' | 'summary';
+type TabType = 'overview' | 'categories' | 'temporal' | 'competitive' | 'workforce' | 'skills';
 
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -24,8 +27,37 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     selectedAgency: 'all',
     timeRange: 'all'
   });
+  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
+  // Use the custom hook for dashboard data
+  const {
+    processor,
+    isAgencyView,
+    selectedAgencyName,
+    filteredData,
+    marketData,
+    metrics,
+    marketMetrics
+  } = useDashboardData(data, filters);
+
+  // Keep references for backward compatibility 
+  const processedData = useMemo(() => data, [data]);
+  const filteredForDistinct = filteredData;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowAgencyDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Get unique agencies for the selector
   const agencies = useMemo(() => {
@@ -37,37 +69,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     return Array.from(agencySet).sort();
   }, [data]);
 
-  // Data is already processed in App; avoid re-processing here
-  const processedData = useMemo(() => data, [data]);
-
-  // Calculate metrics based on view type
-  const isAgencyView = filters.selectedAgency !== 'all';
-  const selectedAgencyName = filters.selectedAgency;
-
-  // For agency view: use filtered metrics for internal insights
-  // For market view: use filtered metrics for everything
-  const metrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(processedData, filters);
-  }, [processedData, filters, processor]);
-
-  // For market-level insights: always use unfiltered data to avoid "100% agency" problem
-  const marketMetrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(processedData, { 
-      selectedAgency: 'all', 
-      timeRange: filters.timeRange 
-    });
-  }, [processedData, filters.timeRange, processor]);
-
   // Additional derived datasets for headline KPIs
-  const filteredForDistinct = useMemo(() => {
-    return processor.applyFilters(processedData, filters);
-  }, [processedData, filters, processor]);
 
   const distinctCategoriesCount = useMemo(() => {
     const set = new Set<string>();
-    filteredForDistinct.forEach(j => set.add(j.primary_category));
+    filteredData.forEach(j => set.add(j.primary_category));
     return set.size;
-  }, [filteredForDistinct]);
+  }, [filteredData]);
 
   const topCategoryShare = useMemo(() => {
     return metrics.topCategories.length > 0 ? metrics.topCategories[0].percentage : 0;
@@ -75,12 +83,12 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
   // Market-wide competitive intel and trends for KPIs
   const competitiveMarket = useMemo(() => {
-    return processor.calculateCompetitiveIntelligence(processedData, true);
-  }, [processedData, processor]);
+    return processor.calculateCompetitiveIntelligence(data, true);
+  }, [data, processor]);
 
   const marketTrends = useMemo(() => {
-    return processor.calculateTemporalTrends(processedData, 12);
-  }, [processedData, processor]);
+    return processor.calculateTemporalTrends(data, 12);
+  }, [data, processor]);
 
   const topAgencyMarket = useMemo(() => {
     const top = competitiveMarket.agencyPositioning[0];
@@ -96,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   }, [marketTrends]);
 
   // Agency-focused KPIs
-  const agencyFilteredData = filteredForDistinct;
+  const agencyFilteredData = filteredData;
 
   const medianApplicationWindow = useMemo(() => {
     if (agencyFilteredData.length === 0) return 0;
@@ -148,7 +156,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const topCategoriesChartData = useMemo(() => {
     const source = metrics.topCategories.length > 0 ? metrics.topCategories : (() => {
       const counts = new Map<string, number>();
-      filteredForDistinct.forEach(j => counts.set(j.primary_category, (counts.get(j.primary_category) || 0) + 1));
+      filteredData.forEach((j: any) => counts.set(j.primary_category, (counts.get(j.primary_category) || 0) + 1));
       return Array.from(counts.entries()).map(([category, count]) => ({ category, count, percentage: 0 }))
         .sort((a, b) => b.count - a.count).slice(0, 10);
     })();
@@ -325,10 +333,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
   // Market averages for comparison (always calculate from full market data)
   const marketAverages = useMemo(() => {
-    const allMarketData = processor.applyFilters(processedData, { 
-      selectedAgency: 'all', 
-      timeRange: filters.timeRange 
-    });
+    const allMarketData = marketData;
 
     // Market average application window
     const allWindows = allMarketData
@@ -355,7 +360,161 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       urgentRate: marketUrgentRate,
       seniorityMix: marketSeniorityMix
     };
-  }, [processedData, filters.timeRange, processor]);
+  }, [marketData]);
+
+  // Competitive Analysis Spider Chart Data
+  const competitiveAnalysis = useMemo(() => {
+    if (!isAgencyView) return null;
+
+    const allAgencies = competitiveMarket.agencyPositioning;
+    const ourAgency = allAgencies.find(a => a.agency === selectedAgencyName);
+    if (!ourAgency) return null;
+
+    const competitors = allAgencies
+      .filter(a => a.agency !== selectedAgencyName)
+      .slice(0, 3);
+
+    const calculateAgencyMetrics = (agencyName: string) => {
+      const agencyJobs = data.filter(job => 
+        (job.short_agency || job.long_agency) === agencyName
+      );
+
+      if (agencyJobs.length === 0) return null;
+
+      const allAgencySizes = allAgencies.map(a => a.volume);
+      const maxAgencySize = Math.max(...allAgencySizes);
+      const marketShare = maxAgencySize > 0 ? (agencyJobs.length / maxAgencySize) * 100 : 0;
+
+      const agencyCategories = new Set(agencyJobs.map(job => job.primary_category));
+      const allCategories = new Set(data.map(job => job.primary_category));
+      const categoryDiversity = allCategories.size > 0 ? (agencyCategories.size / allCategories.size) * 100 : 0;
+
+      const agencyCountries = new Set(agencyJobs.map(job => job.duty_country).filter(c => c));
+      const allCountries = new Set(data.map(job => job.duty_country).filter(c => c));
+      const geographicReach = allCountries.size > 0 ? (agencyCountries.size / allCountries.size) * 100 : 0;
+
+      const agencyWindows = agencyJobs.map(job => job.application_window_days).filter(w => w && w > 0);
+      let processEfficiency = 50;
+      if (agencyWindows.length > 0) {
+        const avgAgencyWindow = agencyWindows.reduce((sum, w) => sum + w, 0) / agencyWindows.length;
+        processEfficiency = Math.max(0, Math.min(100, 100 - ((avgAgencyWindow - 7) / (60 - 7)) * 100));
+      }
+
+      const seniorGrades = ['P4', 'P5', 'P6', 'D1', 'D2'];
+      const seniorJobs = agencyJobs.filter(job => seniorGrades.some(grade => job.up_grade?.includes(grade)));
+      const seniorityProfile = agencyJobs.length > 0 ? (seniorJobs.length / agencyJobs.length) * 100 : 0;
+
+      const multilingualJobs = agencyJobs.filter(job => {
+        const langs = job.languages?.split(',').map(l => l.trim()).filter(l => l.length > 0) || [];
+        return langs.length >= 2;
+      });
+      const languageCapability = agencyJobs.length > 0 ? (multilingualJobs.length / agencyJobs.length) * 100 : 0;
+
+      return {
+        'Market Position': Math.round(marketShare),
+        'Category Diversity': Math.round(categoryDiversity),
+        'Global Reach': Math.round(geographicReach),
+        'Process Speed': Math.round(processEfficiency),
+        'Senior Focus': Math.round(seniorityProfile),
+        'Multilingual': Math.round(languageCapability)
+      };
+    };
+
+    const ourMetrics = calculateAgencyMetrics(selectedAgencyName);
+    if (!ourMetrics) return null;
+
+    const competitorMetrics = competitors.length > 0 ? 
+      Object.keys(ourMetrics).reduce((acc, metric) => {
+        const validCompetitorValues = competitors
+          .map(comp => calculateAgencyMetrics(comp.agency))
+          .filter(m => m !== null)
+          .map(m => m![metric as keyof typeof ourMetrics]);
+        
+        const avgValue = validCompetitorValues.length > 0 ? 
+          validCompetitorValues.reduce((sum, val) => sum + val, 0) / validCompetitorValues.length : 0;
+        acc[metric as keyof typeof ourMetrics] = Math.round(avgValue);
+        return acc;
+      }, {} as typeof ourMetrics) : ourMetrics;
+
+    const systemAverage = Object.keys(ourMetrics).reduce((acc, metric) => {
+      const validAgencyValues = allAgencies
+        .map(agency => calculateAgencyMetrics(agency.agency))
+        .filter(m => m !== null)
+        .map(m => m![metric as keyof typeof ourMetrics]);
+      
+      const avgValue = validAgencyValues.length > 0 ? 
+        validAgencyValues.reduce((sum, val) => sum + val, 0) / validAgencyValues.length : 0;
+      acc[metric as keyof typeof ourMetrics] = Math.round(avgValue);
+      return acc;
+    }, {} as typeof ourMetrics);
+
+    const metricExplanations = {
+      'Market Position': 'Hiring volume relative to largest UN agency (100% = market leader)',
+      'Category Diversity': 'Percentage of all job categories covered by your agency',
+      'Global Reach': 'Percentage of all countries where UN operates that you have presence',
+      'Process Speed': 'Application window efficiency (7 days = 100%, 60+ days = 0%)',
+      'Senior Focus': 'Percentage of positions at P4+ and D-level grades',
+      'Multilingual': 'Percentage of positions requiring 2+ languages'
+    };
+
+    const calculateRealisticScale = (metricName: string, ourValue: number, competitorValue: number, systemValue: number) => {
+      const maxValue = Math.max(ourValue, competitorValue, systemValue);
+      
+      const scaleConfigs = {
+        'Market Position': { max: 100 },
+        'Category Diversity': { max: 100 }, 
+        'Global Reach': { max: 100 },
+        'Process Speed': { max: 100 },
+        'Senior Focus': { max: Math.max(20, maxValue * 1.5) },
+        'Multilingual': { max: Math.max(30, maxValue * 1.5) }
+      };
+      
+      const config = scaleConfigs[metricName as keyof typeof scaleConfigs] || { max: 100 };
+      const scale = (value: number) => Math.min(100, (value / config.max) * 100);
+      
+      return {
+        ourScaled: scale(ourValue),
+        competitorScaled: scale(competitorValue),
+        systemScaled: scale(systemValue),
+        maxScale: config.max,
+        rawOur: ourValue,
+        rawCompetitor: competitorValue,
+        rawSystem: systemValue
+      };
+    };
+
+    const radarData = Object.keys(ourMetrics).map(metric => {
+      const scaling = calculateRealisticScale(
+        metric,
+        ourMetrics[metric as keyof typeof ourMetrics],
+        competitorMetrics[metric as keyof typeof ourMetrics],
+        systemAverage[metric as keyof typeof ourMetrics]
+      );
+      
+      return {
+        metric: metric.replace(' ', '\n'),
+        [selectedAgencyName]: Math.round(scaling.ourScaled),
+        'Top Competitors': Math.round(scaling.competitorScaled),
+        'UN System': Math.round(scaling.systemScaled),
+        fullMetric: metric,
+        explanation: metricExplanations[metric as keyof typeof metricExplanations],
+        rawValues: {
+          [selectedAgencyName]: scaling.rawOur,
+          'Top Competitors': scaling.rawCompetitor,
+          'UN System': scaling.rawSystem
+        },
+        scale: `0-${scaling.maxScale}%`
+      };
+    });
+
+    return {
+      data: radarData,
+      ourMetrics,
+      competitorMetrics,
+      systemAverage,
+      competitors: competitors.map(c => c.agency)
+    };
+  }, [isAgencyView, selectedAgencyName, competitiveMarket, processedData]);
 
   const tabs = [
     {
@@ -389,22 +548,10 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       description: 'Workforce composition and strategic analysis'
     },
     {
-      id: 'benchmarking' as TabType,
-      name: 'Benchmarking',
-      icon: <Activity className="h-5 w-5" />,
-      description: 'Agency performance comparison'
-    },
-    {
       id: 'skills' as TabType,
       name: 'Skills',
       icon: <Briefcase className="h-5 w-5" />,
       description: 'Comprehensive skills analysis and insights'
-    },
-    {
-      id: 'summary' as TabType,
-      name: 'Executive',
-      icon: <Award className="h-5 w-5" />,
-      description: 'Strategic insights and recommendations'
     }
   ];
 
@@ -413,77 +560,190 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'overview':
         return (
           <div className="space-y-8">
-                        {/* Enhanced KPI Cards with trend indicators */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="metric-card">
-                <div className="metric-value">{metrics.totalJobs}</div>
-                <div className="metric-trend">
-                  <span className="text-green-600 text-sm">↗ +{monthOverMonthGrowth.toFixed(0)}% vs last month</span>
-                </div>
-                <div className="metric-label">
-                  <Briefcase className="h-4 w-4 mr-1" />
-                  {isAgencyView ? 'Agency Job Postings' : 'Total Job Postings'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {isAgencyView ? `${selectedAgencyName} positions` : 'All agencies combined'}
-                </div>
-              </div>
-              
-              <div className="metric-card">
-                <div className="metric-value">{isAgencyView ? agencyMarketShare.toFixed(1) + '%' : metrics.totalAgencies}</div>
-                <div className="metric-trend">
-                  <span className="text-yellow-600 text-sm">
-                    {isAgencyView ? (agencyMarketShare > 5 ? 'Strong' : 'Growing') : 'High'}
-                  </span>
-                </div>
-                <div className="metric-label">
-                  <Users className="h-4 w-4 mr-1" />
-                  {isAgencyView ? 'Market Share' : 'Competition Level'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {isAgencyView ? 'Share of total market' : `${metrics.totalAgencies} active agencies`}
-                </div>
-              </div>
+            {/* Enhanced KPI Cards with trend indicators */}
+            <KPICards
+              totalJobs={metrics.totalJobs}
+              totalAgencies={metrics.totalAgencies}
+              isAgencyView={isAgencyView}
+              selectedAgencyName={selectedAgencyName}
+              agencyMarketShare={agencyMarketShare}
+              agencyRank={agencyRank}
+              monthOverMonthGrowth={monthOverMonthGrowth}
+              topCategoryPercentage={marketMetrics.topCategories[0]?.percentage || 0}
+              topCategoryName={marketMetrics.topCategories[0]?.category || 'Leading category'}
+              medianApplicationWindow={medianApplicationWindow}
+              urgentRate={urgentRate}
+            />
 
-              <div className="metric-card">
-                <div className="metric-value">
-                  {isAgencyView ? (agencyRank ? `#${agencyRank}` : 'Unranked') : `${(marketMetrics.topCategories[0]?.percentage || 0).toFixed(1)}%`}
+            {/* Competitive Analysis Spider Chart - Agency View Only */}
+            {isAgencyView && competitiveAnalysis && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-6 w-6 text-indigo-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Competitive Analysis: {selectedAgencyName}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Performance comparison across 6 key strategic dimensions
+                  </p>
                 </div>
-                <div className="metric-trend">
-                  <span className="text-blue-600 text-sm">
-                    {isAgencyView ? (agencyRank && agencyRank <= 5 ? '↗ Top 5' : '→ Stable') : '↗ Leading'}
-                  </span>
-                </div>
-                <div className="metric-label">
-                  <Award className="h-4 w-4 mr-1" />
-                  {isAgencyView ? 'Market Ranking' : 'Top Category Share'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {isAgencyView ? 'Among all agencies' : `${marketMetrics.topCategories[0]?.category || 'Leading category'}`}
+                
+                <div className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Spider Chart */}
+                    <div className="lg:col-span-2">
+                      <div className="h-96">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart data={competitiveAnalysis.data}>
+                            <PolarGrid stroke="#E5E7EB" />
+                            <PolarAngleAxis 
+                              dataKey="metric" 
+                              fontSize={11}
+                              tick={{ fill: '#374151', textAnchor: 'middle' }}
+                            />
+                            <PolarRadiusAxis 
+                              angle={90} 
+                              domain={[0, 100]} 
+                              tick={false}
+                              axisLine={false}
+                            />
+                            
+                            <Radar
+                              name={selectedAgencyName}
+                              dataKey={selectedAgencyName}
+                              stroke="#3B82F6"
+                              fill="#3B82F6"
+                              fillOpacity={0.1}
+                              strokeWidth={3}
+                              dot={{ r: 4, fill: '#3B82F6' }}
+                            />
+                            
+                            <Radar
+                              name="Top Competitors"
+                              dataKey="Top Competitors"
+                              stroke="#EF4444"
+                              fill="#EF4444"
+                              fillOpacity={0.05}
+                              strokeWidth={2}
+                              strokeDasharray="5 5"
+                              dot={{ r: 3, fill: '#EF4444' }}
+                            />
+                            
+                            <Radar
+                              name="UN System"
+                              dataKey="UN System"
+                              stroke="#10B981"
+                              fill="#10B981"
+                              fillOpacity={0.05}
+                              strokeWidth={2}
+                              strokeDasharray="2 2"
+                              dot={{ r: 3, fill: '#10B981' }}
+                            />
+                            
+                            <Tooltip 
+                              formatter={(value: any, name: string) => {
+                                const dataPoint = competitiveAnalysis.data.find(d => d[name] === value);
+                                const rawValue = dataPoint?.rawValues[name];
+                                return [
+                                  `${rawValue}% (scaled: ${value}%)`, 
+                                  name === selectedAgencyName ? 'Your Agency' : name
+                                ];
+                              }}
+                              labelFormatter={(label) => {
+                                const dataPoint = competitiveAnalysis.data.find(d => d.metric === label);
+                                return dataPoint ? `${dataPoint.fullMetric} (Scale: ${dataPoint.scale})` : label.replace('\n', ' ');
+                              }}
+                              contentStyle={{
+                                backgroundColor: '#F9FAFB',
+                                border: '1px solid #E5E7EB',
+                                borderRadius: '8px',
+                                fontSize: '12px'
+                              }}
+                            />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      
+                      {/* Legend */}
+                      <div className="flex items-center justify-center gap-6 mt-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-1 bg-blue-500 rounded"></div>
+                          <span className="text-sm font-medium text-gray-700">{selectedAgencyName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-1 bg-red-500 rounded border-dashed border"></div>
+                          <span className="text-sm text-gray-600">Top Competitors</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-1 bg-green-500 rounded border-dotted border"></div>
+                          <span className="text-sm text-gray-600">UN System</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Performance Summary */}
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Performance Summary</h4>
+                        <div className="space-y-2">
+                          {Object.entries(competitiveAnalysis.ourMetrics).map(([metric, value]) => {
+                            const competitorValue = competitiveAnalysis.competitorMetrics[metric as keyof typeof competitiveAnalysis.competitorMetrics];
+                            const systemValue = competitiveAnalysis.systemAverage[metric as keyof typeof competitiveAnalysis.systemAverage];
+                            const isAboveCompetitors = value > competitorValue;
+                            const isAboveSystem = value > systemValue;
+                            const explanation = competitiveAnalysis.data.find(d => d.fullMetric === metric)?.explanation;
+                            const scale = competitiveAnalysis.data.find(d => d.fullMetric === metric)?.scale;
+                            
+                            return (
+                              <div key={metric} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                                      {metric}
+                                      <div className="group relative">
+                                        <HelpCircle className="h-3 w-3 text-gray-400 cursor-help" />
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                                          <div className="font-medium mb-1">{explanation}</div>
+                                          <div className="text-gray-300">Scale: {scale}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      vs Competitors: {isAboveCompetitors ? '+' : ''}{value - competitorValue}% • vs System: {value > systemValue ? '+' : ''}{value - systemValue}%
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className={`text-lg font-bold ${
+                                    isAboveCompetitors && isAboveSystem ? 'text-green-600' :
+                                    isAboveCompetitors || isAboveSystem ? 'text-blue-600' :
+                                    'text-red-600'
+                                  }`}>
+                                    {value}%
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {isAboveCompetitors && isAboveSystem ? '🏆 Leading' :
+                                     isAboveCompetitors || isAboveSystem ? '📈 Competitive' :
+                                     '⚠️ Behind'}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="metric-card">
-                <div className="metric-value">{isAgencyView ? medianApplicationWindow : Math.round(urgentRate)}</div>
-                <div className="metric-trend">
-                  <span className={`text-sm ${isAgencyView ? 'text-green-600' : urgentRate > 25 ? 'text-orange-600' : 'text-green-600'}`}>
-                    {isAgencyView ? '2 days faster' : urgentRate > 25 ? 'High urgency' : 'Moderate'}
-                  </span>
-                </div>
-                <div className="metric-label">
-                  <Target className="h-4 w-4 mr-1" />
-                  {isAgencyView ? 'Avg. App. Window' : 'Urgent Hiring Rate'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {isAgencyView ? 'Days to apply' : '% positions &lt;14 days'}
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Main Dashboard Panels (2x2 grid) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Panel 1: Market Pulse */}
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="h-6 w-6 text-green-600" />
@@ -572,7 +832,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
 
               {/* Panel 2: Competitive Landscape */}
-                  <div className="bg-white rounded-lg shadow">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                     <Eye className="h-6 w-6 text-blue-600" />
@@ -617,7 +877,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
 
                             {/* Panel 3: Strategic Insights */}
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <Zap className="h-6 w-6 text-purple-600" />
@@ -706,7 +966,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               </div>
 
                             {/* Panel 4: Performance Snapshot */}
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center gap-3">
                     <Activity className="h-6 w-6 text-orange-600" />
@@ -992,7 +1252,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           <CategoryInsights 
             metrics={isAgencyView ? metrics : marketMetrics}
             marketMetrics={marketMetrics}
-            data={processedData}
+            data={data}
             filters={filters}
             isAgencyView={isAgencyView}
           />
@@ -1001,7 +1261,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'temporal':
         return (
           <TemporalTrends 
-            data={processedData}
+            data={data}
             filters={filters}
           />
         );
@@ -1009,7 +1269,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'competitive':
         return (
           <CompetitiveIntel 
-            data={processedData}
+            data={data}
             filters={filters}
           />
         );
@@ -1017,15 +1277,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'workforce':
         return (
           <WorkforceComposition 
-            data={processedData}
-            filters={filters}
-          />
-        );
-
-      case 'benchmarking':
-        return (
-          <AgencyBenchmarking 
-            data={processedData}
+            data={data}
             filters={filters}
           />
         );
@@ -1033,15 +1285,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       case 'skills':
         return (
           <Skills 
-            data={processedData}
-            filters={filters}
-          />
-        );
-
-      case 'summary':
-        return (
-          <ExecutiveSummary 
-            data={processedData}
+            data={data}
             filters={filters}
           />
         );
@@ -1052,65 +1296,161 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {isAgencyView ? `${selectedAgencyName} - Internal Analytics` : 'UN Jobs Market Analytics'}
-            </h1>
-            <p className="text-xl text-gray-600">
-              {isAgencyView 
-                ? `Internal hiring insights and strategic analysis for ${selectedAgencyName}`
-                : 'Understanding hiring patterns across the UN system'
-              }
-            </p>
-          </div>
-
-          {/* Controls */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Agency Selector */}
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-gray-500" />
-                  <select
-                    value={filters.selectedAgency}
-                    onChange={(e) => setFilters(prev => ({ ...prev, selectedAgency: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-un-blue focus:border-transparent"
-                  >
-                    <option value="all">🌍 Market View - All Agencies</option>
-                    {agencies.map(agency => (
-                      <option key={agency} value={agency}>🏢 {agency} - Internal View</option>
-                    ))}
-                  </select>
+            {/* Clean Integrated Header */}
+            <div className="flex items-center justify-between mb-8">
+              {/* Left side - App Branding */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/UNDP_logo.png" 
+                    alt="UNDP" 
+                    className="h-10 w-auto"
+                  />
+                  <div className="flex flex-col">
+                    <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                      Baro Talent
+                    </h1>
+                    <p className="text-xs text-gray-600 leading-tight">
+                      Data Viewer
+                    </p>
+                  </div>
                 </div>
-
-                {/* Time Range Selector */}
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-gray-500" />
+                
+                {/* Integrated Agency Selection */}
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-px bg-gray-300"></div>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-400 transition-colors"
+                    >
+                      {filters.selectedAgency === 'all' ? (
+                        <>
+                          <span>🌍</span>
+                          <span className="font-medium">Market View</span>
+                        </>
+                      ) : (
+                        <>
+                          {getAgencyLogo(filters.selectedAgency) ? (
+                            <img 
+                              src={getAgencyLogo(filters.selectedAgency)!} 
+                              alt={filters.selectedAgency} 
+                              className="h-4 w-4 object-contain"
+                            />
+                          ) : (
+                            <span>🏢</span>
+                          )}
+                          <span className="font-medium">{filters.selectedAgency}</span>
+                        </>
+                      )}
+                      <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showAgencyDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => {
+                            setFilters(prev => ({ ...prev, selectedAgency: 'all' }));
+                            setShowAgencyDropdown(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors border-b border-gray-100"
+                        >
+                          <span>🌍</span>
+                          <span className="font-medium">Market View</span>
+                        </button>
+                        {agencies.map(agency => (
+                          <button
+                            key={agency}
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, selectedAgency: agency }));
+                              setShowAgencyDropdown(false);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                          >
+                            {getAgencyLogo(agency) ? (
+                              <img 
+                                src={getAgencyLogo(agency)!} 
+                                alt={agency} 
+                                className="h-4 w-4 object-contain"
+                              />
+                            ) : (
+                              <span>🏢</span>
+                            )}
+                            <span className="font-medium">{agency}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Time Filter */}
                   <select
                     value={filters.timeRange}
                     onChange={(e) => setFilters(prev => ({ ...prev, timeRange: e.target.value as any }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-un-blue focus:border-transparent"
+                    className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="all">All Time</option>
-                    <option value="1year">Last 12 Months</option>
-                    <option value="6months">Last 6 Months</option>
-                    <option value="3months">Last 3 Months</option>
+                    <option value="6months">6 Months</option>
+                    <option value="1year">1 Year</option>
+                    <option value="2years">2 Years</option>
                   </select>
                 </div>
               </div>
               
-              <div className="text-sm text-gray-600">
-                {isAgencyView ? `${metrics.totalJobs} positions • ${metrics.totalDepartments} departments` : `${metrics.totalJobs} positions • ${metrics.totalAgencies} agencies`}
+              {/* Right side - MOFA Branding */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Funded by</span>
+                <img 
+                  src="/MOFA.png" 
+                  alt="Ministry of Foreign Affairs" 
+                  className="h-6 w-auto"
+                />
+              </div>
+            </div>
+
+            {/* Dynamic Page Title */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {isAgencyView && getAgencyLogo(selectedAgencyName) && (
+                  <img 
+                    src={getAgencyLogo(selectedAgencyName)!} 
+                    alt={selectedAgencyName} 
+                    className="h-16 w-16 object-contain"
+                  />
+                )}
+                <div className="flex flex-col">
+                  <h2 className="text-4xl font-bold text-gray-900">
+                    {isAgencyView ? selectedAgencyName : 'Talent Analytics'}
+                  </h2>
+                  <p className="text-lg text-gray-600 mt-1">
+                    {isAgencyView 
+                      ? 'Internal Analytics & Strategic Insights'
+                      : 'Data-driven insights for strategic workforce planning'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-2xl font-bold text-gray-900">
+                  {metrics.totalJobs}
+                </div>
+                <div className="text-sm text-gray-600">
+                  positions {!isAgencyView && `• ${metrics.totalAgencies} agencies`}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-lg shadow mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6" aria-label="Tabs">
                 {tabs.map((tab) => (

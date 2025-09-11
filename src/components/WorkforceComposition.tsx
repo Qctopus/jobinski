@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { Target, Award, UserCheck, Zap, Info } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor } from '../services/dataProcessor';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 interface WorkforceCompositionProps {
   data: ProcessedJobData[];
@@ -10,21 +10,14 @@ interface WorkforceCompositionProps {
 }
 
 const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filters }) => {
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
-  
-  // Determine if we're in agency-specific view
-  const isAgencyView = filters.selectedAgency !== 'all';
-  const selectedAgencyName = filters.selectedAgency;
-
-  // Apply filters to get relevant data
-  const filteredData = useMemo(() => {
-    return processor.applyFilters(data, filters);
-  }, [data, filters, processor]);
-
-  // Get market data for comparison (always unfiltered)
-  const marketData = useMemo(() => {
-    return processor.applyFilters(data, { selectedAgency: 'all', timeRange: filters.timeRange });
-  }, [data, filters.timeRange, processor]);
+  // Use shared hook for common dashboard data and processing
+  const { 
+    processor, 
+    isAgencyView, 
+    selectedAgencyName, 
+    filteredData, 
+    marketData 
+  } = useDashboardData(data, filters);
 
   // Helper function to classify employment type
   const isStaff = (grade: string) => {
