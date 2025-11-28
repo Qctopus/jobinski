@@ -25,7 +25,6 @@ import HiringSurgeAlerts from './categories/HiringSurgeAlerts';
 import CategoryCompositionPanel from './categories/CategoryCompositionPanel';
 import CategoryDrillDown from './CategoryDrillDown';
 import CategoryEvolutionChart from './categories/CategoryEvolutionChart';
-import { ComparisonPeriodSelector, TimeContextBanner, DataAvailabilityWarning } from './categories/TimeContextBanner';
 
 interface CategoryInsightsProps {
   metrics: DashboardMetrics;
@@ -300,156 +299,172 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Compact Header with Controls */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Brain className="h-5 w-5 text-indigo-600" />
+          <Brain className="h-6 w-6 text-indigo-600" />
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Workforce Composition</h2>
-            <p className="text-xs text-gray-500">
-              {isAgencyView 
-                ? `${agencyName} — ${peerGroupInfo?.name || 'Workforce alignment analysis'}`
-                : 'UN System — Category distribution and trends'
-              }
+            <h2 className="text-xl font-bold text-gray-900">Categories</h2>
+            <p className="text-sm text-gray-500">
+              {isAgencyView ? `${agencyName} workforce composition` : 'UN System hiring patterns'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Period selector inline */}
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+            {(['4weeks', '8weeks', '3months'] as const).map((period) => (
+              <button
+                key={period}
+                onClick={() => setComparisonPeriod(period)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  comparisonPeriod === period
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {period === '4weeks' ? '4W' : period === '8weeks' ? '8W' : '3M'}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors text-xs font-medium ${
-              showFilters ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`p-2 rounded-lg transition-colors ${
+              showFilters ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            <Filter className="h-3.5 w-3.5" />
-            Filters
+            <Filter className="h-4 w-4" />
           </button>
           <button
             onClick={exportReport}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-xs font-medium"
+            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
           >
-            <Download className="h-3.5 w-3.5" />
-            Export
+            <Download className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Mandate Alignment Summary */}
-      <MandateAlignmentSummary 
-        data={data} 
-        agency={agencyName} 
-        isAgencyView={isAgencyView} 
-      />
-
-      {/* Time Comparison Period Selector (Issue 3) */}
-      <ComparisonPeriodSelector 
-        value={comparisonPeriod}
-        onChange={setComparisonPeriod}
-      />
-
-      {/* Time Context Banner (Issue 6) */}
-      <TimeContextBanner 
-        currentPeriod={periodBoundaries.currentLabel}
-        comparisonPeriod={periodBoundaries.previousLabel}
-        comparisonType={comparisonPeriod}
-      />
-
-      {/* Data Availability Warning (Issue 6) */}
-      <DataAvailabilityWarning 
-        hasPreviousData={recentTrends.hasPreviousData}
-        previousCount={recentTrends.previousTotalCount}
-        currentCount={recentTrends.currentTotalCount}
-      />
-
-      {/* Filter panel */}
+      {/* Evolution period filter - collapsible */}
       {showFilters && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center gap-4">
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <div className="flex items-center gap-6">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Evolution Period</label>
-              <select
-                value={shiftPeriod}
-                onChange={(e) => setShiftPeriod(Number(e.target.value) as 12 | 6 | 3)}
-                className="px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
-              >
-                <option value={6}>6 months</option>
-                <option value={3}>3 months</option>
-                <option value={12}>12 months</option>
-              </select>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Evolution Chart Period</label>
+              <div className="flex gap-1">
+                {([3, 6, 12] as const).map((months) => (
+                  <button
+                    key={months}
+                    onClick={() => setShiftPeriod(months)}
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                      shiftPeriod === months
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-300 hover:border-indigo-400'
+                    }`}
+                  >
+                    {months}M
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Recent Trends - Quick glance */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-semibold text-gray-800">Category Trends</span>
-            <span className="text-xs text-gray-500">— {comparisonPeriod === '4weeks' ? 'Last 4 weeks vs prior 4 weeks' : comparisonPeriod === '8weeks' ? 'Last 8 weeks vs prior 8 weeks' : 'Last 3 months vs prior 3 months'}</span>
-          </div>
-          <div className="text-[10px] text-gray-400">
-            {recentTrends.currentTotalCount} current • {recentTrends.previousTotalCount} previous | {recentTrends.growing.length} growing • {recentTrends.declining.length} declining
+      {/* Visual Summary Dashboard */}
+      <MandateAlignmentSummary 
+        data={data} 
+        agency={agencyName} 
+        isAgencyView={isAgencyView}
+        periodStart={periodBoundaries.currentStart}
+        periodEnd={periodBoundaries.currentEnd}
+        periodLabel={periodBoundaries.currentLabel}
+      />
+
+      {/* Data Warning if needed */}
+      {!recentTrends.hasPreviousData && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">Limited comparison data</p>
+            <p className="text-xs text-amber-600">No data available for the previous period. Showing current period only.</p>
           </div>
         </div>
-        
-        <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Growing */}
-          <div className="border border-green-100 rounded-lg p-3 bg-green-50/50">
-            <div className="flex items-center gap-1.5 mb-2">
-              <ArrowUp className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-xs font-semibold text-green-700">Growing Categories</span>
-            </div>
-            <div className="space-y-1.5">
-              {recentTrends.growing.slice(0, 4).map(([category, trend]) => (
-                <div 
-                  key={category} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-green-100 rounded px-2 py-1 -mx-1"
-                  onClick={() => handleCategoryClick(category)}
-                >
-                  <span className="text-xs text-gray-700 truncate flex-1 mr-2">
-                    {category.length > 30 ? category.slice(0, 30) + '...' : category}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-500">{trend.current} jobs</span>
-                    <span className="text-xs font-bold text-green-600">+{trend.growth.toFixed(0)}%</span>
-                  </div>
-                </div>
-              ))}
-              {recentTrends.growing.length === 0 && (
-                <span className="text-xs text-gray-400 italic">No significant growth</span>
-              )}
+      )}
+
+      {/* Category Trends - Visual Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Growing Categories */}
+        <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-5 border border-emerald-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-emerald-500 rounded-lg">
+                <ArrowUp className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-emerald-900">Growing</h3>
+                <p className="text-xs text-emerald-600">{recentTrends.growing.length} categories trending up</p>
+              </div>
             </div>
           </div>
-
-          {/* Declining */}
-          <div className="border border-amber-100 rounded-lg p-3 bg-amber-50/50">
-            <div className="flex items-center gap-1.5 mb-2">
-              <ArrowDown className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-xs font-semibold text-amber-700">Declining Categories</span>
-            </div>
-            <div className="space-y-1.5">
-              {recentTrends.declining.slice(0, 4).map(([category, trend]) => (
-                <div 
-                  key={category} 
-                  className="flex items-center justify-between cursor-pointer hover:bg-amber-100 rounded px-2 py-1 -mx-1"
-                  onClick={() => handleCategoryClick(category)}
-                >
-                  <span className="text-xs text-gray-700 truncate flex-1 mr-2">
-                    {category.length > 30 ? category.slice(0, 30) + '...' : category}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-500">{trend.current} jobs</span>
-                    <span className="text-xs font-bold text-amber-600">{trend.growth.toFixed(0)}%</span>
-                  </div>
+          <div className="space-y-2">
+            {recentTrends.growing.slice(0, 4).map(([category, trend]) => (
+              <div 
+                key={category} 
+                className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2 cursor-pointer transition-colors"
+                onClick={() => handleCategoryClick(category)}
+              >
+                <span className="text-sm text-gray-800 truncate flex-1 mr-3">
+                  {category.length > 25 ? category.slice(0, 25) + '...' : category}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
+                  <span className="text-sm font-bold text-emerald-600 tabular-nums">+{trend.growth.toFixed(0)}%</span>
                 </div>
-              ))}
-              {recentTrends.declining.length === 0 && (
-                <span className="text-xs text-gray-400 italic">No significant decline</span>
-              )}
+              </div>
+            ))}
+            {recentTrends.growing.length === 0 && (
+              <div className="text-center py-4 text-sm text-emerald-600/60">
+                No significant growth in this period
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Declining Categories */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-amber-500 rounded-lg">
+                <ArrowDown className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-900">Declining</h3>
+                <p className="text-xs text-amber-600">{recentTrends.declining.length} categories trending down</p>
+              </div>
             </div>
+          </div>
+          <div className="space-y-2">
+            {recentTrends.declining.slice(0, 4).map(([category, trend]) => (
+              <div 
+                key={category} 
+                className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2 cursor-pointer transition-colors"
+                onClick={() => handleCategoryClick(category)}
+              >
+                <span className="text-sm text-gray-800 truncate flex-1 mr-3">
+                  {category.length > 25 ? category.slice(0, 25) + '...' : category}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
+                  <span className="text-sm font-bold text-amber-600 tabular-nums">{trend.growth.toFixed(0)}%</span>
+                </div>
+              </div>
+            ))}
+            {recentTrends.declining.length === 0 && (
+              <div className="text-center py-4 text-sm text-amber-600/60">
+                No significant decline in this period
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,30 +1,27 @@
 /**
- * Mandate Alignment Summary
+ * Mandate Alignment Summary - Visual Dashboard Header
  * 
- * Top panel showing executive briefing on workforce-mandate alignment.
- * Provides quick context for HR leadership.
+ * A visual, information-dense summary panel for workforce alignment.
+ * Respects time period filter and shows clear metrics with visual indicators.
  */
 
 import React from 'react';
-import { Briefcase, MapPin, Clock, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { 
+  MapPin, Clock, Users, TrendingUp, TrendingDown, 
+  Globe, Building2, Calendar, Target
+} from 'lucide-react';
 import { ProcessedJobData } from '../../types';
 import { getAgencyPeerGroup, getPeerAgencies } from '../../config/peerGroups';
+import { parseISO } from 'date-fns';
+import { JOB_CLASSIFICATION_DICTIONARY } from '../../dictionary';
 
 interface MandateAlignmentSummaryProps {
   data: ProcessedJobData[];
   agency: string | null;
   isAgencyView: boolean;
-}
-
-interface SummaryMetrics {
-  totalPositions: number;
-  categoryCount: number;
-  topCategories: Array<{ name: string; count: number; percentage: number }>;
-  fieldPercentage: number;
-  medianApplicationWindow: number;
-  peerGroupName?: string;
-  peerFieldPercentage?: number;
-  alignment?: 'above' | 'below' | 'in_line';
+  periodStart?: Date;
+  periodEnd?: Date;
+  periodLabel?: string;
 }
 
 // DAC Donor Countries - positions in these countries are NOT "field" positions
@@ -40,61 +37,57 @@ const DAC_DONOR_COUNTRIES = [
 
 // Primary UN Headquarters locations
 const HQ_LOCATIONS = [
-  // Primary UN HQs
   'new york', 'geneva', 'vienna', 'nairobi', 'rome', 'paris',
-  // Secondary HQs
   'copenhagen', 'the hague', 'bonn', 'montreal', 'washington',
-  // Regional commission seats
   'bangkok', 'beirut', 'addis ababa', 'santiago'
 ];
 
-// High-income non-DAC countries that are also not "field"
 const HIGH_INCOME_NON_FIELD = [
   'singapore', 'hong kong', 'qatar', 'united arab emirates', 'uae',
   'saudi arabia', 'kuwait', 'bahrain', 'brunei'
 ];
 
-/**
- * Determine if a position is a "programme country" (field) position
- * Field = NOT HQ, NOT donor country, NOT home-based
- */
 const isFieldPosition = (dutyStation: string, dutyCountry: string): boolean => {
   const station = (dutyStation || '').toLowerCase().trim();
   const country = (dutyCountry || '').toLowerCase().trim();
   
-  // Home-based is NOT field (could be anywhere)
-  if (station.includes('home') || station.includes('remote')) {
-    return false;
-  }
+  if (station.includes('home') || station.includes('remote')) return false;
+  if (HQ_LOCATIONS.some(hq => station.includes(hq) || country.includes(hq))) return false;
+  if (DAC_DONOR_COUNTRIES.some(dac => country.includes(dac))) return false;
+  if (HIGH_INCOME_NON_FIELD.some(hi => country.includes(hi))) return false;
   
-  // HQ locations are NOT field
-  if (HQ_LOCATIONS.some(hq => station.includes(hq) || country.includes(hq))) {
-    return false;
-  }
-  
-  // DAC donor countries are NOT field
-  if (DAC_DONOR_COUNTRIES.some(dac => country.includes(dac))) {
-    return false;
-  }
-  
-  // High-income non-DAC are NOT field
-  if (HIGH_INCOME_NON_FIELD.some(hi => country.includes(hi))) {
-    return false;
-  }
-  
-  // Everything else is considered a programme country / field position
   return true;
+};
+
+// Get category color
+const getCategoryColor = (categoryName: string) => {
+  return JOB_CLASSIFICATION_DICTIONARY.find(c => c.name === categoryName)?.color || '#6B7280';
 };
 
 const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
   data,
   agency,
-  isAgencyView
+  isAgencyView,
+  periodStart,
+  periodEnd,
+  periodLabel
 }) => {
-  const metrics = React.useMemo((): SummaryMetrics => {
+  const metrics = React.useMemo(() => {
+    // Filter by time period if specified
+    let timeFilteredData = data;
+    if (periodStart && periodEnd) {
+      timeFilteredData = data.filter(job => {
+        try {
+          const postDate = parseISO(job.posting_date);
+          return postDate >= periodStart && postDate <= periodEnd;
+        } catch { return false; }
+      });
+    }
+
+    // Filter by agency if in agency view
     const relevantData = isAgencyView && agency
-      ? data.filter(job => (job.short_agency || job.long_agency) === agency)
-      : data;
+      ? timeFilteredData.filter(job => (job.short_agency || job.long_agency) === agency)
+      : timeFilteredData;
     
     // Count by category
     const categoryCounts = new Map<string, number>();
@@ -108,176 +101,229 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
       .map(([name, count]) => ({
         name,
         count,
-        percentage: (count / (relevantData.length || 1)) * 100
+        percentage: (count / (relevantData.length || 1)) * 100,
+        color: getCategoryColor(name)
       }));
     
-    // Programme country positions (using proper field detection)
+    // Programme country positions
     const fieldJobs = relevantData.filter(job => 
       isFieldPosition(job.duty_station || '', job.duty_country || '')
     );
-    const fieldPercentage = (fieldJobs.length / (relevantData.length || 1)) * 100;
+    const hqJobs = relevantData.filter(job => {
+      const station = (job.duty_station || '').toLowerCase();
+      return HQ_LOCATIONS.some(hq => station.includes(hq));
+    });
+    const homeJobs = relevantData.filter(job => {
+      const station = (job.duty_station || '').toLowerCase();
+      return station.includes('home') || station.includes('remote');
+    });
     
     // Median application window
     const windows = relevantData
       .map(j => j.application_window_days)
       .filter(w => typeof w === 'number' && w > 0)
       .sort((a, b) => a - b);
-    const medianWindow = windows.length > 0
-      ? windows[Math.floor(windows.length / 2)]
-      : 0;
+    const medianWindow = windows.length > 0 ? windows[Math.floor(windows.length / 2)] : 0;
     
-    const result: SummaryMetrics = {
-      totalPositions: relevantData.length,
-      categoryCount: categoryCounts.size,
-      topCategories: sortedCategories.slice(0, 3),
-      fieldPercentage,
-      medianApplicationWindow: medianWindow
-    };
-    
-    // Agency-specific peer comparison
+    // Peer comparison
+    let peerData: { fieldPct: number; name: string } | null = null;
     if (isAgencyView && agency) {
       const peerGroup = getAgencyPeerGroup(agency);
       const peerAgencies = getPeerAgencies(agency);
       
       if (peerGroup && peerAgencies.length > 0) {
-        const peerData = data.filter(job => 
+        const peerJobs = timeFilteredData.filter(job => 
           peerAgencies.includes(job.short_agency || job.long_agency || '')
         );
-        
-        const peerFieldJobs = peerData.filter(job => 
+        const peerFieldJobs = peerJobs.filter(job => 
           isFieldPosition(job.duty_station || '', job.duty_country || '')
         );
-        const peerFieldPct = (peerFieldJobs.length / (peerData.length || 1)) * 100;
-        
-        result.peerGroupName = peerGroup.name;
-        result.peerFieldPercentage = peerFieldPct;
-        
-        const diff = fieldPercentage - peerFieldPct;
-        result.alignment = Math.abs(diff) < 5 ? 'in_line' : diff > 0 ? 'above' : 'below';
+        peerData = {
+          fieldPct: (peerFieldJobs.length / (peerJobs.length || 1)) * 100,
+          name: peerGroup.name
+        };
       }
     }
     
-    return result;
-  }, [data, agency, isAgencyView]);
+    return {
+      totalPositions: relevantData.length,
+      categoryCount: categoryCounts.size,
+      topCategories: sortedCategories.slice(0, 5),
+      fieldPercentage: (fieldJobs.length / (relevantData.length || 1)) * 100,
+      hqPercentage: (hqJobs.length / (relevantData.length || 1)) * 100,
+      homePercentage: (homeJobs.length / (relevantData.length || 1)) * 100,
+      medianApplicationWindow: medianWindow,
+      peerData
+    };
+  }, [data, agency, isAgencyView, periodStart, periodEnd]);
 
-  // Generate narrative text
-  const narrative = React.useMemo(() => {
-    if (isAgencyView && agency) {
-      const topCatNames = metrics.topCategories.slice(0, 2).map(c => c.name).join(' and ');
-      const topCatPct = metrics.topCategories.slice(0, 2).reduce((sum, c) => sum + c.percentage, 0);
-      
-      let alignmentText = '';
-      if (metrics.peerFieldPercentage !== undefined) {
-        if (metrics.alignment === 'in_line') {
-          alignmentText = `in line with your peer group average of ${metrics.peerFieldPercentage.toFixed(0)}%`;
-        } else if (metrics.alignment === 'above') {
-          alignmentText = `above your peer group average of ${metrics.peerFieldPercentage.toFixed(0)}%`;
-        } else {
-          alignmentText = `below your peer group average of ${metrics.peerFieldPercentage.toFixed(0)}%`;
-        }
-      }
-      
-      return (
-        <>
-          <span className="font-semibold text-gray-900">{agency}</span> has{' '}
-          <span className="font-semibold text-blue-600">{metrics.totalPositions.toLocaleString()}</span>{' '}
-          open positions across{' '}
-          <span className="font-semibold">{metrics.categoryCount}</span> categories. 
-          Your hiring is concentrated in{' '}
-          <span className="font-semibold">{topCatNames}</span>{' '}
-          ({topCatPct.toFixed(0)}%).
-          Programme country positions represent{' '}
-          <span className="font-semibold">{metrics.fieldPercentage.toFixed(0)}%</span> of your openings
-          {alignmentText && <>, {alignmentText}</>}.
-        </>
-      );
-    } else {
-      const topCatNames = metrics.topCategories.slice(0, 3).map(c => c.name).join(', ');
-      const topCatPct = metrics.topCategories.slice(0, 3).reduce((sum, c) => sum + c.percentage, 0);
-      
-      return (
-        <>
-          The UN system currently has{' '}
-          <span className="font-semibold text-blue-600">{metrics.totalPositions.toLocaleString()}</span>{' '}
-          open positions across{' '}
-          <span className="font-semibold">{metrics.categoryCount}</span> categories.{' '}
-          <span className="font-semibold">{topCatNames}</span> represent{' '}
-          <span className="font-semibold">{topCatPct.toFixed(0)}%</span> of all hiring. 
-          Programme country positions account for{' '}
-          <span className="font-semibold">{metrics.fieldPercentage.toFixed(0)}%</span> of openings. 
-          System-wide median application window:{' '}
-          <span className="font-semibold">{metrics.medianApplicationWindow}</span> days.
-        </>
-      );
-    }
-  }, [metrics, agency, isAgencyView]);
+  const fieldDiff = metrics.peerData ? metrics.fieldPercentage - metrics.peerData.fieldPct : 0;
 
   return (
-    <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200 p-5">
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 p-3 bg-white rounded-lg shadow-sm">
-          <Briefcase className="h-6 w-6 text-slate-600" />
+    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 rounded-2xl p-6 text-white shadow-xl">
+      {/* Header with period indicator */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          {isAgencyView ? (
+            <div className="p-2.5 bg-white/10 backdrop-blur rounded-xl">
+              <Building2 className="h-6 w-6 text-blue-300" />
+            </div>
+          ) : (
+            <div className="p-2.5 bg-white/10 backdrop-blur rounded-xl">
+              <Globe className="h-6 w-6 text-emerald-300" />
+            </div>
+          )}
+          <div>
+            <h2 className="text-xl font-bold">
+              {isAgencyView ? agency : 'UN System'}
+            </h2>
+            <p className="text-sm text-slate-300">
+              {isAgencyView ? 'Agency Workforce Summary' : 'Market Overview'}
+            </p>
+          </div>
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-            {isAgencyView ? 'Workforce Alignment Summary' : 'UN System Overview'}
-          </h2>
-          
-          <p className="text-base text-gray-700 leading-relaxed">
-            {narrative}
-          </p>
-          
-          {/* Quick stats row */}
-          <div className="mt-4 flex flex-wrap gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4 text-slate-400" />
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{metrics.totalPositions.toLocaleString()}</span> positions
-              </span>
+        {periodLabel && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur rounded-lg">
+            <Calendar className="h-4 w-4 text-slate-300" />
+            <span className="text-sm text-slate-200">{periodLabel}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Main metrics grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Positions */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-4 w-4 text-blue-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wide">Positions</span>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {metrics.totalPositions.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-400 mt-1">
+            across {metrics.categoryCount} categories
+          </div>
+        </div>
+
+        {/* Programme Countries */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="h-4 w-4 text-emerald-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wide">Field</span>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {metrics.fieldPercentage.toFixed(0)}%
+          </div>
+          {metrics.peerData && (
+            <div className={`text-xs mt-1 flex items-center gap-1 ${fieldDiff >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {fieldDiff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+              {Math.abs(fieldDiff).toFixed(0)}pp vs peers
             </div>
-            
-            <div className="flex items-center gap-2 text-sm group relative">
-              <MapPin className="h-4 w-4 text-slate-400" />
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{metrics.fieldPercentage.toFixed(0)}%</span> programme countries
-              </span>
-              {/* Tooltip explaining the metric */}
-              <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10">
-                <div className="bg-gray-800 text-white text-xs rounded-lg py-2 px-3 w-64 shadow-lg">
-                  <p className="font-medium mb-1">Programme Country Positions</p>
-                  <p className="text-gray-300">Excludes: HQ locations (NY, Geneva, Vienna, Rome, etc.), DAC donor countries, and home-based positions.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-slate-400" />
-              <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{metrics.medianApplicationWindow}</span>d median window
-              </span>
-            </div>
-            
-            {isAgencyView && metrics.peerGroupName && (
-              <div className="flex items-center gap-2 text-sm bg-white px-2 py-1 rounded-md">
-                {metrics.alignment === 'above' ? (
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                ) : metrics.alignment === 'below' ? (
-                  <TrendingDown className="h-4 w-4 text-amber-500" />
-                ) : (
-                  <span className="h-4 w-4 text-center text-gray-400">≈</span>
-                )}
-                <span className="text-gray-500 text-xs">
-                  vs {metrics.peerGroupName}
-                </span>
-              </div>
-            )}
+          )}
+        </div>
+
+        {/* HQ Positions */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="h-4 w-4 text-purple-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wide">HQ</span>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {metrics.hqPercentage.toFixed(0)}%
+          </div>
+          <div className="text-xs text-slate-400 mt-1">
+            {metrics.homePercentage.toFixed(0)}% remote
+          </div>
+        </div>
+
+        {/* Application Window */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-amber-400" />
+            <span className="text-xs text-slate-400 uppercase tracking-wide">Window</span>
+          </div>
+          <div className="text-3xl font-bold text-white">
+            {metrics.medianApplicationWindow}
+          </div>
+          <div className="text-xs text-slate-400 mt-1">
+            days median
           </div>
         </div>
       </div>
+
+      {/* Category distribution bar */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-slate-400 uppercase tracking-wide">Top Categories</span>
+          <span className="text-xs text-slate-500">
+            {metrics.topCategories.slice(0, 3).reduce((sum, c) => sum + c.percentage, 0).toFixed(0)}% of hiring
+          </span>
+        </div>
+        
+        {/* Stacked bar visualization */}
+        <div className="h-8 rounded-lg overflow-hidden flex bg-white/5">
+          {metrics.topCategories.slice(0, 5).map((cat, i) => (
+            <div 
+              key={cat.name}
+              className="h-full flex items-center justify-center transition-all hover:brightness-110 cursor-pointer group relative"
+              style={{ 
+                width: `${cat.percentage}%`, 
+                backgroundColor: cat.color,
+                minWidth: cat.percentage > 5 ? '40px' : '20px'
+              }}
+              title={`${cat.name}: ${cat.count} (${cat.percentage.toFixed(1)}%)`}
+            >
+              {cat.percentage > 10 && (
+                <span className="text-[10px] font-medium text-white/90 truncate px-1">
+                  {cat.percentage.toFixed(0)}%
+                </span>
+              )}
+            </div>
+          ))}
+          {metrics.topCategories.length > 0 && (
+            <div 
+              className="h-full flex items-center justify-center bg-slate-600/50"
+              style={{ flexGrow: 1 }}
+            >
+              <span className="text-[10px] text-slate-400">Other</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 mt-3">
+          {metrics.topCategories.slice(0, 5).map(cat => (
+            <div key={cat.name} className="flex items-center gap-1.5">
+              <div 
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: cat.color }}
+              />
+              <span className="text-xs text-slate-300 truncate max-w-[120px]">
+                {cat.name.length > 18 ? cat.name.slice(0, 18) + '...' : cat.name}
+              </span>
+              <span className="text-xs text-slate-500">({cat.count})</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Peer comparison footer */}
+      {isAgencyView && metrics.peerData && (
+        <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-slate-400" />
+            <span className="text-xs text-slate-400">
+              Compared to {metrics.peerData.name}
+            </span>
+          </div>
+          <div className="text-xs text-slate-300">
+            Peer field rate: <span className="font-medium">{metrics.peerData.fieldPct.toFixed(0)}%</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default MandateAlignmentSummary;
-
