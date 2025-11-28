@@ -4,7 +4,7 @@ import { ProcessedJobData, FilterOptions } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { TimeframeProvider } from '../contexts/TimeframeContext';
 import { getAgencyLogo } from '../utils/agencyLogos';
-import CategoryInsights from './CategoryInsights';
+import CategoryInsights from './CategoryInsightsNew';
 import TemporalTrends from './TemporalTrends';
 import CompetitiveIntel from './CompetitiveIntel';
 import WorkforceComposition from './WorkforceComposition';
