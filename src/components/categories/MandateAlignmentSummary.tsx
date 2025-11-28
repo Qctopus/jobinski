@@ -3,12 +3,13 @@
  * 
  * A visual, information-dense summary panel for workforce alignment.
  * Respects time period filter and shows clear metrics with visual indicators.
+ * Light theme with proper category colors.
  */
 
 import React from 'react';
 import { 
   MapPin, Clock, Users, TrendingUp, TrendingDown, 
-  Globe, Building2, Calendar, Target
+  Globe, Building2, Calendar, Target, Home
 } from 'lucide-react';
 import { ProcessedJobData } from '../../types';
 import { getAgencyPeerGroup, getPeerAgencies } from '../../config/peerGroups';
@@ -35,7 +36,6 @@ const DAC_DONOR_COUNTRIES = [
   'united states', 'usa', 'us', 'united states of america'
 ];
 
-// Primary UN Headquarters locations
 const HQ_LOCATIONS = [
   'new york', 'geneva', 'vienna', 'nairobi', 'rome', 'paris',
   'copenhagen', 'the hague', 'bonn', 'montreal', 'washington',
@@ -59,9 +59,19 @@ const isFieldPosition = (dutyStation: string, dutyCountry: string): boolean => {
   return true;
 };
 
-// Get category color
-const getCategoryColor = (categoryName: string) => {
-  return JOB_CLASSIFICATION_DICTIONARY.find(c => c.name === categoryName)?.color || '#6B7280';
+// Helper to get category info from dictionary
+const getCategoryInfo = (categoryIdOrName: string) => {
+  const cat = JOB_CLASSIFICATION_DICTIONARY.find(
+    c => c.id === categoryIdOrName || c.name === categoryIdOrName
+  );
+  if (cat) return { name: cat.name, color: cat.color, id: cat.id };
+  
+  const fallbackName = categoryIdOrName
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace(' And ', ' & ');
+  return { name: fallbackName, color: '#6B7280', id: categoryIdOrName };
 };
 
 const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
@@ -98,12 +108,16 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
     
     const sortedCategories = Array.from(categoryCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({
-        name,
-        count,
-        percentage: (count / (relevantData.length || 1)) * 100,
-        color: getCategoryColor(name)
-      }));
+      .map(([categoryId, count]) => {
+        const info = getCategoryInfo(categoryId);
+        return {
+          id: categoryId,
+          name: info.name,
+          color: info.color,
+          count,
+          percentage: (count / (relevantData.length || 1)) * 100
+        };
+      });
     
     // Programme country positions
     const fieldJobs = relevantData.filter(job => 
@@ -160,168 +174,180 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
   const fieldDiff = metrics.peerData ? metrics.fieldPercentage - metrics.peerData.fieldPct : 0;
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 rounded-2xl p-6 text-white shadow-xl">
-      {/* Header with period indicator */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          {isAgencyView ? (
-            <div className="p-2.5 bg-white/10 backdrop-blur rounded-xl">
-              <Building2 className="h-6 w-6 text-blue-300" />
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isAgencyView ? (
+              <div className="p-2.5 bg-blue-100 rounded-xl">
+                <Building2 className="h-5 w-5 text-blue-600" />
+              </div>
+            ) : (
+              <div className="p-2.5 bg-emerald-100 rounded-xl">
+                <Globe className="h-5 w-5 text-emerald-600" />
+              </div>
+            )}
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {isAgencyView ? agency : 'UN System'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {isAgencyView ? 'Agency Workforce Summary' : 'Market Overview'}
+              </p>
             </div>
-          ) : (
-            <div className="p-2.5 bg-white/10 backdrop-blur rounded-xl">
-              <Globe className="h-6 w-6 text-emerald-300" />
+          </div>
+          {periodLabel && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg">
+              <Calendar className="h-4 w-4" />
+              <span className="text-sm font-medium">{periodLabel}</span>
             </div>
           )}
-          <div>
-            <h2 className="text-xl font-bold">
-              {isAgencyView ? agency : 'UN System'}
-            </h2>
-            <p className="text-sm text-slate-300">
-              {isAgencyView ? 'Agency Workforce Summary' : 'Market Overview'}
-            </p>
+        </div>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Total Positions */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">Positions</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {metrics.totalPositions.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              {metrics.categoryCount} categories
+            </div>
+          </div>
+
+          {/* Programme Countries */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">Field</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {metrics.fieldPercentage.toFixed(0)}%
+            </div>
+            {metrics.peerData && (
+              <div className={`text-xs flex items-center gap-1 ${fieldDiff >= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {fieldDiff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {Math.abs(fieldDiff).toFixed(0)}pp vs peers
+              </div>
+            )}
+          </div>
+
+          {/* HQ + Remote */}
+          <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-100">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="h-4 w-4 text-purple-600" />
+              <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">HQ</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {metrics.hqPercentage.toFixed(0)}%
+            </div>
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              <Home className="h-3 w-3" />
+              {metrics.homePercentage.toFixed(0)}% remote
+            </div>
+          </div>
+
+          {/* Application Window */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 text-amber-600" />
+              <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">Window</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {metrics.medianApplicationWindow}d
+            </div>
+            <div className="text-xs text-gray-500">
+              median posting
+            </div>
           </div>
         </div>
-        {periodLabel && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur rounded-lg">
-            <Calendar className="h-4 w-4 text-slate-300" />
-            <span className="text-sm text-slate-200">{periodLabel}</span>
+
+        {/* Category Distribution */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-gray-700">Top Categories</span>
+            <span className="text-xs text-gray-400">
+              {metrics.topCategories.slice(0, 3).reduce((sum, c) => sum + c.percentage, 0).toFixed(0)}% of total
+            </span>
+          </div>
+          
+          {/* Stacked bar with category colors */}
+          <div className="h-10 rounded-xl overflow-hidden flex bg-gray-100 shadow-inner">
+            {metrics.topCategories.slice(0, 5).map((cat, i) => (
+              <div 
+                key={cat.id}
+                className="h-full flex items-center justify-center transition-all hover:brightness-95 cursor-pointer relative group"
+                style={{ 
+                  width: `${cat.percentage}%`, 
+                  backgroundColor: cat.color,
+                  minWidth: cat.percentage > 5 ? '50px' : '24px'
+                }}
+                title={`${cat.name}: ${cat.count} (${cat.percentage.toFixed(1)}%)`}
+              >
+                {cat.percentage > 12 && (
+                  <span className="text-xs font-semibold text-white drop-shadow-sm">
+                    {cat.percentage.toFixed(0)}%
+                  </span>
+                )}
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20">
+                  <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-xl">
+                    <div className="font-semibold">{cat.name}</div>
+                    <div className="text-gray-300">{cat.count} positions ({cat.percentage.toFixed(1)}%)</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {metrics.topCategories.length > 0 && (
+              <div 
+                className="h-full flex items-center justify-center bg-gray-300"
+                style={{ flexGrow: 1 }}
+              >
+                <span className="text-xs text-gray-600 font-medium">Other</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Color Legend */}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3">
+            {metrics.topCategories.slice(0, 5).map(cat => (
+              <div key={cat.id} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full shadow-sm"
+                  style={{ backgroundColor: cat.color }}
+                />
+                <span className="text-xs text-gray-600">
+                  {cat.name.length > 20 ? cat.name.slice(0, 20) + '...' : cat.name}
+                </span>
+                <span className="text-xs text-gray-400">({cat.count})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Peer comparison footer */}
+        {isAgencyView && metrics.peerData && (
+          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-gray-400" />
+              <span className="text-xs text-gray-500">
+                Compared to {metrics.peerData.name}
+              </span>
+            </div>
+            <div className="text-xs text-gray-600">
+              Peer field rate: <span className="font-semibold">{metrics.peerData.fieldPct.toFixed(0)}%</span>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Main metrics grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Total Positions */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="h-4 w-4 text-blue-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide">Positions</span>
-          </div>
-          <div className="text-3xl font-bold text-white">
-            {metrics.totalPositions.toLocaleString()}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">
-            across {metrics.categoryCount} categories
-          </div>
-        </div>
-
-        {/* Programme Countries */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-4 w-4 text-emerald-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide">Field</span>
-          </div>
-          <div className="text-3xl font-bold text-white">
-            {metrics.fieldPercentage.toFixed(0)}%
-          </div>
-          {metrics.peerData && (
-            <div className={`text-xs mt-1 flex items-center gap-1 ${fieldDiff >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {fieldDiff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {Math.abs(fieldDiff).toFixed(0)}pp vs peers
-            </div>
-          )}
-        </div>
-
-        {/* HQ Positions */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <Building2 className="h-4 w-4 text-purple-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide">HQ</span>
-          </div>
-          <div className="text-3xl font-bold text-white">
-            {metrics.hqPercentage.toFixed(0)}%
-          </div>
-          <div className="text-xs text-slate-400 mt-1">
-            {metrics.homePercentage.toFixed(0)}% remote
-          </div>
-        </div>
-
-        {/* Application Window */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-4 w-4 text-amber-400" />
-            <span className="text-xs text-slate-400 uppercase tracking-wide">Window</span>
-          </div>
-          <div className="text-3xl font-bold text-white">
-            {metrics.medianApplicationWindow}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">
-            days median
-          </div>
-        </div>
-      </div>
-
-      {/* Category distribution bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-slate-400 uppercase tracking-wide">Top Categories</span>
-          <span className="text-xs text-slate-500">
-            {metrics.topCategories.slice(0, 3).reduce((sum, c) => sum + c.percentage, 0).toFixed(0)}% of hiring
-          </span>
-        </div>
-        
-        {/* Stacked bar visualization */}
-        <div className="h-8 rounded-lg overflow-hidden flex bg-white/5">
-          {metrics.topCategories.slice(0, 5).map((cat, i) => (
-            <div 
-              key={cat.name}
-              className="h-full flex items-center justify-center transition-all hover:brightness-110 cursor-pointer group relative"
-              style={{ 
-                width: `${cat.percentage}%`, 
-                backgroundColor: cat.color,
-                minWidth: cat.percentage > 5 ? '40px' : '20px'
-              }}
-              title={`${cat.name}: ${cat.count} (${cat.percentage.toFixed(1)}%)`}
-            >
-              {cat.percentage > 10 && (
-                <span className="text-[10px] font-medium text-white/90 truncate px-1">
-                  {cat.percentage.toFixed(0)}%
-                </span>
-              )}
-            </div>
-          ))}
-          {metrics.topCategories.length > 0 && (
-            <div 
-              className="h-full flex items-center justify-center bg-slate-600/50"
-              style={{ flexGrow: 1 }}
-            >
-              <span className="text-[10px] text-slate-400">Other</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Legend */}
-        <div className="flex flex-wrap gap-3 mt-3">
-          {metrics.topCategories.slice(0, 5).map(cat => (
-            <div key={cat.name} className="flex items-center gap-1.5">
-              <div 
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: cat.color }}
-              />
-              <span className="text-xs text-slate-300 truncate max-w-[120px]">
-                {cat.name.length > 18 ? cat.name.slice(0, 18) + '...' : cat.name}
-              </span>
-              <span className="text-xs text-slate-500">({cat.count})</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Peer comparison footer */}
-      {isAgencyView && metrics.peerData && (
-        <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-slate-400" />
-            <span className="text-xs text-slate-400">
-              Compared to {metrics.peerData.name}
-            </span>
-          </div>
-          <div className="text-xs text-slate-300">
-            Peer field rate: <span className="font-medium">{metrics.peerData.fieldPct.toFixed(0)}%</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

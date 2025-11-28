@@ -3,6 +3,7 @@
  * 
  * Shows how categories evolve over time with visual charts.
  * Helps HR leadership understand hiring pattern changes.
+ * Uses proper category colors from dictionary.
  */
 
 import React, { useMemo } from 'react';
@@ -11,6 +12,21 @@ import { parseISO, format, startOfMonth, subMonths } from 'date-fns';
 import { ProcessedJobData } from '../../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../../dictionary';
 import { TrendingUp, BarChart3 } from 'lucide-react';
+
+// Helper to get category info from dictionary
+const getCategoryInfo = (categoryIdOrName: string) => {
+  const cat = JOB_CLASSIFICATION_DICTIONARY.find(
+    c => c.id === categoryIdOrName || c.name === categoryIdOrName
+  );
+  if (cat) return { name: cat.name, color: cat.color, id: cat.id };
+  
+  const fallbackName = categoryIdOrName
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace(' And ', ' & ');
+  return { name: fallbackName, color: '#6B7280', id: categoryIdOrName };
+};
 
 interface CategoryEvolutionChartProps {
   data: ProcessedJobData[];
@@ -38,7 +54,7 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
       periods.push({
         start: periodStart,
         end: periodEnd,
-        label: format(periodStart, 'MMM yyyy')
+        label: format(periodStart, 'MMM')
       });
     }
     
@@ -62,63 +78,68 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
         .map(([cat]) => cat);
     }
     
-    // Build chart data
+    // Get category metadata
+    const categoryMeta = categoriesToShow.map(cat => getCategoryInfo(cat));
+    
+    // Build chart data - use beautiful names as keys
+    const chartPoints = periods.map(period => {
+      const periodJobs = relevantData.filter(job => {
+        try {
+          const postDate = parseISO(job.posting_date);
+          return postDate >= period.start && postDate < period.end;
+        } catch {
+          return false;
+        }
+      });
+      
+      const dataPoint: Record<string, any> = { month: period.label };
+      
+      categoryMeta.forEach(catInfo => {
+        const count = periodJobs.filter(j => {
+          const jobCat = getCategoryInfo(j.primary_category);
+          return jobCat.id === catInfo.id;
+        }).length;
+        dataPoint[catInfo.name] = count;
+      });
+      
+      return dataPoint;
+    });
+    
     return {
-      data: periods.map(period => {
-        const periodJobs = relevantData.filter(job => {
-          try {
-            const postDate = parseISO(job.posting_date);
-            return postDate >= period.start && postDate < period.end;
-          } catch {
-            return false;
-          }
-        });
-        
-        const dataPoint: Record<string, any> = { month: period.label };
-        
-        categoriesToShow!.forEach(category => {
-          const count = periodJobs.filter(j => j.primary_category === category).length;
-          dataPoint[category] = count;
-        });
-        
-        return dataPoint;
-      }),
-      categories: categoriesToShow
+      data: chartPoints,
+      categories: categoryMeta
     };
   }, [data, selectedCategories, months, agency]);
-  
-  // Get colors from dictionary
-  const getColor = (category: string) => {
-    return JOB_CLASSIFICATION_DICTIONARY.find(c => c.name === category)?.color || '#6B7280';
-  };
   
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white shadow-lg rounded-lg p-3 border border-gray-200">
-          <p className="font-medium text-gray-900 mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-gray-600 truncate max-w-[150px]">
-                {entry.name.length > 20 ? entry.name.slice(0, 20) + '...' : entry.name}:
-              </span>
-              <span className="font-medium text-gray-900">{entry.value}</span>
-            </div>
-          ))}
+        <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-100">
+          <p className="font-semibold text-gray-900 mb-2 text-sm">{label}</p>
+          <div className="space-y-1.5">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center gap-2 text-sm">
+                <div 
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-gray-600 truncate max-w-[160px]">
+                  {entry.name}
+                </span>
+                <span className="font-semibold text-gray-900 ml-auto">{entry.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
     return null;
   };
 
-  if (chartData.data.length === 0) {
+  if (chartData.data.length === 0 || chartData.categories.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div className="flex items-center justify-center h-48 text-gray-400">
           <div className="text-center">
             <BarChart3 className="h-8 w-8 mx-auto mb-2" />
@@ -130,47 +151,48 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
   }
   
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-indigo-500" />
-          <h3 className="text-sm font-semibold text-gray-900">Category Evolution</h3>
-          <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-            Past {months} months
+          <TrendingUp className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-base font-semibold text-gray-900">Category Evolution</h3>
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+            {months} months
           </span>
         </div>
+        {agency && (
+          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+            {agency}
+          </span>
+        )}
       </div>
       
-      <div className="p-4">
-        <div className="h-72">
+      <div className="p-5">
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             {chartType === 'area' ? (
               <AreaChart data={chartData.data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis 
                   dataKey="month" 
-                  tick={{ fontSize: 11, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: '#6B7280' }}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 11, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: '#6B7280' }}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ fontSize: 11 }}
-                  formatter={(value: string) => value.length > 20 ? value.slice(0, 20) + '...' : value}
-                />
-                {chartData.categories.map((category, index) => (
+                {chartData.categories.map((catInfo) => (
                   <Area
-                    key={category}
+                    key={catInfo.id}
                     type="monotone"
-                    dataKey={category}
+                    dataKey={catInfo.name}
                     stackId="1"
-                    stroke={getColor(category)}
-                    fill={getColor(category)}
-                    fillOpacity={0.6}
-                    name={category}
+                    stroke={catInfo.color}
+                    fill={catInfo.color}
+                    fillOpacity={0.7}
+                    name={catInfo.name}
                   />
                 ))}
               </AreaChart>
@@ -179,28 +201,24 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis 
                   dataKey="month" 
-                  tick={{ fontSize: 11, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: '#6B7280' }}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 11, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: '#6B7280' }}
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ fontSize: 11 }}
-                  formatter={(value: string) => value.length > 20 ? value.slice(0, 20) + '...' : value}
-                />
-                {chartData.categories.map((category) => (
+                {chartData.categories.map((catInfo) => (
                   <Line
-                    key={category}
+                    key={catInfo.id}
                     type="monotone"
-                    dataKey={category}
-                    stroke={getColor(category)}
-                    strokeWidth={2}
-                    dot={{ fill: getColor(category), strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, strokeWidth: 2 }}
-                    name={category}
+                    dataKey={catInfo.name}
+                    stroke={catInfo.color}
+                    strokeWidth={3}
+                    dot={{ fill: catInfo.color, strokeWidth: 0, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
+                    name={catInfo.name}
                   />
                 ))}
               </LineChart>
@@ -208,21 +226,23 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
           </ResponsiveContainer>
         </div>
         
-        {/* Legend with category counts */}
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <div className="flex flex-wrap gap-3">
-            {chartData.categories.map(category => {
-              const totalCount = chartData.data.reduce((sum, d) => sum + (d[category] || 0), 0);
+        {/* Legend with category colors and counts */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="flex flex-wrap gap-4">
+            {chartData.categories.map(catInfo => {
+              const totalCount = chartData.data.reduce((sum, d) => sum + (d[catInfo.name] || 0), 0);
               return (
-                <div key={category} className="flex items-center gap-1.5 text-xs">
+                <div key={catInfo.id} className="flex items-center gap-2">
                   <div 
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: getColor(category) }}
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: catInfo.color }}
                   />
-                  <span className="text-gray-600 truncate max-w-[100px]">
-                    {category.length > 15 ? category.slice(0, 15) + '...' : category}
+                  <span className="text-sm text-gray-700">
+                    {catInfo.name}
                   </span>
-                  <span className="text-gray-400">({totalCount})</span>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {totalCount}
+                  </span>
                 </div>
               );
             })}
@@ -234,4 +254,3 @@ const CategoryEvolutionChart: React.FC<CategoryEvolutionChartProps> = ({
 };
 
 export default CategoryEvolutionChart;
-

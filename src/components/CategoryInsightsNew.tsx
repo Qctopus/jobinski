@@ -26,6 +26,24 @@ import CategoryCompositionPanel from './categories/CategoryCompositionPanel';
 import CategoryDrillDown from './CategoryDrillDown';
 import CategoryEvolutionChart from './categories/CategoryEvolutionChart';
 
+// Helper to get beautiful category name and color from dictionary
+const getCategoryInfo = (categoryIdOrName: string) => {
+  // Try to find by id first, then by name
+  const cat = JOB_CLASSIFICATION_DICTIONARY.find(
+    c => c.id === categoryIdOrName || c.name === categoryIdOrName
+  );
+  if (cat) {
+    return { name: cat.name, color: cat.color, id: cat.id };
+  }
+  // Fallback: convert slug to title case
+  const fallbackName = categoryIdOrName
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace(' And ', ' & ');
+  return { name: fallbackName, color: '#6B7280', id: categoryIdOrName };
+};
+
 interface CategoryInsightsProps {
   metrics: DashboardMetrics;
   marketMetrics: DashboardMetrics;
@@ -408,21 +426,30 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            {recentTrends.growing.slice(0, 4).map(([category, trend]) => (
-              <div 
-                key={category} 
-                className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <span className="text-sm text-gray-800 truncate flex-1 mr-3">
-                  {category.length > 25 ? category.slice(0, 25) + '...' : category}
-                </span>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
-                  <span className="text-sm font-bold text-emerald-600 tabular-nums">+{trend.growth.toFixed(0)}%</span>
+            {recentTrends.growing.slice(0, 4).map(([category, trend]) => {
+              const catInfo = getCategoryInfo(category);
+              return (
+                <div 
+                  key={category} 
+                  className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2.5 cursor-pointer transition-colors"
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1 mr-3">
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: catInfo.color }}
+                    />
+                    <span className="text-sm text-gray-800 truncate">
+                      {catInfo.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
+                    <span className="text-sm font-bold text-emerald-600 tabular-nums">+{trend.growth.toFixed(0)}%</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {recentTrends.growing.length === 0 && (
               <div className="text-center py-4 text-sm text-emerald-600/60">
                 No significant growth in this period
@@ -445,21 +472,30 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            {recentTrends.declining.slice(0, 4).map(([category, trend]) => (
-              <div 
-                key={category} 
-                className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2 cursor-pointer transition-colors"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <span className="text-sm text-gray-800 truncate flex-1 mr-3">
-                  {category.length > 25 ? category.slice(0, 25) + '...' : category}
-                </span>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
-                  <span className="text-sm font-bold text-amber-600 tabular-nums">{trend.growth.toFixed(0)}%</span>
+            {recentTrends.declining.slice(0, 4).map(([category, trend]) => {
+              const catInfo = getCategoryInfo(category);
+              return (
+                <div 
+                  key={category} 
+                  className="flex items-center justify-between bg-white/60 hover:bg-white rounded-lg px-3 py-2.5 cursor-pointer transition-colors"
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1 mr-3">
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: catInfo.color }}
+                    />
+                    <span className="text-sm text-gray-800 truncate">
+                      {catInfo.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 tabular-nums">{trend.current}</span>
+                    <span className="text-sm font-bold text-amber-600 tabular-nums">{trend.growth.toFixed(0)}%</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {recentTrends.declining.length === 0 && (
               <div className="text-center py-4 text-sm text-amber-600/60">
                 No significant decline in this period
