@@ -27,6 +27,65 @@ interface SummaryMetrics {
   alignment?: 'above' | 'below' | 'in_line';
 }
 
+// DAC Donor Countries - positions in these countries are NOT "field" positions
+const DAC_DONOR_COUNTRIES = [
+  'australia', 'austria', 'belgium', 'canada', 'czech republic', 'czechia',
+  'denmark', 'estonia', 'finland', 'france', 'germany', 'greece', 'hungary',
+  'iceland', 'ireland', 'israel', 'italy', 'japan', 'korea', 'south korea',
+  'republic of korea', 'latvia', 'lithuania', 'luxembourg', 'netherlands',
+  'new zealand', 'norway', 'poland', 'portugal', 'slovak republic', 'slovakia',
+  'slovenia', 'spain', 'sweden', 'switzerland', 'united kingdom', 'uk',
+  'united states', 'usa', 'us', 'united states of america'
+];
+
+// Primary UN Headquarters locations
+const HQ_LOCATIONS = [
+  // Primary UN HQs
+  'new york', 'geneva', 'vienna', 'nairobi', 'rome', 'paris',
+  // Secondary HQs
+  'copenhagen', 'the hague', 'bonn', 'montreal', 'washington',
+  // Regional commission seats
+  'bangkok', 'beirut', 'addis ababa', 'santiago'
+];
+
+// High-income non-DAC countries that are also not "field"
+const HIGH_INCOME_NON_FIELD = [
+  'singapore', 'hong kong', 'qatar', 'united arab emirates', 'uae',
+  'saudi arabia', 'kuwait', 'bahrain', 'brunei'
+];
+
+/**
+ * Determine if a position is a "programme country" (field) position
+ * Field = NOT HQ, NOT donor country, NOT home-based
+ */
+const isFieldPosition = (dutyStation: string, dutyCountry: string): boolean => {
+  const station = (dutyStation || '').toLowerCase().trim();
+  const country = (dutyCountry || '').toLowerCase().trim();
+  
+  // Home-based is NOT field (could be anywhere)
+  if (station.includes('home') || station.includes('remote')) {
+    return false;
+  }
+  
+  // HQ locations are NOT field
+  if (HQ_LOCATIONS.some(hq => station.includes(hq) || country.includes(hq))) {
+    return false;
+  }
+  
+  // DAC donor countries are NOT field
+  if (DAC_DONOR_COUNTRIES.some(dac => country.includes(dac))) {
+    return false;
+  }
+  
+  // High-income non-DAC are NOT field
+  if (HIGH_INCOME_NON_FIELD.some(hi => country.includes(hi))) {
+    return false;
+  }
+  
+  // Everything else is considered a programme country / field position
+  return true;
+};
+
 const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
   data,
   agency,
@@ -52,12 +111,10 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
         percentage: (count / (relevantData.length || 1)) * 100
       }));
     
-    // Field percentage (non-HQ locations)
-    const hqLocations = ['new york', 'geneva', 'vienna', 'nairobi', 'rome', 'paris', 'copenhagen'];
-    const fieldJobs = relevantData.filter(job => {
-      const location = (job.duty_country || job.duty_station || '').toLowerCase();
-      return !hqLocations.some(hq => location.includes(hq)) && !location.includes('home-based');
-    });
+    // Programme country positions (using proper field detection)
+    const fieldJobs = relevantData.filter(job => 
+      isFieldPosition(job.duty_station || '', job.duty_country || '')
+    );
     const fieldPercentage = (fieldJobs.length / (relevantData.length || 1)) * 100;
     
     // Median application window
@@ -87,10 +144,9 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
           peerAgencies.includes(job.short_agency || job.long_agency || '')
         );
         
-        const peerFieldJobs = peerData.filter(job => {
-          const location = (job.duty_country || job.duty_station || '').toLowerCase();
-          return !hqLocations.some(hq => location.includes(hq)) && !location.includes('home-based');
-        });
+        const peerFieldJobs = peerData.filter(job => 
+          isFieldPosition(job.duty_station || '', job.duty_country || '')
+        );
         const peerFieldPct = (peerFieldJobs.length / (peerData.length || 1)) * 100;
         
         result.peerGroupName = peerGroup.name;
@@ -130,7 +186,7 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
           Your hiring is concentrated in{' '}
           <span className="font-semibold">{topCatNames}</span>{' '}
           ({topCatPct.toFixed(0)}%).
-          Field positions represent{' '}
+          Programme country positions represent{' '}
           <span className="font-semibold">{metrics.fieldPercentage.toFixed(0)}%</span> of your openings
           {alignmentText && <>, {alignmentText}</>}.
         </>
@@ -147,7 +203,7 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
           <span className="font-semibold">{metrics.categoryCount}</span> categories.{' '}
           <span className="font-semibold">{topCatNames}</span> represent{' '}
           <span className="font-semibold">{topCatPct.toFixed(0)}%</span> of all hiring. 
-          Field positions account for{' '}
+          Programme country positions account for{' '}
           <span className="font-semibold">{metrics.fieldPercentage.toFixed(0)}%</span> of openings. 
           System-wide median application window:{' '}
           <span className="font-semibold">{metrics.medianApplicationWindow}</span> days.
@@ -181,11 +237,18 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
               </span>
             </div>
             
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm group relative">
               <MapPin className="h-4 w-4 text-slate-400" />
               <span className="text-gray-600">
-                <span className="font-semibold text-gray-900">{metrics.fieldPercentage.toFixed(0)}%</span> field-based
+                <span className="font-semibold text-gray-900">{metrics.fieldPercentage.toFixed(0)}%</span> programme countries
               </span>
+              {/* Tooltip explaining the metric */}
+              <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10">
+                <div className="bg-gray-800 text-white text-xs rounded-lg py-2 px-3 w-64 shadow-lg">
+                  <p className="font-medium mb-1">Programme Country Positions</p>
+                  <p className="text-gray-300">Excludes: HQ locations (NY, Geneva, Vienna, Rome, etc.), DAC donor countries, and home-based positions.</p>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center gap-2 text-sm">

@@ -66,31 +66,108 @@ export interface PyramidComparison {
 export class GradePyramidAnalyzer {
   /**
    * Classify a grade into a group
+   * 
+   * UN Grade Hierarchy:
+   * - Executive: D1, D2, ASG, USG, SG, DSG (International Directors & Senior Officials)
+   * - Senior: P5, P6, P7 (Senior International Professional)
+   * - Mid: P3, P4 (Mid-level International Professional)
+   * - Entry: P1, P2, G1-G7, NO-A/B/C/D, L1-L4, Interns
+   * - Consultant: IC, SSA, LICA, IPSA, Consultants
+   * - Service Agreements: NPSA, PSA, SB (classified by level within 'entry', 'mid', 'senior')
    */
   classifyGrade(grade: string): GradeGroup {
     if (!grade) return 'other';
     
     const g = grade.toUpperCase().trim();
     
-    // Executive (D1+, USG, ASG)
-    if (/^(D[12]|USG|ASG)/.test(g)) return 'executive';
+    // Executive (D1+, USG, ASG, SG, DSG) - International Directors & Senior Officials
+    if (/^(D[-]?[12]|USG|ASG|SG|DSG)/.test(g)) return 'executive';
     
-    // Senior (P5, P6, P7)
-    if (/^P[567]/.test(g)) return 'senior';
+    // Senior International Professional (P5, P6, P7)
+    if (/^P[-]?[567]/.test(g)) return 'senior';
     
-    // Mid-level (P3, P4)
-    if (/^P[34]/.test(g)) return 'mid';
+    // Mid-level International Professional (P3, P4)
+    if (/^P[-]?[34]/.test(g)) return 'mid';
     
-    // Entry (P1, P2, G-levels, NO levels)
-    if (/^(P[12]|G[1-7]|NO[A-D]|L[1-4])/.test(g)) return 'entry';
+    // Entry-level International Professional (P1, P2)
+    if (/^P[-]?[12]/.test(g)) return 'entry';
     
-    // Consultant/Contractor
-    if (g.includes('CONSULT') || g.includes('IC') || g.includes('SSA') || g.includes('UNV')) {
+    // General Service (G1-G7)
+    if (/^G[-]?[1-7]/.test(g)) return 'entry';
+    
+    // National Officers (NO-A, NO-B, NO-C, NO-D)
+    if (/^NO[-]?[A-D]/.test(g)) return 'entry';
+    
+    // Local levels (L1-L4)
+    if (/^L[-]?[1-4]/.test(g)) return 'entry';
+    
+    // NPSA (National Personnel Service Agreement) - Classify by level
+    // NPSA 10-11: Senior national staff (but NOT executive - these are service agreements)
+    // NPSA 7-9: Mid-level national staff
+    // NPSA 1-6: Entry national staff
+    const npsaMatch = g.match(/NPSA[-\s]?([0-9]+)/);
+    if (npsaMatch) {
+      const level = parseInt(npsaMatch[1]);
+      if (level >= 10) return 'senior'; // Senior national, but not executive
+      if (level >= 7) return 'mid';
+      return 'entry';
+    }
+    
+    // PSA (Personnel Service Agreement) - Similar classification
+    const psaMatch = g.match(/PSA[-\s]?([0-9]+)/);
+    if (psaMatch) {
+      const level = parseInt(psaMatch[1]);
+      if (level >= 10) return 'senior';
+      if (level >= 7) return 'mid';
+      return 'entry';
+    }
+    
+    // SB (Service Contract - UNDP specific)
+    const sbMatch = g.match(/SB[-\s]?([0-9]+)/);
+    if (sbMatch) {
+      const level = parseInt(sbMatch[1]);
+      if (level >= 4) return 'mid';
+      return 'entry';
+    }
+    
+    // IPSA (International Personnel Service Agreement)
+    const ipsaMatch = g.match(/IPSA[-\s]?([0-9]+)/);
+    if (ipsaMatch) {
+      const level = parseInt(ipsaMatch[1]);
+      if (level >= 10) return 'senior';
+      if (level >= 7) return 'mid';
+      return 'entry';
+    }
+    
+    // LICA (Local Individual Contractor Agreement)
+    if (g.includes('LICA')) {
+      const licaMatch = g.match(/LICA[-\s]?([0-9]+)/);
+      if (licaMatch) {
+        const level = parseInt(licaMatch[1]);
+        if (level >= 10) return 'consultant'; // Senior consultant
+        return 'consultant';
+      }
       return 'consultant';
+    }
+    
+    // Consultant/Contractor types
+    if (g.includes('CONSULT') || g === 'IC' || g.includes('SSA') || 
+        g.includes('INDIVIDUAL CONTRACTOR')) {
+      return 'consultant';
+    }
+    
+    // UNV (UN Volunteers)
+    if (g.includes('UNV') || g.includes('VOLUNTEER')) {
+      return 'entry';
     }
     
     // Intern
     if (g.includes('INTERN')) return 'entry';
+    
+    // Log unrecognized grade for debugging
+    if (grade && grade.trim().length > 0) {
+      console.debug(`GradePyramidAnalyzer: Unrecognized grade "${grade}" classified as 'other'`);
+    }
     
     return 'other';
   }

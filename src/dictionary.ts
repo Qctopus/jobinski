@@ -505,8 +505,9 @@ export const JOB_CLASSIFICATION_DICTIONARY: ClassificationCategory[] = [
   }
 ];
 
-// Leadership Override System - Only true senior leadership grades and titles  
-// Rule: P5+, D grades, PSA-10+, but excludes P4-, GS/G grades, intern, PSA<10, NO<D
+// Leadership Override System - Only true senior leadership grades and titles
+// UN System Context: NPSA/PSA are service agreement contracts, NOT international staff
+// True leadership = International Professional D1+, or Senior Appointed Officials (ASG, USG)
 export const LEADERSHIP_GRADES = [
   'D-2', 'D2', 'D-1', 'D1', 'ASG', 'USG', 'SG', 'DSG', 'P5', 'P6', 'P7'
 ];
@@ -514,55 +515,65 @@ export const LEADERSHIP_GRADES = [
 /**
  * STRICT POSITIVE IDENTIFICATION for Leadership grades
  * ONLY these specific grades qualify for Leadership & Executive Management:
- * - D1, D2 (Director levels)
- * - NOD (National Officer D level)
+ * - D1, D2 (Director levels) - International Professional Staff
  * - ASG (Assistant Secretary-General)
  * - USG (Under-Secretary-General)
  * - SG (Secretary-General)  
  * - DSG (Deputy Secretary-General)
- * - P5, P6, P7 (Senior Professional levels)
- * - PSA-10+ (Senior Program Support levels)
- * - NPSA-10+ (Senior National Program Support levels)
+ * - P5 (Senior Professional level) - May be considered senior leadership
  * 
- * EVERYTHING ELSE IS EXCLUDED including:
- * Intern, Consultant, P1-P4, GS/G grades, NOA/NOB/NOC, PSA<10, NPSA<10, etc.
+ * EXPLICITLY EXCLUDED (even at high levels):
+ * - NPSA (all levels) - National staff contracts, NOT executive positions
+ *   Even NPSA-10/11 are locally recruited national staff, subject to local 
+ *   salary scales, and are supporting roles not executive leadership.
+ * - PSA (all levels) - Personnel Service Agreements, NOT staff positions
+ * - Consultants (IC, SSA, LICA, IPSA)
+ * - UNV, Interns
+ * - P1-P4, GS/G grades, NOA/NOB/NOC/NOD
  */
 export function isLeadershipGrade(grade: string): boolean {
   if (!grade) return false;
   
   const gradeUpper = grade.toUpperCase().trim();
   
-  // POSITIVE IDENTIFICATION ONLY - Executive levels
+  // EXPLICITLY EXCLUDE NPSA at ALL levels - service agreement, not executive
+  // NPSA = National Personnel Service Agreement (national staff contracts)
+  if (gradeUpper.includes('NPSA')) {
+    return false;
+  }
+  
+  // EXPLICITLY EXCLUDE PSA at ALL levels - service agreement
+  if (gradeUpper.includes('PSA')) {
+    return false;
+  }
+  
+  // EXPLICITLY EXCLUDE service contracts and consultants
+  if (gradeUpper.includes('CONSULT') || gradeUpper.includes('IC') || 
+      gradeUpper.includes('LICA') || gradeUpper.includes('IPSA') ||
+      gradeUpper.includes('SSA') || gradeUpper.includes('SB')) {
+    return false;
+  }
+  
+  // EXPLICITLY EXCLUDE UNV and Interns
+  if (gradeUpper.includes('UNV') || gradeUpper.includes('VOLUNTEER') ||
+      gradeUpper.includes('INTERN')) {
+    return false;
+  }
+  
+  // POSITIVE IDENTIFICATION ONLY - Executive levels (Senior Appointed Officials)
   if (['ASG', 'USG', 'SG', 'DSG'].includes(gradeUpper)) return true;
   
-  // POSITIVE IDENTIFICATION ONLY - D grades (D1, D2) and NOD
+  // POSITIVE IDENTIFICATION ONLY - D grades (D1, D2) - International Directors
   if (gradeUpper.match(/^D[-]?[12]$/)) return true;
-  if (gradeUpper === 'NOD') return true;
   
-  // POSITIVE IDENTIFICATION ONLY - P grades (P5, P6, P7 only)
+  // POSITIVE IDENTIFICATION ONLY - P5+ (Senior Professional levels)
   const pMatch = gradeUpper.match(/^P[-]?([0-9]+)$/);
   if (pMatch) {
     const pLevel = parseInt(pMatch[1]);
-    return pLevel >= 5 && pLevel <= 7; // Only P5, P6, P7
+    return pLevel >= 5; // Only P5+
   }
   
-  // POSITIVE IDENTIFICATION ONLY - PSA grades (PSA-10 and above only)
-  const psaMatch = gradeUpper.match(/^PSA[-]?([0-9]+)$/);
-  if (psaMatch) {
-    const psaLevel = parseInt(psaMatch[1]);
-    return psaLevel >= 10;
-  }
-  
-  // POSITIVE IDENTIFICATION ONLY - NPSA grades (NPSA-10 and above only)
-  const npsaMatch = gradeUpper.match(/^NPSA[-]?([0-9]+)$/);
-  if (npsaMatch) {
-    const npsaLevel = parseInt(npsaMatch[1]);
-    return npsaLevel >= 10;
-  }
-  
-  // EVERYTHING ELSE IS EXCLUDED - Default to false
-  // This includes: Intern, Consultant, P1-P4, GS/G grades, NOA/NOB/NOC, 
-  // PSA<10, NPSA<10, Volunteer, UNV, and any unrecognized grades
+  // EVERYTHING ELSE IS EXCLUDED
   return false;
 }
 

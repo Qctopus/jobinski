@@ -9,7 +9,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { 
-  Brain, TrendingUp, Eye, Download, Filter, Search, X, 
+  Brain, TrendingUp, Eye, Download, Filter, 
   ArrowUp, ArrowDown, AlertCircle
 } from 'lucide-react';
 import { DashboardMetrics, ProcessedJobData, FilterOptions } from '../types';
@@ -17,13 +17,15 @@ import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { getAgencyPeerGroup, getPeerAgencies } from '../config/peerGroups';
 import { SurgeDetector } from '../services/analytics/SurgeDetector';
 import { CategoryShiftAnalyzer } from '../services/analytics/CategoryShiftAnalyzer';
-import { parseISO, subWeeks } from 'date-fns';
+import { parseISO, subWeeks, subMonths, format } from 'date-fns';
 
 // Components
 import MandateAlignmentSummary from './categories/MandateAlignmentSummary';
 import HiringSurgeAlerts from './categories/HiringSurgeAlerts';
 import CategoryCompositionPanel from './categories/CategoryCompositionPanel';
 import CategoryDrillDown from './CategoryDrillDown';
+import CategoryEvolutionChart from './categories/CategoryEvolutionChart';
+import { ComparisonPeriodSelector, TimeContextBanner, DataAvailabilityWarning } from './categories/TimeContextBanner';
 
 interface CategoryInsightsProps {
   metrics: DashboardMetrics;
@@ -32,6 +34,41 @@ interface CategoryInsightsProps {
   filters: FilterOptions;
   isAgencyView: boolean;
 }
+
+// Helper to get period boundaries
+const getPeriodBoundaries = (comparisonType: '4weeks' | '8weeks' | '3months') => {
+  const now = new Date();
+  
+  switch (comparisonType) {
+    case '4weeks':
+      return {
+        currentStart: subWeeks(now, 4),
+        currentEnd: now,
+        previousStart: subWeeks(now, 8),
+        previousEnd: subWeeks(now, 4),
+        currentLabel: `${format(subWeeks(now, 4), 'MMM d')} - ${format(now, 'MMM d')}`,
+        previousLabel: `${format(subWeeks(now, 8), 'MMM d')} - ${format(subWeeks(now, 4), 'MMM d')}`
+      };
+    case '8weeks':
+      return {
+        currentStart: subWeeks(now, 8),
+        currentEnd: now,
+        previousStart: subWeeks(now, 16),
+        previousEnd: subWeeks(now, 8),
+        currentLabel: `${format(subWeeks(now, 8), 'MMM d')} - ${format(now, 'MMM d')}`,
+        previousLabel: `${format(subWeeks(now, 16), 'MMM d')} - ${format(subWeeks(now, 8), 'MMM d')}`
+      };
+    case '3months':
+      return {
+        currentStart: subMonths(now, 3),
+        currentEnd: now,
+        previousStart: subMonths(now, 6),
+        previousEnd: subMonths(now, 3),
+        currentLabel: `${format(subMonths(now, 3), 'MMM d')} - ${format(now, 'MMM d')}`,
+        previousLabel: `${format(subMonths(now, 6), 'MMM d')} - ${format(subMonths(now, 3), 'MMM d')}`
+      };
+  }
+};
 
 const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   metrics,
@@ -43,12 +80,15 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   const [drillDownOpen, setDrillDownOpen] = useState(false);
   const [drillDownCategoryId, setDrillDownCategoryId] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [shiftPeriod, setShiftPeriod] = useState<12 | 6 | 3>(12);
+  const [comparisonPeriod, setComparisonPeriod] = useState<'4weeks' | '8weeks' | '3months'>('4weeks');
+  const [shiftPeriod, setShiftPeriod] = useState<12 | 6 | 3>(6);
 
   const agencyName = isAgencyView ? filters.selectedAgency : null;
   const peerAgencies = useMemo(() => agencyName ? getPeerAgencies(agencyName) : [], [agencyName]);
   const peerGroupInfo = useMemo(() => agencyName ? getAgencyPeerGroup(agencyName) : null, [agencyName]);
+
+  // Calculate period boundaries based on comparison period
+  const periodBoundaries = useMemo(() => getPeriodBoundaries(comparisonPeriod), [comparisonPeriod]);
 
   // Surge detection
   const surgeAnalysis = useMemo(() => {
@@ -84,11 +124,9 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
     return { yourMix: marketMix, peerMix: marketMix, marketMix, deviations: [] };
   }, [data, agencyName, peerAgencies]);
 
-  // Recent trends (4-week comparison)
+  // Recent trends based on selected comparison period
   const recentTrends = useMemo(() => {
-    const now = new Date();
-    const fourWeeksAgo = subWeeks(now, 4);
-    const eightWeeksAgo = subWeeks(now, 8);
+    const { currentStart, currentEnd, previousStart, previousEnd } = periodBoundaries;
 
     const relevantData = isAgencyView && agencyName
       ? data.filter(job => (job.short_agency || job.long_agency) === agencyName)
@@ -96,16 +134,20 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
 
     const recentCounts = new Map<string, number>();
     const previousCounts = new Map<string, number>();
+    let currentTotalCount = 0;
+    let previousTotalCount = 0;
 
     relevantData.forEach(job => {
       try {
         const postingDate = parseISO(job.posting_date);
         const category = job.primary_category;
 
-        if (postingDate >= fourWeeksAgo) {
+        if (postingDate >= currentStart && postingDate <= currentEnd) {
           recentCounts.set(category, (recentCounts.get(category) || 0) + 1);
-        } else if (postingDate >= eightWeeksAgo) {
+          currentTotalCount++;
+        } else if (postingDate >= previousStart && postingDate < previousEnd) {
           previousCounts.set(category, (previousCounts.get(category) || 0) + 1);
+          previousTotalCount++;
         }
       } catch { /* skip */ }
     });
@@ -131,8 +173,15 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
       .sort((a, b) => a[1].growth - b[1].growth)
       .slice(0, 4);
 
-    return { trends, growing, declining };
-  }, [data, isAgencyView, agencyName]);
+    return { 
+      trends, 
+      growing, 
+      declining, 
+      currentTotalCount, 
+      previousTotalCount,
+      hasPreviousData: previousTotalCount > 0
+    };
+  }, [data, isAgencyView, agencyName, periodBoundaries]);
 
   // Category deep dive data
   const categoryDeepDive = useMemo(() => {
@@ -208,12 +257,8 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
     return cards;
   }, [data, isAgencyView, agencyName, recentTrends, surgeAnalysis]);
 
-  // Filtered categories
-  const filteredCategories = useMemo(() => {
-    if (!searchTerm.trim()) return categoryDeepDive;
-    const search = searchTerm.toLowerCase();
-    return categoryDeepDive.filter(c => c.category.toLowerCase().includes(search));
-  }, [categoryDeepDive, searchTerm]);
+  // Just use categoryDeepDive directly (search removed in favor of comparison period)
+  const filteredCategories = categoryDeepDive;
 
   // Handle category click
   const handleCategoryClick = (categoryName: string) => {
@@ -297,38 +342,40 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
         isAgencyView={isAgencyView} 
       />
 
+      {/* Time Comparison Period Selector (Issue 3) */}
+      <ComparisonPeriodSelector 
+        value={comparisonPeriod}
+        onChange={setComparisonPeriod}
+      />
+
+      {/* Time Context Banner (Issue 6) */}
+      <TimeContextBanner 
+        currentPeriod={periodBoundaries.currentLabel}
+        comparisonPeriod={periodBoundaries.previousLabel}
+        comparisonType={comparisonPeriod}
+      />
+
+      {/* Data Availability Warning (Issue 6) */}
+      <DataAvailabilityWarning 
+        hasPreviousData={recentTrends.hasPreviousData}
+        previousCount={recentTrends.previousTotalCount}
+        currentCount={recentTrends.currentTotalCount}
+      />
+
       {/* Filter panel */}
       {showFilters && (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Search Categories</label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-8 py-1.5 w-full text-sm border rounded focus:ring-1 focus:ring-blue-500"
-                />
-                {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-                  </button>
-                )}
-              </div>
-            </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Shift Period</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Evolution Period</label>
               <select
                 value={shiftPeriod}
                 onChange={(e) => setShiftPeriod(Number(e.target.value) as 12 | 6 | 3)}
                 className="px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500"
               >
-                <option value={12}>12 months</option>
                 <option value={6}>6 months</option>
                 <option value={3}>3 months</option>
+                <option value={12}>12 months</option>
               </select>
             </div>
           </div>
@@ -340,11 +387,11 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
         <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-semibold text-gray-800">Recent Trends</span>
-            <span className="text-xs text-gray-500">— Last 4 weeks vs prior 4 weeks</span>
+            <span className="text-sm font-semibold text-gray-800">Category Trends</span>
+            <span className="text-xs text-gray-500">— {comparisonPeriod === '4weeks' ? 'Last 4 weeks vs prior 4 weeks' : comparisonPeriod === '8weeks' ? 'Last 8 weeks vs prior 8 weeks' : 'Last 3 months vs prior 3 months'}</span>
           </div>
           <div className="text-[10px] text-gray-400">
-            {recentTrends.growing.length} growing • {recentTrends.declining.length} declining
+            {recentTrends.currentTotalCount} current • {recentTrends.previousTotalCount} previous | {recentTrends.growing.length} growing • {recentTrends.declining.length} declining
           </div>
         </div>
         
@@ -470,6 +517,14 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
           </div>
         </div>
       )}
+
+      {/* Category Evolution Chart (Issue 5) */}
+      <CategoryEvolutionChart 
+        data={data}
+        months={shiftPeriod}
+        chartType="line"
+        agency={agencyName}
+      />
 
       {/* Category Deep Dive Cards */}
       <div className="bg-white rounded-lg border border-gray-200">
