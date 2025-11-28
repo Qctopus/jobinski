@@ -1,8 +1,5 @@
 import React, { useMemo } from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
-} from 'recharts';
+import { BarChart, LineChart, AreaChart } from './charts';
 import { 
   TrendingUp, Award, Users, Globe, MapPin, Clock, 
   Zap, Target, Brain, BookOpen, Briefcase,
@@ -10,7 +7,8 @@ import {
   Lightbulb, Star, Activity, BarChart3
 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor } from '../services/dataProcessor';
+import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
+import { useDataProcessing } from '../contexts/DataProcessingContext';
 
 interface SkillsProps {
   data: ProcessedJobData[];
@@ -18,115 +16,60 @@ interface SkillsProps {
 }
 
 const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
+  const dataProcessing = useDataProcessing();
 
   const isAgencyView = filters.selectedAgency !== 'all';
-  const filteredData = useMemo(() => processor.applyFilters(data, filters), [data, filters, processor]);
+  const filteredData = useMemo(() => {
+    if (!data || !dataProcessing || !dataProcessing.getFilteredData) {
+      return [];
+    }
+    try {
+      const result = dataProcessing.getFilteredData(data, filters);
+      return Array.isArray(result) ? result : [];
+    } catch (error) {
+      console.error('Error filtering data:', error);
+      return [];
+    }
+  }, [data, filters, dataProcessing]);
 
-  // Enhanced skills analysis using real CSV data
+  // Enhanced skills analysis using context
   const skillsAnalysis = useMemo(() => {
-    console.log('Analyzing skills for', filteredData.length, 'jobs');
-    
-    // Extract skills from job_labels field - this is our primary data source
-    const skillFrequency = new Map<string, {
-      count: number;
-      agencies: Set<string>;
-      locations: Set<string>;
-      jobIds: Set<string>;
-      grades: string[];
-      years: number[];
-      recentCount: number;
-      olderCount: number;
-    }>();
-
-    const currentYear = new Date().getFullYear();
-    
-    filteredData.forEach(job => {
-      if (!job.job_labels) return;
-      
-      // Parse skills from comma-separated job_labels
-      const skills = job.job_labels
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s.length > 1 && !s.toLowerCase().includes('unknown'));
-      
-      const agency = job.short_agency || job.long_agency || 'Unknown';
-      const location = job.duty_country || 'Unknown';
-      const grade = job.up_grade || 'Unknown';
-      const year = job.posting_year || currentYear;
-      const isRecent = year >= currentYear - 1;
-
-      skills.forEach(skill => {
-        if (!skillFrequency.has(skill)) {
-          skillFrequency.set(skill, {
-            count: 0,
-            agencies: new Set(),
-            locations: new Set(),
-            jobIds: new Set(),
-            grades: [],
-            years: [],
-            recentCount: 0,
-            olderCount: 0
-          });
-        }
-        
-        const skillData = skillFrequency.get(skill)!;
-        skillData.count++;
-        skillData.agencies.add(agency);
-        skillData.locations.add(location);
-        skillData.jobIds.add(job.id);
-        skillData.grades.push(grade);
-        skillData.years.push(year);
-        
-        if (isRecent) {
-          skillData.recentCount++;
-        } else {
-          skillData.olderCount++;
-        }
-      });
-    });
-
-    // Process into analysis structure
-    const allSkills = Array.from(skillFrequency.entries())
-      .map(([skill, data]) => {
-        // Real scarcity: high demand (many positions) but concentrated in few agencies
-        const demandToAgencyRatio = data.agencies.size > 0 ? data.count / data.agencies.size : 0;
-        const scarcityIndex = demandToAgencyRatio > 10 ? Math.min(100, (demandToAgencyRatio - 10) * 5) : 0;
-        const growth = data.olderCount > 0 ? ((data.recentCount - data.olderCount) / data.olderCount) * 100 : 
-                       data.recentCount > 0 ? 100 : 0;
-        
-        return {
-          skill,
-          count: data.count,
-          agencies: data.agencies.size,
-          locations: data.locations.size,
-          frequency: (data.count / filteredData.length) * 100,
-          scarcityIndex: Math.round(scarcityIndex),
-          growthRate: Math.round(growth),
-          isDigital: isDigitalSkill(skill),
-          isEmerging: growth > 50 && data.recentCount >= 2,
-          uniqueJobs: data.jobIds.size,
-          avgGrade: calculateAvgGrade(data.grades)
-        };
-      })
-      .filter(skill => skill.count >= 2) // Filter out rare skills
-      .sort((a, b) => b.count - a.count);
-
-    console.log('Processed', allSkills.length, 'skills from', filteredData.length, 'jobs');
-
-    return {
-      topSkills: allSkills.slice(0, 15),
-      allSkills,
-      digitalSkills: allSkills.filter(s => s.isDigital).slice(0, 8),
-      talentCompetition: calculateTalentCompetition(allSkills, filteredData),
-      skillTrends: calculateSkillTrends(filteredData),
-      emergingSkills: allSkills.filter(s => s.isEmerging).slice(0, 8),
-      skillsByCategory: categorizeSkills(filteredData)
-    };
-  }, [filteredData]);
+    if (!filteredData || filteredData.length === 0 || !dataProcessing || !dataProcessing.getSkillsAnalysis) {
+      return {
+        topSkills: [],
+        skillTrends: [],
+        emergingSkills: [],
+        skillsByCategory: [],
+        rareSkills: []
+      };
+    }
+    try {
+      const result = dataProcessing.getSkillsAnalysis(filteredData);
+      return result || {
+        topSkills: [],
+        skillTrends: [],
+        emergingSkills: [],
+        skillsByCategory: [],
+        rareSkills: []
+      };
+    } catch (error) {
+      console.error('Error analyzing skills:', error);
+      return {
+        topSkills: [],
+        skillTrends: [],
+        emergingSkills: [],
+        skillsByCategory: [],
+        rareSkills: []
+      };
+    }
+  }, [filteredData, dataProcessing]);
 
   // Career progression analysis with real data
   const careerProgression = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) {
+      return {};
+    }
+    
     const gradeMapping = {
       'Entry Level': (grade: string) => ['P1', 'P2', 'G1', 'G2', 'G3', 'NOA', 'NOB'].some(g => grade?.includes(g)),
       'Mid Level': (grade: string) => ['P3', 'P4', 'G4', 'G5', 'G6', 'NOC', 'NOD'].some(g => grade?.includes(g)),
@@ -168,6 +111,10 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
 
   // Geographic distribution with real location data
   const geographicDistribution = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) {
+      return [];
+    }
+    
     const locationSkills = new Map<string, { skills: Map<string, number>; totalJobs: number }>();
     
     filteredData.forEach(job => {
@@ -214,6 +161,13 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
 
   // Agency comparison analysis
   const agencyAnalysis = useMemo(() => {
+    if (!filteredData || filteredData.length === 0 || !data || data.length === 0) {
+      return {
+        isAgencyView: false,
+        topSkills: []
+      };
+    }
+    
     if (isAgencyView) {
       // Single agency view - compare to market
       const agencySkills = extractSkillCounts(filteredData);
@@ -275,15 +229,36 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
     }
   }, [filteredData, data, isAgencyView, filters.selectedAgency]);
 
-  // Language analysis using real data
+  // Language analysis using context
   const languageAnalysis = useMemo(() => {
-    return processor.analyzeLanguageRequirements(filteredData);
-  }, [filteredData, processor]);
+    try {
+      const result = dataProcessing.getLanguageAnalysis(filteredData);
+      return result || {
+        requiredLanguages: [],
+        desiredLanguages: [],
+        multilingualJobsPercentage: 0,
+        averageLanguageCount: 0,
+        topLanguagePairs: [],
+        agencyLanguageProfiles: []
+      };
+    } catch (error) {
+      console.error('Error analyzing languages:', error);
+      return {
+        requiredLanguages: [],
+        desiredLanguages: [],
+        multilingualJobsPercentage: 0,
+        averageLanguageCount: 0,
+        topLanguagePairs: [],
+        agencyLanguageProfiles: []
+      };
+    }
+  }, [filteredData, dataProcessing]);
 
   // Helper functions
   function isDigitalSkill(skill: string): boolean {
-    const digitalKeywords = ['digital', 'technology', 'data', 'software', 'analytics', 'programming', 'innovation', 'ai', 'machine learning', 'cybersecurity', 'automation'];
-    return digitalKeywords.some(keyword => skill.toLowerCase().includes(keyword));
+    const digitalCategory = JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === 'digital-technology');
+    const digitalKeywords = digitalCategory ? [...digitalCategory.coreKeywords, ...digitalCategory.supportKeywords] : [];
+    return digitalKeywords.some(keyword => skill.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   function calculateAvgGrade(grades: string[]): number {
@@ -433,13 +408,18 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
   }
 
   function categorizeSkills(allJobs: ProcessedJobData[]) {
-    const categories = {
-      'Digital & Technology': ['digital', 'technology', 'data', 'software', 'analytics', 'programming', 'innovation', 'ai'],
-      'Leadership & Management': ['management', 'leadership', 'strategy', 'coordination', 'supervision', 'governance'],
-      'Communication & Advocacy': ['communication', 'advocacy', 'outreach', 'reporting', 'presentation', 'media'],
-      'Technical & Analytical': ['analysis', 'research', 'evaluation', 'assessment', 'monitoring', 'technical'],
-      'Operations & Administration': ['operations', 'logistics', 'administration', 'planning', 'implementation', 'support']
-    };
+    // Build categories from dictionary
+    const categories = JOB_CLASSIFICATION_DICTIONARY.reduce((acc, category) => {
+      // Map main categories to skill keywords
+      if (['digital-technology', 'communication-advocacy', 'operations-logistics'].includes(category.id)) {
+        acc[category.name] = category.coreKeywords.slice(0, 8); // Use first 8 core keywords
+      }
+      return acc;
+    }, {} as Record<string, string[]>);
+    
+    // Add skill-specific categories not in main dictionary
+    categories['Leadership & Management'] = ['management', 'leadership', 'strategy', 'coordination', 'supervision', 'governance'];
+    categories['Technical & Analytical'] = ['analysis', 'research', 'evaluation', 'assessment', 'monitoring', 'technical'];
     
     // Count unique jobs per category (no double counting)
     return Object.entries(categories).map(([categoryName, keywords]) => {
@@ -497,11 +477,26 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
 
   // Calculate key metrics for dashboard cards
   const keyMetrics = useMemo(() => {
-    const topSkill = skillsAnalysis.topSkills[0];
-    const digitalPercentage = skillsAnalysis.digitalSkills.length > 0 ? 
-      Math.round((skillsAnalysis.digitalSkills.reduce((sum, s) => sum + s.count, 0) / filteredData.length) * 100) : 0;
-    const fastestGrowing = skillsAnalysis.skillTrends.find(s => s.growthRate > 0 && s.growthRate < 999);
-    const mostCompetitive = skillsAnalysis.topSkills.find(s => s.agencies >= 3);
+    if (!skillsAnalysis || !filteredData || !Array.isArray(filteredData)) {
+      return {
+        topSkill: 'N/A',
+        topSkillCount: 0,
+        trendingSkill: 'N/A',
+        trendingGrowth: 0,
+        digitalMaturity: 0,
+        mostCompetitive: 'N/A',
+        competitiveAgencies: 0
+      };
+    }
+
+    const topSkill = skillsAnalysis.topSkills?.[0];
+    const digitalSkills = Array.isArray(skillsAnalysis.digitalSkills) ? skillsAnalysis.digitalSkills : [];
+    const digitalPercentage = digitalSkills.length > 0 && filteredData.length > 0 ? 
+      Math.round((digitalSkills.reduce((sum, s) => sum + (s?.count || 0), 0) / filteredData.length) * 100) : 0;
+    const skillTrends = Array.isArray(skillsAnalysis.skillTrends) ? skillsAnalysis.skillTrends : [];
+    const fastestGrowing = skillTrends.find(s => s && s.growthRate > 0 && s.growthRate < 999);
+    const topSkills = Array.isArray(skillsAnalysis.topSkills) ? skillsAnalysis.topSkills : [];
+    const mostCompetitive = topSkills.find(s => s && s.agencies >= 3);
     
     return {
       topSkill: topSkill?.skill || 'N/A',
@@ -512,7 +507,7 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
       mostCompetitive: mostCompetitive?.skill || 'N/A',
       competitiveAgencies: mostCompetitive?.agencies || 0
     };
-  }, [skillsAnalysis, filteredData.length]);
+  }, [skillsAnalysis, filteredData]);
 
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#059669'];
 
@@ -593,9 +588,9 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
           </div>
           
           <div className="p-6">
-            {skillsAnalysis.topSkills.length > 0 ? (
+            {(skillsAnalysis?.topSkills?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {skillsAnalysis.topSkills.map((skill, index) => (
+                {(skillsAnalysis.topSkills || []).map((skill, index) => (
                   <div key={skill.skill} className="flex items-center gap-3">
                     <div className="w-32 text-sm text-gray-700 truncate">{skill.skill}</div>
                     <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
@@ -673,9 +668,9 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
             </div>
             
             <div className="p-6">
-              {skillsAnalysis.talentCompetition.length > 0 ? (
+              {(skillsAnalysis?.talentCompetition?.length || 0) > 0 ? (
                 <div className="space-y-3">
-                  {skillsAnalysis.talentCompetition.slice(0, 8).map((skill, index) => (
+                  {(skillsAnalysis?.talentCompetition || []).slice(0, 8).map((skill, index) => (
                     <div key={skill.skill} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-medium text-gray-900">{skill.skill}</div>
@@ -880,7 +875,7 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
               <div>
                 <h5 className="font-medium text-gray-900 mb-3">Required Languages</h5>
                 <div className="space-y-2">
-                  {languageAnalysis.requiredLanguages.slice(0, 5).map(([lang, count]: [string, number]) => (
+                  {(languageAnalysis?.requiredLanguages || []).slice(0, 5).map(([lang, count]: [string, number]) => (
                     <div key={lang} className="flex justify-between text-sm">
                       <span className="text-gray-700">{lang}</span>
                       <span className="text-gray-500">{count}</span>
@@ -892,7 +887,7 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
               <div>
                 <h5 className="font-medium text-gray-900 mb-3">Desired Languages</h5>
                 <div className="space-y-2">
-                  {languageAnalysis.desiredLanguages.slice(0, 5).map(([lang, count]: [string, number]) => (
+                  {(languageAnalysis?.desiredLanguages || []).slice(0, 5).map(([lang, count]: [string, number]) => (
                     <div key={lang} className="flex justify-between text-sm">
                       <span className="text-gray-700">{lang}</span>
                       <span className="text-gray-500">{count}</span>
@@ -906,11 +901,11 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Multilingual Jobs:</span>
-                    <span className="font-medium">{Math.round(languageAnalysis.multilingualJobsPercentage)}%</span>
+                    <span className="font-medium">{Math.round(languageAnalysis?.multilingualJobsPercentage || 0)}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Avg Languages:</span>
-                    <span className="font-medium">{languageAnalysis.averageLanguageCount}</span>
+                    <span className="font-medium">{languageAnalysis?.averageLanguageCount || 0}</span>
                   </div>
                 </div>
               </div>
@@ -936,9 +931,9 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
             </div>
             
             <div className="p-6">
-              {skillsAnalysis.emergingSkills.length > 0 ? (
+              {(skillsAnalysis?.emergingSkills?.length || 0) > 0 ? (
                 <div className="space-y-3">
-                  {skillsAnalysis.emergingSkills.map((skill: any, index: number) => (
+                  {(skillsAnalysis?.emergingSkills || []).map((skill: any, index: number) => (
                     <div key={skill.skill} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <TrendingUp className="h-4 w-4 text-green-600" />
@@ -971,9 +966,9 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
             </div>
             
             <div className="p-6">
-              {skillsAnalysis.digitalSkills.length > 0 ? (
+              {(skillsAnalysis?.digitalSkills?.length || 0) > 0 ? (
                 <div className="space-y-3">
-                  {skillsAnalysis.digitalSkills.map((skill: any, index: number) => (
+                  {(skillsAnalysis?.digitalSkills || []).map((skill: any, index: number) => (
                     <div key={skill.skill} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Zap className="h-4 w-4 text-blue-600" />
@@ -1006,14 +1001,14 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
           <div className="p-6 border-b border-gray-200">
             <h4 className="text-lg font-semibold text-gray-900">Skill Evolution Trends</h4>
             <p className="text-sm text-gray-600 mt-1">
-              Skills momentum from {skillsAnalysis.skillTrends.length > 0 ? skillsAnalysis.skillTrends[0]?.firstYear : 'N/A'} to {skillsAnalysis.skillTrends.length > 0 ? skillsAnalysis.skillTrends[0]?.lastYear : 'N/A'}
+              Skills momentum from {(skillsAnalysis?.skillTrends?.length || 0) > 0 ? skillsAnalysis.skillTrends[0]?.firstYear : 'N/A'} to {(skillsAnalysis?.skillTrends?.length || 0) > 0 ? skillsAnalysis.skillTrends[0]?.lastYear : 'N/A'}
             </p>
           </div>
           
           <div className="p-6">
-            {skillsAnalysis.skillTrends.length > 0 ? (
+            {(skillsAnalysis?.skillTrends?.length || 0) > 0 ? (
               <div className="space-y-3">
-                {skillsAnalysis.skillTrends.map((trend, index) => (
+                {(skillsAnalysis?.skillTrends || []).map((trend, index) => (
                   <div key={trend.skill} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-medium text-gray-900 capitalize">{trend.skill}</div>

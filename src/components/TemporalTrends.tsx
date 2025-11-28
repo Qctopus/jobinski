@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { TrendingUp, TrendingDown, Calendar, Clock, Zap, AlertTriangle, Eye } from 'lucide-react';
+import { LineChart, AreaChart, BarChart, PostedVsOpenChart } from './charts';
+import { TrendingUp, TrendingDown, Calendar, Clock, Zap, AlertTriangle, Eye, BarChart3 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor, JOB_CATEGORIES } from '../services/dataProcessor';
+import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
+import { useDataProcessing } from '../contexts/DataProcessingContext';
 
 interface TemporalTrendsProps {
   data: ProcessedJobData[];
@@ -10,7 +11,7 @@ interface TemporalTrendsProps {
 }
 
 const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
+  const dataProcessing = useDataProcessing();
   
   const isAgencyView = filters.selectedAgency !== 'all';
   
@@ -18,21 +19,95 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
   // - Agency view: Use filtered data to show internal trends
   // - Market view: Use unfiltered data to show market trends
   const dataToAnalyze = useMemo(() => {
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
     if (isAgencyView) {
       // Show agency's internal temporal patterns
-      return processor.applyFilters(data, filters);
+      if (!dataProcessing || !dataProcessing.getFilteredData) {
+        return [];
+      }
+      try {
+        const result = dataProcessing.getFilteredData(data, filters);
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('Error filtering temporal data:', error);
+        return [];
+      }
     } else {
       // Show market-wide temporal patterns
       return data;
     }
-  }, [data, filters, processor, isAgencyView]);
+  }, [data, filters, dataProcessing, isAgencyView]);
 
   const temporalAnalysis = useMemo(() => {
-    return processor.calculateTemporalTrends(dataToAnalyze, 18); // 18 months of data
-  }, [dataToAnalyze, processor]);
+    if (!dataToAnalyze || !Array.isArray(dataToAnalyze) || dataToAnalyze.length === 0 || !dataProcessing || !dataProcessing.getTemporalTrends) {
+      return {
+        agencyTimeSeries: [],
+        categoryTimeSeries: [],
+        seasonalPatterns: [],
+        trendSummary: {},
+        emergingCategories: [],
+        decliningCategories: [],
+        velocityIndicators: []
+      };
+    }
+    try {
+      const result = dataProcessing.getTemporalTrends(dataToAnalyze, 18); // 18 months of data
+      return result || {
+        agencyTimeSeries: [],
+        categoryTimeSeries: [],
+        seasonalPatterns: [],
+        trendSummary: {},
+        emergingCategories: [],
+        decliningCategories: [],
+        velocityIndicators: []
+      };
+    } catch (error) {
+      console.error('Error analyzing temporal trends:', error);
+      return {
+        agencyTimeSeries: [],
+        categoryTimeSeries: [],
+        seasonalPatterns: [],
+        trendSummary: {},
+        emergingCategories: [],
+        decliningCategories: [],
+        velocityIndicators: []
+      };
+    }
+  }, [dataToAnalyze, dataProcessing]);
+
+  // Calculate Posted vs Open job timeline
+  const postedVsOpenAnalysis = useMemo(() => {
+    if (!dataToAnalyze || !Array.isArray(dataToAnalyze) || dataToAnalyze.length === 0 || !dataProcessing?.temporalAnalyzer) {
+      return [];
+    }
+    try {
+      const result = dataProcessing.temporalAnalyzer.calculateTemporalMetrics(dataToAnalyze, 'month');
+      // Convert EnhancedTemporalMetrics to TemporalSnapshot format
+      const avgJobsPerPeriod = result.length > 0 
+        ? result.reduce((sum, r) => sum + r.jobs_posted_this_period, 0) / result.length 
+        : 0;
+      
+      return result.map(r => ({
+        period: r.period,
+        jobs_posted: r.jobs_posted_this_period,
+        jobs_open: r.jobs_open_end_of_period,
+        jobs_closed: r.jobs_closed_this_period,
+        net_opening_change: r.net_change,
+        market_saturation: r.market_saturation_index > 1.5 ? 'high' as const : 
+                          r.market_saturation_index < 0.8 ? 'low' as const : 
+                          'medium' as const,
+        avg_jobs_per_period: avgJobsPerPeriod
+      })) || [];
+    } catch (error) {
+      console.error('Error calculating posted vs open timeline:', error);
+      return [];
+    }
+  }, [dataToAnalyze, dataProcessing]);
 
   const getCategoryColor = (categoryName: string) => {
-    const category = JOB_CATEGORIES.find(cat => cat.name === categoryName);
+    const category = JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.name === categoryName);
     return category?.color || '#94A3B8';
   };
 
@@ -162,8 +237,9 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
             <div className="text-right">
               <div className="text-lg font-semibold text-green-600">
                 {(() => {
-                  const fastestGrowing = temporalAnalysis.emergingTrends.velocityIndicators
-                    .filter(v => v.trend === 'rising')
+                  const velocityIndicators = temporalAnalysis?.velocityIndicators || temporalAnalysis?.emergingTrends?.velocityIndicators || [];
+                  const fastestGrowing = velocityIndicators
+                    .filter(v => v && v.trend === 'rising')
                     .sort((a, b) => b.acceleration - a.acceleration)[0];
                   
                   if (!fastestGrowing) return 'No growth';
@@ -182,8 +258,9 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           </div>
           <div className="text-xs text-gray-500 leading-tight">
             {(() => {
-              const fastestGrowing = temporalAnalysis.emergingTrends.velocityIndicators
-                .filter(v => v.trend === 'rising')
+              const velocityIndicators = temporalAnalysis?.velocityIndicators || temporalAnalysis?.emergingTrends?.velocityIndicators || [];
+              const fastestGrowing = velocityIndicators
+                .filter(v => v && v.trend === 'rising')
                 .sort((a, b) => b.acceleration - a.acceleration)[0];
               
               if (!fastestGrowing) return 'All categories stable';
@@ -193,6 +270,43 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           </div>
         </div>
       </div>
+
+      {/* Posted vs Open Jobs Timeline - NEW FEATURE */}
+      {postedVsOpenAnalysis && postedVsOpenAnalysis.length > 0 && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="h-6 w-6 text-purple-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Jobs Posted vs Jobs Open for Applications</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Shows the difference between NEW jobs posted each month and TOTAL jobs accepting applications
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            <PostedVsOpenChart snapshots={postedVsOpenAnalysis} />
+            <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-xs font-semibold text-blue-800 uppercase">Jobs Posted</div>
+                <div className="text-xs text-blue-700 mt-1">NEW opportunities that month</div>
+              </div>
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="text-xs font-semibold text-green-800 uppercase">Jobs Open</div>
+                <div className="text-xs text-green-700 mt-1">TOTAL accepting applications</div>
+              </div>
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="text-xs font-semibold text-purple-800 uppercase">Market Saturation</div>
+                <div className="text-xs text-purple-700 mt-1">High/Medium/Low indicator</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Temporal Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -209,31 +323,35 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           </div>
           
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={temporalAnalysis.agencyTimeSeries.map(item => ({
-                ...item,
-                month: formatMonthLabel(item.month)
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={11} />
-                <YAxis fontSize={12} />
-                <Tooltip 
-                  labelFormatter={(label) => `Month: ${label}`}
-                  formatter={(value: any, name: any) => [`${value} jobs`, name]}
-                />
-                {topAgencies.map((agency, index) => (
-                  <Line
-                    key={agency}
-                    type="monotone"
-                    dataKey={agency}
-                    stroke={agencyColors[index] || '#94A3B8'}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name={agency.length > 15 ? agency.substring(0, 12) + '...' : agency}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+            {(temporalAnalysis?.agencyTimeSeries?.length || 0) > 0 ? (
+              <LineChart
+                data={temporalAnalysis.agencyTimeSeries.map(item => ({
+                  ...item,
+                  month: formatMonthLabel(item.month)
+                }))}
+                xAxisKey="month"
+                dataKey={topAgencies[0] || 'total'}
+                height={400}
+                color={agencyColors[0] || '#3B82F6'}
+                additionalLines={topAgencies.slice(1).map((agency, index) => ({
+                  dataKey: agency,
+                  name: agency.length > 15 ? agency.substring(0, 12) + '...' : agency,
+                  stroke: agencyColors[index + 1] || '#94A3B8',
+                  strokeWidth: 2
+                }))}
+                tooltipLabelFormatter={(label) => `Month: ${label}`}
+                tooltipFormatter={(value: any, name: any) => [`${value} jobs`, name]}
+                dotSize={3}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-96 text-gray-500">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No agency timeline data available</p>
+                  <p className="text-sm mt-1">Check data filters and date range</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -250,32 +368,38 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           </div>
           
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={temporalAnalysis.categoryTimeSeries.map(item => ({
-                ...item,
-                month: formatMonthLabel(item.month)
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={11} />
-                <YAxis fontSize={12} />
-                <Tooltip 
-                  labelFormatter={(label) => `Month: ${label}`}
-                  formatter={(value: any, name: any) => [`${value} jobs`, name]}
-                />
-                {topCategories.map((category, index) => (
-                  <Area
-                    key={category}
-                    type="monotone"
-                    dataKey={category}
-                    stackId="1"
-                    stroke={getCategoryColor(category)}
-                    fill={getCategoryColor(category)}
-                    fillOpacity={0.6}
-                    name={category.length > 20 ? category.substring(0, 17) + '...' : category}
-                  />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
+            {(temporalAnalysis?.categoryTimeSeries?.length || 0) > 0 ? (
+              <AreaChart
+                data={temporalAnalysis.categoryTimeSeries.map(item => ({
+                  ...item,
+                  month: formatMonthLabel(item.month)
+                }))}
+                xAxisKey="month"
+                dataKey={topCategories[0] || 'default'}
+                height={400}
+                color={getCategoryColor(topCategories[0]) || '#3B82F6'}
+                fillOpacity={0.6}
+                stacked={true}
+                additionalAreas={topCategories.slice(1).map((category) => ({
+                  dataKey: category,
+                  name: category.length > 20 ? category.substring(0, 17) + '...' : category,
+                  fill: getCategoryColor(category),
+                  stroke: getCategoryColor(category),
+                  fillOpacity: 0.6,
+                  stackId: "1"
+                }))}
+                tooltipLabelFormatter={(label) => `Month: ${label}`}
+                tooltipFormatter={(value: any, name: any) => [`${value} jobs`, name]}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-96 text-gray-500">
+                <div className="text-center">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No category evolution data available</p>
+                  <p className="text-sm mt-1">Check data filters and date range</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -293,18 +417,25 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
         </div>
         
         <div className="p-6">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={temporalAnalysis.seasonalPatterns}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="monthName" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip 
-                formatter={(value: any) => [`${value} jobs`, 'Total Jobs']}
-                labelFormatter={(label) => `${label} (seasonal average)`}
-              />
-              <Bar dataKey="totalJobs" fill="#009edb" radius={4} />
-            </BarChart>
-          </ResponsiveContainer>
+          {(temporalAnalysis?.seasonalPatterns?.length || 0) > 0 ? (
+            <BarChart
+              data={temporalAnalysis.seasonalPatterns}
+              dataKey="totalJobs"
+              xAxisKey="monthName"
+              height={300}
+              color="#009edb"
+              tooltipFormatter={(value: any) => [`${value} jobs`, 'Total Jobs']}
+              tooltipLabelFormatter={(label) => `${label} (seasonal average)`}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No seasonal pattern data available</p>
+                <p className="text-sm mt-1">Need more historical data for analysis</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -321,8 +452,8 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           
           <div className="p-6">
             <div className="space-y-4">
-              {temporalAnalysis.emergingTrends.newCategories.length > 0 ? (
-                temporalAnalysis.emergingTrends.newCategories.map((category, index) => (
+              {(temporalAnalysis?.emergingCategories?.length || 0) > 0 ? (
+                (temporalAnalysis.emergingCategories || []).map((category, index) => (
                   <div key={category.category} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div 
@@ -365,8 +496,8 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           
           <div className="p-6">
             <div className="space-y-4">
-              {temporalAnalysis.emergingTrends.decliningCategories.length > 0 ? (
-                temporalAnalysis.emergingTrends.decliningCategories.map((category, index) => (
+              {(temporalAnalysis?.decliningCategories?.length || 0) > 0 ? (
+                (temporalAnalysis.decliningCategories || []).map((category, index) => (
                   <div key={category.category} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div 
@@ -409,8 +540,8 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
           
           <div className="p-6">
             <div className="space-y-4">
-              {temporalAnalysis.emergingTrends.velocityIndicators.length > 0 ? (
-                temporalAnalysis.emergingTrends.velocityIndicators.slice(0, 6).map((indicator, index) => (
+              {(temporalAnalysis?.velocityIndicators?.length || 0) > 0 ? (
+                (temporalAnalysis.velocityIndicators || []).slice(0, 6).map((indicator, index) => (
                   <div key={indicator.category} className={`flex items-center justify-between p-3 rounded-lg ${
                     indicator.trend === 'rising' ? 'bg-green-50' : 
                     indicator.trend === 'falling' ? 'bg-red-50' : 'bg-gray-50'
@@ -462,16 +593,20 @@ const TemporalTrends: React.FC<TemporalTrendsProps> = ({ data, filters }) => {
             <div>
               <h4 className="font-medium mb-2">Key Trends</h4>
               <ul className="text-sm space-y-1 opacity-90">
-                {temporalAnalysis.emergingTrends.newCategories.length > 0 && (
-                  <li>• {temporalAnalysis.emergingTrends.newCategories.length} new categories emerged recently</li>
+                {(temporalAnalysis?.emergingCategories?.length || 0) > 0 && (
+                  <li>• {temporalAnalysis.emergingCategories.length} new categories emerged recently</li>
                 )}
-                {temporalAnalysis.seasonalPatterns.length > 0 && (
+                {(temporalAnalysis?.seasonalPatterns?.length || 0) > 0 && (
                   <li>• Peak hiring occurs in {temporalAnalysis.seasonalPatterns.reduce((max, month) => 
                     month.totalJobs > max.totalJobs ? month : max, temporalAnalysis.seasonalPatterns[0]).monthName}</li>
                 )}
-                {temporalAnalysis.emergingTrends.velocityIndicators.filter(v => v.trend === 'rising').length > 0 && (
-                  <li>• {temporalAnalysis.emergingTrends.velocityIndicators.filter(v => v.trend === 'rising').length} categories showing rapid growth</li>
-                )}
+                {(() => {
+                  const velocityIndicators = temporalAnalysis?.velocityIndicators || temporalAnalysis?.emergingTrends?.velocityIndicators || [];
+                  const risingCount = velocityIndicators.filter(v => v && v.trend === 'rising').length;
+                  return risingCount > 0 && (
+                    <li>• {risingCount} categories showing rapid growth</li>
+                  );
+                })()}
               </ul>
             </div>
             <div>

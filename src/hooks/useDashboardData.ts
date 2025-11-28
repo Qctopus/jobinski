@@ -1,55 +1,34 @@
 import { useMemo } from 'react';
-import { ProcessedJobData, FilterOptions } from '../types';
-import { JobAnalyticsProcessor } from '../services/dataProcessor';
+import { ProcessedJobData, FilterOptions, DashboardMetrics } from '../types';
+import { useDataProcessing } from '../contexts/DataProcessingContext';
 
 export interface DashboardDataHook {
-  processor: JobAnalyticsProcessor;
+  processor: any;
   isAgencyView: boolean;
   selectedAgencyName: string;
   filteredData: ProcessedJobData[];
   marketData: ProcessedJobData[];
-  metrics: ReturnType<JobAnalyticsProcessor['calculateDashboardMetrics']>;
-  marketMetrics: ReturnType<JobAnalyticsProcessor['calculateDashboardMetrics']>;
+  metrics: DashboardMetrics;
+  marketMetrics: DashboardMetrics;
 }
 
 export const useDashboardData = (
   data: ProcessedJobData[],
   filters: FilterOptions
 ): DashboardDataHook => {
-  const processor = useMemo(() => new JobAnalyticsProcessor(), []);
+  const dataProcessing = useDataProcessing();
 
-  const isAgencyView = filters.selectedAgency !== 'all';
-  const selectedAgencyName = filters.selectedAgency;
-
-  const filteredData = useMemo(() => {
-    return processor.applyFilters(data, filters);
-  }, [data, filters, processor]);
-
-  const marketData = useMemo(() => {
-    return processor.applyFilters(data, { 
-      selectedAgency: 'all', 
-      timeRange: filters.timeRange 
-    });
-  }, [data, filters.timeRange, processor]);
-
-  const metrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(data, filters);
-  }, [data, filters, processor]);
-
-  const marketMetrics = useMemo(() => {
-    return processor.calculateDashboardMetrics(data, { 
-      selectedAgency: 'all', 
-      timeRange: filters.timeRange 
-    });
-  }, [data, filters.timeRange, processor]);
+  const result = useMemo(() => {
+    return dataProcessing.processData(data, filters);
+  }, [data, filters, dataProcessing]);
 
   return {
-    processor,
-    isAgencyView,
-    selectedAgencyName,
-    filteredData,
-    marketData,
-    metrics,
-    marketMetrics
+    processor: dataProcessing.processor,
+    isAgencyView: result.isAgencyView,
+    selectedAgencyName: result.selectedAgencyName,
+    filteredData: result.filteredData,
+    marketData: result.marketData,
+    metrics: result.metrics,
+    marketMetrics: result.marketMetrics
   };
 };

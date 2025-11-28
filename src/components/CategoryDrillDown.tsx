@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { ProcessedJobData, FilterOptions } from '../types';
-import { JOB_CATEGORIES } from '../services/categorization/CategoryProcessor';
+import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { 
   X, 
   ExternalLink, 
@@ -14,9 +14,14 @@ import {
   Filter,
   AlertCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  HelpCircle,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import CategoryAnalyticsView from './CategoryAnalyticsView';
 
 interface CategoryDrillDownProps {
   isOpen: boolean;
@@ -47,10 +52,11 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Get category information
   const category = useMemo(() => {
-    const foundCategory = JOB_CATEGORIES.find(cat => cat.id === categoryId) || JOB_CATEGORIES[0];
+    const foundCategory = JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === categoryId) || JOB_CLASSIFICATION_DICTIONARY[0];
     
     // Debug logging (development only)
     if (process.env.NODE_ENV === 'development') {
@@ -79,7 +85,7 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
         jobCategory.toLowerCase() === category.name.toLowerCase() ||
         jobCategory.toLowerCase() === category.id.toLowerCase() ||
         // Also check if the job category matches any category that has the same ID as categoryId
-        (categoryId && JOB_CATEGORIES.find(cat => cat.id === categoryId)?.name === jobCategory);
+        (categoryId && JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === categoryId)?.name === jobCategory);
       
       return matches;
     });
@@ -197,7 +203,7 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
         jobCategory === categoryId ||
         jobCategory.toLowerCase() === category.name.toLowerCase() ||
         jobCategory.toLowerCase() === category.id.toLowerCase() ||
-        (categoryId && JOB_CATEGORIES.find(cat => cat.id === categoryId)?.name === jobCategory)
+        (categoryId && JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === categoryId)?.name === jobCategory)
       );
     });
 
@@ -249,7 +255,7 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
         jobCategory === categoryId ||
         jobCategory.toLowerCase() === category.name.toLowerCase() ||
         jobCategory.toLowerCase() === category.id.toLowerCase() ||
-        (categoryId && JOB_CATEGORIES.find(cat => cat.id === categoryId)?.name === jobCategory);
+        (categoryId && JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === categoryId)?.name === jobCategory);
       
       if (!categoryMatch) return false;
       
@@ -311,6 +317,23 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
     if (confidence >= 70) return 'text-green-600 bg-green-100';
     if (confidence >= 40) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
+  };
+
+  const getConfidenceIcon = (confidence: number) => {
+    if (confidence >= 70) return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+    if (confidence >= 40) return <HelpCircle className="h-4 w-4 text-yellow-600" />;
+    return <XCircle className="h-4 w-4 text-red-600" />;
+  };
+
+  const getConfidenceTooltip = (confidence: number, keywords: string[]) => {
+    const level = confidence >= 70 ? 'High' : confidence >= 40 ? 'Medium' : 'Low';
+    const explanation = confidence >= 70 
+      ? 'Strong keyword matches across multiple fields' 
+      : confidence >= 40 
+      ? 'Some keyword matches found' 
+      : 'Weak or unclear classification';
+    
+    return `${level} confidence (${confidence}%): ${explanation}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -395,6 +418,14 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
                     {selectedGrades.length + selectedAgencies.length}
                   </span>
                 )}
+              </button>
+
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Analytics
               </button>
 
               <button
@@ -603,9 +634,18 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
 
                     {/* Classification Score */}
                     <div className="col-span-1">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getConfidenceColor(job.classification_confidence || 0)}`}>
-                        {job.classification_confidence || 0}%
-                      </span>
+                      <div 
+                        className="flex items-center gap-1 cursor-help"
+                        title={getConfidenceTooltip(job.classification_confidence || 0, job.classification_reasoning || [])}
+                      >
+                        {getConfidenceIcon(job.classification_confidence || 0)}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getConfidenceColor(job.classification_confidence || 0)}`}>
+                          {job.classification_confidence || 0}%
+                        </span>
+                      </div>
+                      {job.is_ambiguous_category && (
+                        <div className="text-xs text-yellow-600 mt-1">Ambiguous</div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -678,6 +718,19 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
           )}
         </div>
       </div>
+
+      {/* Category Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+          <div className="w-full max-w-7xl h-full max-h-[95vh] overflow-hidden">
+            <CategoryAnalyticsView
+              category={category.name}
+              data={data}
+              onClose={() => setShowAnalytics(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

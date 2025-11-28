@@ -27,6 +27,7 @@ export interface JobData {
   created_at: string;
   updated_at: string;
   archived: boolean;
+  sectoral_category?: string; // Backend field for sector categorization
 }
 
 export interface ProcessedJobData extends JobData {
@@ -36,6 +37,12 @@ export interface ProcessedJobData extends JobData {
   is_home_based: boolean;
   formatted_posting_date: string;
   formatted_apply_until: string;
+  // Status fields (Phase 1.2)
+  is_active: boolean;
+  is_expired: boolean;
+  days_remaining: number;
+  status: 'active' | 'closing_soon' | 'expired' | 'archived';
+  urgency: 'urgent' | 'normal' | 'extended';
   // New analytics fields
   primary_category: string;
   secondary_categories: string[];
@@ -53,6 +60,12 @@ export interface ProcessedJobData extends JobData {
   geographic_subregion: string;
   is_conflict_zone: boolean;
   is_developing_country: boolean;
+  // Enhanced classification fields
+  classification_confidence: number;
+  is_ambiguous_category: boolean;
+  classification_reasoning: string[];
+  emerging_terms_found: string[];
+  hybrid_category_candidate?: string;
 }
 
 export interface JobCategory {
@@ -119,4 +132,148 @@ export interface FilterOptions {
   timeRange: '3months' | '6months' | '1year' | 'all';
   startDate?: string;
   endDate?: string;
+}
+
+// Enhanced category analytics interfaces
+export interface CategoryAnalytics {
+  gradeBreakdown: {
+    distribution: { grade: string; count: number; percentage: number }[];
+    consultantPercentage: number;
+    totalPositions: number;
+    avgGradeLevel: string;
+    seniorityBreakdown: { level: string; count: number; percentage: number }[];
+  };
+  agencyConcentration: {
+    agency: string;
+    count: number;
+    percentage: number;
+    isLeader: boolean;
+    rank: number;
+  }[];
+  locationHotspots: {
+    location: string;
+    count: number;
+    percentage: number;
+    countries: string[];
+    locationType: string;
+  }[];
+  monthlyTrend: {
+    monthlyData: { month: string; count: number }[];
+    growthRate: number;
+    peakMonth: { month: string; count: number };
+    avgMonthlyVolume: number;
+  };
+  avgDaysToDeadline: {
+    avg: number;
+    distribution: {
+      range: string;
+      count: number;
+      percentage: number;
+      type: string;
+    }[];
+  };
+  relatedCategories: {
+    category: string;
+    count: number;
+    percentage: number;
+  }[];
+  topPositions: {
+    title: string;
+    count: number;
+    percentage: number;
+    agencies: string[];
+    grades: string[];
+  }[];
+  experienceProfile: {
+    highSchool: { avg: number; min: number; max: number; positions: number };
+    bachelor: { avg: number; min: number; max: number; positions: number };
+    master: { avg: number; min: number; max: number; positions: number };
+    overallPattern: {
+      noExperienceRequired: number;
+      entryLevel: number;
+      experienced: number;
+      senior: number;
+    };
+  };
+  languageRequirements: {
+    topLanguages: { language: string; count: number; percentage: number }[];
+    multilingualPercentage: number;
+    avgLanguagesRequired: number;
+  };
+  postingVelocity: {
+    avgJobsPerWeek: number;
+    peakWeek: number;
+    lowWeek: number;
+    volatility: number;
+  };
+  growthRate: {
+    categoryGrowthRate: number;
+    marketGrowthRate: number;
+    relativePerformance: number;
+    isOutperforming: boolean;
+  };
+  classificationQuality: {
+    avgConfidence: number;
+    distribution: { level: string; count: number; percentage: number }[];
+    needsReview: number;
+    ambiguousJobs: number;
+  };
+  urgencyAnalysis: {
+    urgencyRate: number;
+    urgentJobsCount: number;
+    agenciesWithUrgentHiring: { agency: string; count: number }[];
+    avgUrgentWindow: number;
+  };
+}
+
+// Category intelligence summary
+export interface CategoryIntelligence {
+  emergingAreas: CategoryGrowth[];
+  urgentNeeds: CategoryUrgency[];
+  concentrationRisks: CategoryConcentration[];
+  leadershipFocus: CategorySeniority[];
+  globalCategories: CategorySpread[];
+  specializedCategories: CategorySpecialization[];
+}
+
+export interface CategoryGrowth {
+  category: string;
+  growthRate: number;
+  monthOverMonth: number;
+  isNew: boolean;
+}
+
+export interface CategoryUrgency {
+  category: string;
+  avgDaysToDeadline: number;
+  urgentJobsPercentage: number;
+  totalUrgentJobs: number;
+}
+
+export interface CategoryConcentration {
+  category: string;
+  leadingAgency: string;
+  marketShare: number;
+  herfindahlIndex: number;
+}
+
+export interface CategorySeniority {
+  category: string;
+  seniorPositionsPercentage: number;
+  avgGradeLevel: number;
+  executivePositions: number;
+}
+
+export interface CategorySpread {
+  category: string;
+  uniqueCountries: number;
+  uniqueAgencies: number;
+  globalPresenceIndex: number;
+}
+
+export interface CategorySpecialization {
+  category: string;
+  uniqueLanguages: string[];
+  specializationIndex: number;
+  requirements: string[];
 } 

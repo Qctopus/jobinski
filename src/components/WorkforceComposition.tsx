@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Target, Award, UserCheck, Zap, Info } from 'lucide-react';
+import { BarChart, PieChart, WorkforceEvolutionChart } from './charts';
+import { Target, Award, UserCheck, Zap, Info, TrendingUp } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useDataProcessing } from '../contexts/DataProcessingContext';
 
 interface WorkforceCompositionProps {
   data: ProcessedJobData[];
@@ -11,19 +12,34 @@ interface WorkforceCompositionProps {
 
 const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filters }) => {
   // Use shared hook for common dashboard data and processing
-  const { 
-    processor, 
-    isAgencyView, 
-    selectedAgencyName, 
-    filteredData, 
-    marketData 
+  const {
+    isAgencyView,
+    selectedAgencyName,
+    filteredData,
+    marketData
   } = useDashboardData(data, filters);
+
+  // Get data processing services
+  const dataProcessing = useDataProcessing();
+
+  // Calculate workforce evolution timeline
+  const workforceTimeline = useMemo(() => {
+    if (!dataProcessing?.workforceAnalyzer) return null;
+
+    try {
+      const timeline = dataProcessing.workforceAnalyzer.calculateWorkforceTimeline(data, 'month');
+      return timeline;
+    } catch (error) {
+      console.error('Error calculating workforce timeline:', error);
+      return null;
+    }
+  }, [data, dataProcessing]);
 
   // Helper function to classify employment type
   const isStaff = (grade: string) => {
     if (!grade) return false;
     const gradeUpper = grade.toUpperCase().trim();
-    
+
     // Staff categories: P (Professional), D (Director), G (General Service), NO (National Officer), L (Language)
     return (
       /^P\d+/.test(gradeUpper) ||        // P1, P2, P3, etc.
@@ -39,7 +55,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
   const isConsultant = (grade: string) => {
     if (!grade) return false;
     const gradeUpper = grade.toUpperCase().trim();
-    
+
     // Consultant/contract categories (NOA is staff, not consultant!)
     return (
       gradeUpper.includes('CONSULTANT') ||
@@ -89,19 +105,19 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
   // Core workforce analysis - Grade distribution by agency and category
   const workforceAnalysis = useMemo(() => {
     const gradeCategories = {
-      'Entry International (P1-P2, L1-L2)': (grade: string) => 
+      'Entry International (P1-P2, L1-L2)': (grade: string) =>
         isInternationalStaff(grade) && /^(P[12]|L[12])/.test(grade?.toUpperCase() || ''),
-      'Mid International (P3-P4, L3-L4)': (grade: string) => 
+      'Mid International (P3-P4, L3-L4)': (grade: string) =>
         isInternationalStaff(grade) && /^(P[34]|L[34])/.test(grade?.toUpperCase() || ''),
-      'Senior International (P5+, D1+)': (grade: string) => 
+      'Senior International (P5+, D1+)': (grade: string) =>
         isInternationalStaff(grade) && /^(P[567]|D[12]|L[567]|USG|ASG)/.test(grade?.toUpperCase() || ''),
-      'National Staff (G, NO, NOA)': (grade: string) => 
+      'National Staff (G, NO, NOA)': (grade: string) =>
         isNationalStaff(grade),
-      'Consultants': (grade: string) => 
+      'Consultants': (grade: string) =>
         isConsultant(grade),
-      'Interns': (grade: string) => 
+      'Interns': (grade: string) =>
         isIntern(grade),
-      'Unspecified': (grade: string) => 
+      'Unspecified': (grade: string) =>
         isUnspecified(grade) || (!isStaff(grade) && !isConsultant(grade) && !isIntern(grade))
     };
 
@@ -109,13 +125,13 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
     const calculateGradeDistribution = (dataset: ProcessedJobData[]) => {
       const total = dataset.length;
       const gradeCounts: { [key: string]: number } = {};
-      
+
       Object.keys(gradeCategories).forEach(grade => gradeCounts[grade] = 0);
 
       dataset.forEach(job => {
         const grade = job.up_grade || '';
         let categorized = false;
-        
+
         Object.entries(gradeCategories).forEach(([category, matcher]) => {
           if (!categorized && matcher(grade)) {
             gradeCounts[category]++;
@@ -157,21 +173,21 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
     if (isAgencyView) {
       // For agency view, show category breakdown by grade
       const categoryGradeMap = new Map<string, { [grade: string]: number }>();
-      
+
       filteredData.forEach(job => {
         const category = job.primary_category;
         const jobIsConsultant = isConsultant(job.up_grade || '');
         const jobIsStaff = isStaff(job.up_grade || '');
-        const isSenior = jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g => 
+        const isSenior = jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g =>
           job.up_grade?.includes(g)
         );
-        
+
         const gradeType = jobIsConsultant ? 'Consultant' : isSenior ? 'Senior Staff' : 'Regular Staff';
-        
+
         if (!categoryGradeMap.has(category)) {
           categoryGradeMap.set(category, { Consultant: 0, 'Senior Staff': 0, 'Regular Staff': 0, total: 0 });
         }
-        
+
         const categoryData = categoryGradeMap.get(category)!;
         categoryData[gradeType]++;
         categoryData.total++;
@@ -194,21 +210,21 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
     } else {
       // For market view, show agency comparison by grade composition
       const agencyGradeMap = new Map<string, { [grade: string]: number }>();
-      
+
       marketData.forEach(job => {
         const agency = job.short_agency || job.long_agency || 'Unknown';
         const jobIsConsultant = isConsultant(job.up_grade || '');
         const jobIsStaff = isStaff(job.up_grade || '');
-        const isSenior = jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g => 
+        const isSenior = jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g =>
           job.up_grade?.includes(g)
         );
-        
+
         const gradeType = jobIsConsultant ? 'Consultant' : isSenior ? 'Senior Staff' : 'Regular Staff';
-        
+
         if (!agencyGradeMap.has(agency)) {
           agencyGradeMap.set(agency, { Consultant: 0, 'Senior Staff': 0, 'Regular Staff': 0, total: 0 });
         }
-        
+
         const agencyData = agencyGradeMap.get(agency)!;
         agencyData[gradeType]++;
         agencyData.total++;
@@ -231,7 +247,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
     }
   }, [filteredData, marketData, isAgencyView]);
 
-    // Agency grade composition comparison analysis
+  // Agency grade composition comparison analysis
   const agencyGradeComparison = useMemo(() => {
     if (isAgencyView || marketData.length === 0) {
       return [];
@@ -256,7 +272,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
       const international = jobs.filter(job => isInternationalStaff(job.up_grade || '')).length;
       const national = jobs.filter(job => isNationalStaff(job.up_grade || '')).length;
       const consultants = jobs.filter(job => isConsultant(job.up_grade || '')).length;
-      const seniors = jobs.filter(job => isInternationalStaff(job.up_grade || '') && 
+      const seniors = jobs.filter(job => isInternationalStaff(job.up_grade || '') &&
         /^(P[567]|D[12]|L[567]|USG|ASG)/.test(job.up_grade?.toUpperCase() || '')).length;
       const interns = jobs.filter(job => isIntern(job.up_grade || '')).length;
 
@@ -281,7 +297,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
   // Top agencies and their workforce strategies
   const agencyStrategies = useMemo(() => {
     if (isAgencyView) return null;
-    
+
     const agencyMap = new Map<string, ProcessedJobData[]>();
     marketData.forEach(job => {
       const agency = job.short_agency || job.long_agency || 'Unknown';
@@ -294,19 +310,19 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
         const consultants = jobs.filter(job => isConsultant(job.up_grade || '')).length;
         const seniors = jobs.filter(job => {
           const jobIsStaff = isStaff(job.up_grade || '');
-          return jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g => 
+          return jobIsStaff && ['P5', 'P6', 'P7', 'D1', 'D2', 'NO-C', 'NO5', 'NO6'].some(g =>
             job.up_grade?.includes(g)
           );
         }).length;
         const field = jobs.filter(job => job.location_type === 'Field').length;
-        
+
         // Top category
         const categoryCount = new Map<string, number>();
         jobs.forEach(job => {
           categoryCount.set(job.primary_category, (categoryCount.get(job.primary_category) || 0) + 1);
         });
         const topCategory = Array.from(categoryCount.entries())
-          .sort(([,a], [,b]) => b - a)[0];
+          .sort(([, a], [, b]) => b - a)[0];
 
         return {
           agency,
@@ -316,8 +332,8 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
           fieldPerc: (field / jobs.length) * 100,
           topCategory: topCategory?.[0] || 'Various',
           topCategoryCount: topCategory?.[1] || 0,
-          strategy: consultants / jobs.length > 0.4 ? 'Consultant-Heavy' : 
-                   seniors / jobs.length > 0.3 ? 'Leadership-Focused' : 'Operational'
+          strategy: consultants / jobs.length > 0.4 ? 'Consultant-Heavy' :
+            seniors / jobs.length > 0.3 ? 'Leadership-Focused' : 'Operational'
         };
       })
       .filter(agency => agency.totalJobs >= 15)
@@ -335,7 +351,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
           {isAgencyView ? `${selectedAgencyName} - Workforce Composition` : 'UN System Workforce Composition'}
         </h2>
         <div className="text-sm text-gray-600">
-          {isAgencyView 
+          {isAgencyView
             ? `${workforceAnalysis.totalPositions} positions analyzed with market comparison`
             : `${workforceAnalysis.totalPositions} positions across ${agencyStrategies?.length || 0} major agencies`
           }
@@ -423,7 +439,7 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
 
         <div className="metric-card">
           <div className="metric-value">
-            {isAgencyView 
+            {isAgencyView
               ? agencyCategoryGradeAnalysis.length
               : agencyStrategies?.filter(a => a.strategy === 'Consultant-Heavy').length || 0
             }
@@ -438,6 +454,31 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
         </div>
       </div>
 
+      {/* Workforce Evolution Over Time */}
+      {workforceTimeline && workforceTimeline.length > 0 && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-indigo-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Workforce Composition Evolution</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Track how workforce composition (seniority, grade, location mix) has evolved over the past 6 months
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <WorkforceEvolutionChart timeline={workforceTimeline} metric="seniority" />
+            <div className="mt-4 text-center text-xs text-gray-500">
+              Showing seniority distribution evolution • Switch to grade, location, or skill domain mix for other views
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Analysis Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Grade Distribution */}
@@ -445,54 +486,52 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Grade Distribution</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {isAgencyView 
-                ? `${selectedAgencyName} vs market average` 
+              {isAgencyView
+                ? `${selectedAgencyName} vs market average`
                 : 'System-wide grade composition'
               }
             </p>
           </div>
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={400}>
-              {isAgencyView ? (
-                <BarChart data={workforceAnalysis.gradeComparison} margin={{ bottom: 80, left: 20, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="grade" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={100} 
-                    fontSize={11} 
-                    interval={0}
-                  />
-                  <YAxis />
-                  <Tooltip formatter={(value: number, name: string) => [
-                    `${value.toFixed(1)}%`, 
-                    name === 'percentage' ? selectedAgencyName : 'Market Average'
-                  ]} />
-                  <Bar dataKey="percentage" fill="#1f77b4" name={selectedAgencyName} />
-                  <Bar dataKey="marketPercentage" fill="#ff7f0e" name="Market Average" />
-                </BarChart>
-              ) : (
-                <PieChart>
-                  <Pie
-                    data={workforceAnalysis.gradeDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    dataKey="percentage"
-                    label={({ grade, percentage }) => {
-                      const shortGrade = grade.includes('Staff') ? grade.split(' ')[0] : grade.split(' ')[0];
-                      return `${shortGrade}: ${percentage.toFixed(1)}%`;
-                    }}
-                  >
-                    {workforceAnalysis.gradeDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Percentage']} />
-                </PieChart>
-              )}
-            </ResponsiveContainer>
+            {isAgencyView ? (
+              <BarChart
+                data={workforceAnalysis.gradeComparison}
+                dataKey="percentage"
+                xAxisKey="grade"
+                height={400}
+                angle={-45}
+                textAnchor="end"
+                fontSize={11}
+                interval={0}
+                margin={{ bottom: 100, left: 20, right: 20 }}
+                color="#1f77b4"
+                additionalBars={[{
+                  dataKey: "marketPercentage",
+                  name: "Market Average",
+                  fill: "#ff7f0e"
+                }]}
+                tooltipFormatter={(value: number, name: string) => [
+                  `${value.toFixed(1)}%`,
+                  name === 'percentage' ? selectedAgencyName : 'Market Average'
+                ]}
+              />
+            ) : (
+              <PieChart
+                data={workforceAnalysis.gradeDistribution.map(item => ({
+                  name: item.grade,
+                  value: item.percentage
+                }))}
+                height={400}
+                colors={colors}
+                outerRadius={120}
+                showLabels={true}
+                labelFormatter={({ name, value }) => {
+                  const shortGrade = name.includes('Staff') ? name.split(' ')[0] : name.split(' ')[0];
+                  return `${shortGrade}: ${value.toFixed(1)}%`;
+                }}
+                tooltipFormatter={(value: number) => [`${value.toFixed(1)}%`, 'Percentage']}
+              />
+            )}
           </div>
         </div>
 
@@ -503,33 +542,42 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
               {isAgencyView ? 'Category Workforce Mix' : 'Agency Workforce Strategies'}
             </h3>
             <p className="text-sm text-gray-600 mt-1">
-              {isAgencyView 
-                ? 'Staff vs consultant ratio by category' 
+              {isAgencyView
+                ? 'Staff vs consultant ratio by category'
                 : 'Workforce composition patterns by agency'
               }
             </p>
           </div>
           <div className="p-6">
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={agencyCategoryGradeAnalysis} margin={{ bottom: 100, left: 20, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey={isAgencyView ? "category" : "agency"} 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={120} 
-                  fontSize={10}
-                  interval={0}
-                  tick={{ fontSize: 10 }}
-                />
-                <YAxis />
-                <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, '']} />
-                <Bar dataKey="consultantPerc" stackId="a" fill="#ff7f0e" name="Consultants" />
-                <Bar dataKey="seniorPerc" stackId="a" fill="#2ca02c" name="Senior Staff" />
-                <Bar dataKey="staffPerc" stackId="a" fill="#1f77b4" name="Regular Staff" />
-              </BarChart>
-            </ResponsiveContainer>
-            
+            <BarChart
+              data={agencyCategoryGradeAnalysis}
+              dataKey="consultantPerc"
+              xAxisKey={isAgencyView ? "category" : "agency"}
+              height={400}
+              angle={-45}
+              textAnchor="end"
+              fontSize={10}
+              interval={0}
+              margin={{ bottom: 120, left: 20, right: 20 }}
+              color="#ff7f0e"
+              stackId="a"
+              additionalBars={[
+                {
+                  dataKey: "seniorPerc",
+                  name: "Senior Staff",
+                  fill: "#2ca02c",
+                  stackId: "a"
+                },
+                {
+                  dataKey: "staffPerc",
+                  name: "Regular Staff",
+                  fill: "#1f77b4",
+                  stackId: "a"
+                }
+              ]}
+              tooltipFormatter={(value: number) => [`${value.toFixed(1)}%`, '']}
+            />
+
             {/* Chart Legend */}
             <div className="mt-4 flex justify-center">
               <div className="flex items-center gap-6 text-sm">
@@ -563,50 +611,54 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
               {/* International vs National Staff */}
               <div>
                 <h4 className="font-medium text-gray-900 mb-4">International vs National Staff</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={agencyGradeComparison} margin={{ bottom: 50, left: 20, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="agency" 
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={80} 
-                      fontSize={10}
-                    />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, '']}
-                      labelFormatter={(agency) => agencyGradeComparison.find(a => a.agency === agency)?.fullAgency || agency}
-                    />
-                    <Bar dataKey="internationalPerc" fill="#1f77b4" name="International Staff" />
-                    <Bar dataKey="nationalPerc" fill="#2ca02c" name="National Staff" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart
+                  data={agencyGradeComparison}
+                  dataKey="internationalPerc"
+                  xAxisKey="agency"
+                  height={300}
+                  angle={-45}
+                  textAnchor="end"
+                  fontSize={10}
+                  margin={{ bottom: 80, left: 20, right: 20 }}
+                  color="#1f77b4"
+                  additionalBars={[{
+                    dataKey: "nationalPerc",
+                    name: "National Staff",
+                    fill: "#2ca02c"
+                  }]}
+                  tooltipFormatter={(value: number) => [`${value.toFixed(1)}%`, '']}
+                  tooltipLabelFormatter={(agency) => agencyGradeComparison.find(a => a.agency === agency)?.fullAgency || agency}
+                />
               </div>
 
               {/* Consultant vs Staff Distribution */}
               <div>
                 <h4 className="font-medium text-gray-900 mb-4">Consultant vs Staff Distribution</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={agencyGradeComparison} margin={{ bottom: 50, left: 20, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="agency" 
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={80} 
-                      fontSize={10}
-                    />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, '']}
-                      labelFormatter={(agency) => agencyGradeComparison.find(a => a.agency === agency)?.fullAgency || agency}
-                    />
-                    <Bar dataKey="consultantPerc" fill="#ff7f0e" name="Consultants" />
-                    <Bar dataKey="seniorPerc" fill="#d62728" name="Senior Staff" />
-                    <Bar dataKey="internPerc" fill="#9467bd" name="Interns" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart
+                  data={agencyGradeComparison}
+                  dataKey="consultantPerc"
+                  xAxisKey="agency"
+                  height={300}
+                  angle={-45}
+                  textAnchor="end"
+                  fontSize={10}
+                  margin={{ bottom: 80, left: 20, right: 20 }}
+                  color="#ff7f0e"
+                  additionalBars={[
+                    {
+                      dataKey: "seniorPerc",
+                      name: "Senior Staff",
+                      fill: "#d62728"
+                    },
+                    {
+                      dataKey: "internPerc",
+                      name: "Interns",
+                      fill: "#9467bd"
+                    }
+                  ]}
+                  tooltipFormatter={(value: number) => [`${value.toFixed(1)}%`, '']}
+                  tooltipLabelFormatter={(agency) => agencyGradeComparison.find(a => a.agency === agency)?.fullAgency || agency}
+                />
               </div>
             </div>
 
@@ -660,15 +712,15 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
               {agencyCategoryGradeAnalysis.map((item, index) => (
                 <div key={'category' in item ? item.category : item.agency} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: colors[index % colors.length] }}
                     />
                     <h4 className="font-semibold text-gray-900 text-sm truncate" title={'category' in item ? item.category : item.agency}>
                       {'category' in item ? item.category : item.agency}
                     </h4>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total:</span>
@@ -687,10 +739,10 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
                       <span className="font-medium">{item.staffPerc.toFixed(1)}%</span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 text-xs text-gray-600">
-                    Strategy: {item.consultantPerc > 50 ? 'Consultant-driven' : 
-                             item.seniorPerc > 40 ? 'Leadership-heavy' : 'Staff-focused'}
+                    Strategy: {item.consultantPerc > 50 ? 'Consultant-driven' :
+                      item.seniorPerc > 40 ? 'Leadership-heavy' : 'Staff-focused'}
                   </div>
                 </div>
               ))}
@@ -744,11 +796,10 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
                         </div>
                       </td>
                       <td className="py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          agency.strategy === 'Consultant-Heavy' ? 'bg-orange-100 text-orange-700' :
-                          agency.strategy === 'Leadership-Focused' ? 'bg-green-100 text-green-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span className={`text-xs px-2 py-1 rounded-full ${agency.strategy === 'Consultant-Heavy' ? 'bg-orange-100 text-orange-700' :
+                            agency.strategy === 'Leadership-Focused' ? 'bg-green-100 text-green-700' :
+                              'bg-blue-100 text-blue-700'
+                          }`}>
                           {agency.strategy}
                         </span>
                       </td>
@@ -774,11 +825,11 @@ const WorkforceComposition: React.FC<WorkforceCompositionProps> = ({ data, filte
                     <li>• Senior positions: {(workforceAnalysis.gradeComparison.find(g => g.grade.includes('Senior'))?.percentage || 0).toFixed(1)}% vs {(workforceAnalysis.gradeComparison.find(g => g.grade.includes('Senior'))?.marketPercentage || 0).toFixed(1)}% market</li>
                     <li>• Consultant ratio: {(workforceAnalysis.gradeComparison.find(g => g.grade.includes('Consultant'))?.percentage || 0).toFixed(1)}% vs {(workforceAnalysis.gradeComparison.find(g => g.grade.includes('Consultant'))?.marketPercentage || 0).toFixed(1)}% market</li>
                     <li>• Most consultant-heavy category: {(() => {
-                      const top = agencyCategoryGradeAnalysis.sort((a,b) => b.consultantPerc - a.consultantPerc)[0];
+                      const top = agencyCategoryGradeAnalysis.sort((a, b) => b.consultantPerc - a.consultantPerc)[0];
                       return top && 'category' in top ? top.category : 'N/A';
                     })()}</li>
                     <li>• Most senior-focused category: {(() => {
-                      const top = agencyCategoryGradeAnalysis.sort((a,b) => b.seniorPerc - a.seniorPerc)[0];
+                      const top = agencyCategoryGradeAnalysis.sort((a, b) => b.seniorPerc - a.seniorPerc)[0];
                       return top && 'category' in top ? top.category : 'N/A';
                     })()}</li>
                   </>
