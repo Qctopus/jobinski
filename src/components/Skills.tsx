@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import { BarChart, LineChart, AreaChart } from './charts';
 import { 
   TrendingUp, Award, Users, Globe, MapPin, Clock, 
-  Zap, Target, Brain, BookOpen, Briefcase,
+  Zap, Target, Brain, BookOpen, Briefcase, Building2,
   ArrowUp, ArrowDown, AlertTriangle,
   Lightbulb, Star, Activity, BarChart3
 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { useDataProcessing } from '../contexts/DataProcessingContext';
+import { getAgencyLogo } from '../utils/agencyLogos';
 
 interface SkillsProps {
   data: ProcessedJobData[];
@@ -512,230 +513,224 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#059669'];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Header - Matching Intelligence tab style */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isAgencyView && filters.selectedAgency !== 'all' ? (
+            getAgencyLogo(filters.selectedAgency) ? (
+              <img src={getAgencyLogo(filters.selectedAgency)!} alt={filters.selectedAgency} className="h-5 w-5 object-contain" />
+            ) : (
+              <Briefcase className="h-4 w-4 text-blue-600" />
+            )
+          ) : (
+            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
+          )}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Skills Intelligence Center</h2>
-            <p className="text-gray-600 mt-1">
-              {isAgencyView 
-                ? `Strategic skills analysis for ${filters.selectedAgency} (${filteredData.length} positions)`
-                : `Market-wide skills analysis (${filteredData.length} positions)`
-              }
-            </p>
+            <span className="text-sm font-semibold text-gray-800">Skills Intelligence</span>
+            <span className="text-xs text-gray-500 ml-2">
+              {isAgencyView ? `${filters.selectedAgency} analysis` : 'Market-wide analysis'}
+            </span>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-500">
-              Analyzing {filteredData.length} positions
-            </div>
-          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500">{filteredData.length.toLocaleString()} positions analyzed</span>
         </div>
       </div>
 
-      {/* SECTION 1: SKILLS MARKET INTELLIGENCE */}
-      <div className="space-y-6">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-blue-600" />
-          Skills Market Intelligence
-        </h3>
-
-        {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Star className="h-5 w-5 text-yellow-500" />
-              <h4 className="font-semibold text-gray-900">Top Skill</h4>
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Star className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-medium text-gray-500">Top Skill</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">{keyMetrics.topSkill}</p>
-            <p className="text-sm text-gray-600">{keyMetrics.topSkillCount} positions</p>
+            <p className="text-lg font-bold text-gray-900">{keyMetrics.topSkill}</p>
+            <p className="text-xs text-gray-500">{keyMetrics.topSkillCount} positions</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              <h4 className="font-semibold text-gray-900">Trending Skills</h4>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <span className="text-xs font-medium text-gray-500">Trending</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">+{keyMetrics.trendingGrowth}%</p>
-            <p className="text-sm text-gray-600">{keyMetrics.trendingSkill}</p>
+            <p className="text-lg font-bold text-gray-900">+{keyMetrics.trendingGrowth}%</p>
+            <p className="text-xs text-gray-500">{keyMetrics.trendingSkill}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Zap className="h-5 w-5 text-blue-500" />
-              <h4 className="font-semibold text-gray-900">Digital Maturity</h4>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-medium text-gray-500">Digital Maturity</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{keyMetrics.digitalMaturity}%</p>
-            <p className="text-sm text-gray-600">Tech skill adoption</p>
+            <p className="text-lg font-bold text-gray-900">{keyMetrics.digitalMaturity}%</p>
+            <p className="text-xs text-gray-500">Tech skill adoption</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Target className="h-5 w-5 text-purple-500" />
-              <h4 className="font-semibold text-gray-900">Most Competitive</h4>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-purple-500" />
+              <span className="text-xs font-medium text-gray-500">Most Competitive</span>
             </div>
             <p className="text-lg font-bold text-gray-900">{keyMetrics.mostCompetitive}</p>
-            <p className="text-sm text-gray-600">{keyMetrics.competitiveAgencies} agencies</p>
+            <p className="text-xs text-gray-500">{keyMetrics.competitiveAgencies} agencies</p>
           </div>
-        </div>
+      </div>
 
-        {/* Skills Demand Chart - Fixed implementation */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900">Top 15 Skills by Demand</h4>
-            <p className="text-sm text-gray-600 mt-1">Most frequently requested skills across positions</p>
+      {/* Skills Demand Chart */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-blue-500" />
+          <span className="text-sm font-semibold text-gray-800">Top 15 Skills by Demand</span>
+          <span className="text-[10px] text-gray-400 ml-auto">Most frequently requested</span>
+        </div>
+        
+        <div className="p-4">
+          {(skillsAnalysis?.topSkills?.length || 0) > 0 ? (
+            <div className="space-y-2">
+              {(skillsAnalysis.topSkills || []).map((skill, index) => (
+                <div key={skill.skill} className="flex items-center gap-3">
+                  <div className="w-28 text-xs text-gray-700 truncate">{skill.skill}</div>
+                  <div className="flex-1 bg-gray-100 rounded h-5 relative">
+                    <div 
+                      className="bg-blue-500 h-5 rounded flex items-center justify-end pr-2 transition-all duration-300"
+                      style={{ 
+                        width: `${Math.max(5, (skill.count / skillsAnalysis.topSkills[0].count) * 100)}%` 
+                      }}
+                    >
+                      <span className="text-white text-[10px] font-medium">{skill.count}</span>
+                    </div>
+                  </div>
+                  <div className="w-14 text-[10px] text-gray-400 text-right">
+                    {skill.agencies} agencies
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-gray-500">
+              <div className="text-center">
+                <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-xs">No skill data available</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Skills by Category and Shortage Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Skills by Category */}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-purple-500" />
+            <span className="text-sm font-semibold text-gray-800">Skills by Category</span>
           </div>
           
           <div className="p-6">
-            {(skillsAnalysis?.topSkills?.length || 0) > 0 ? (
-              <div className="space-y-3">
-                {(skillsAnalysis.topSkills || []).map((skill, index) => (
-                  <div key={skill.skill} className="flex items-center gap-3">
-                    <div className="w-32 text-sm text-gray-700 truncate">{skill.skill}</div>
-                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
-                      <div 
-                        className="bg-blue-500 h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-300"
-                        style={{ 
-                          width: `${Math.max(5, (skill.count / skillsAnalysis.topSkills[0].count) * 100)}%` 
-                        }}
-                      >
-                        <span className="text-white text-xs font-medium">{skill.count}</span>
-                      </div>
+            <div className="space-y-4">
+              {skillsAnalysis.skillsByCategory.map((category, index) => (
+                <div key={category.category} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-medium text-gray-900">{category.category}</h5>
+                    <div className="text-right">
+                      <span className="text-sm text-gray-500">{category.totalPositions} positions</span>
                     </div>
-                    <div className="w-16 text-xs text-gray-500 text-right">
-                      {skill.agencies} agencies
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {category.skills.slice(0, 4).map((skill: any, skillIndex: number) => (
+                      <div key={skill.skill} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: colors[skillIndex % colors.length] }}
+                          />
+                          <span className="text-gray-700">{skill.skill}</span>
+                        </div>
+                        <span className="text-gray-500">{skill.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Talent Competition Analysis */}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+            <Target className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-semibold text-gray-800">Talent Market Dynamics</span>
+          </div>
+          
+          <div className="p-4">
+            {(skillsAnalysis?.talentCompetition?.length || 0) > 0 ? (
+              <div className="space-y-3">
+                {(skillsAnalysis?.talentCompetition || []).slice(0, 8).map((skill, index) => (
+                  <div key={skill.skill} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium text-gray-900 text-sm">{skill.skill}</div>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        skill.competitionLevel === 'High' ? 'bg-red-100 text-red-700' :
+                        skill.competitionLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {skill.competitionLevel}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 text-xs">
+                      <div>
+                        <div className="text-gray-400">Positions</div>
+                        <div className="font-medium text-gray-700">{skill.positions}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Grade</div>
+                        <div className="font-medium text-gray-700">{skill.mostCommonGrade}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Agencies</div>
+                        <div className="font-medium text-gray-700">{skill.agencies}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Urgent</div>
+                        <div className={`font-medium ${skill.urgencyRate > 20 ? 'text-orange-600' : 'text-gray-700'}`}>
+                          {skill.urgencyRate > 0 ? `${skill.urgencyRate}%` : '-'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No skill data available for current filters</p>
-                </div>
+              <div className="text-center text-gray-500 py-8">
+                <Target className="h-6 w-6 mx-auto mb-2 text-gray-300" />
+                <p className="text-xs">Insufficient data</p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Skills by Category and Shortage Analysis */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Skills by Category */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900">Skills by Category</h4>
-              <p className="text-sm text-gray-600 mt-1">Demand organized by functional area</p>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                {skillsAnalysis.skillsByCategory.map((category, index) => (
-                  <div key={category.category} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-medium text-gray-900">{category.category}</h5>
-                      <div className="text-right">
-                        <span className="text-sm text-gray-500">{category.totalPositions} positions</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      {category.skills.slice(0, 4).map((skill: any, skillIndex: number) => (
-                        <div key={skill.skill} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: colors[skillIndex % colors.length] }}
-                            />
-                            <span className="text-gray-700">{skill.skill}</span>
-                          </div>
-                          <span className="text-gray-500">{skill.count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Talent Competition Analysis */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900">Talent Market Dynamics</h4>
-              <p className="text-sm text-gray-600 mt-1">Grade premiums, urgency rates, and competitive positioning for top skills</p>
-            </div>
-            
-            <div className="p-6">
-              {(skillsAnalysis?.talentCompetition?.length || 0) > 0 ? (
-                <div className="space-y-3">
-                  {(skillsAnalysis?.talentCompetition || []).slice(0, 8).map((skill, index) => (
-                    <div key={skill.skill} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium text-gray-900">{skill.skill}</div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            skill.competitionLevel === 'High' ? 'bg-red-100 text-red-700' :
-                            skill.competitionLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {skill.competitionLevel} Competition
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <div className="text-gray-500">Positions</div>
-                          <div className="font-medium">{skill.positions}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Common Grade</div>
-                          <div className="font-medium">{skill.mostCommonGrade}</div>
-                          <div className="text-xs text-gray-400">{skill.gradeDistribution}% of positions</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Agencies</div>
-                          <div className="font-medium">{skill.agencies} agencies</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">Quick Hiring</div>
-                          <div className={`font-medium ${skill.urgencyRate > 20 ? 'text-orange-600' : 'text-gray-600'}`}>
-                            {skill.urgencyRate > 0 ? `${skill.urgencyRate}%` : 'N/A'}
-                          </div>
-                          <div className="text-xs text-gray-400">≤21 days window</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-8">
-                  <Target className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                  <p>Insufficient data for talent market analysis</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
       {/* SECTION 2: STRATEGIC WORKFORCE INSIGHTS */}
-      <div className="space-y-6">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Users className="h-6 w-6 text-green-600" />
-          Strategic Workforce Insights
-        </h3>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Users className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-semibold text-gray-700">Strategic Workforce Insights</span>
+        </div>
 
         {/* Career Progression Analysis */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900">Career Progression Skill Requirements</h4>
-            <p className="text-sm text-gray-600 mt-1">How skill requirements evolve across seniority levels</p>
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-green-500" />
+            <span className="text-sm font-semibold text-gray-800">Career Progression</span>
+            <span className="text-xs text-gray-400 ml-auto">Skills by seniority</span>
           </div>
           
-          <div className="p-6">
+          <div className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {Object.entries(careerProgression).map(([level, data]: [string, any]) => (
                 <div key={level} className="border border-gray-200 rounded-lg p-4">
@@ -760,19 +755,17 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
         </div>
 
         {/* Agency Analysis and Geographic Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Agency Skill Analysis */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900">
-                {isAgencyView ? `${agencyAnalysis.agencyName} vs Market` : 'Agency Skill Specializations'}
-              </h4>
-              <p className="text-sm text-gray-600 mt-1">
-                {isAgencyView ? 'Competitive positioning analysis' : 'How different agencies specialize'}
-              </p>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-purple-500" />
+              <span className="text-sm font-semibold text-gray-800">
+                {isAgencyView ? `${agencyAnalysis.agencyName} vs Market` : 'Agency Specializations'}
+              </span>
             </div>
             
-            <div className="p-6">
+            <div className="p-4">
               {agencyAnalysis.isAgencyView ? (
                 <div className="space-y-4">
                   <div>

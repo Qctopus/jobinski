@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Clock, Eye, Users, Briefcase, Target, Activity, HelpCircle } from 'lucide-react';
-import { ProcessedJobData, FilterOptions } from '../types';
+import { Users, Briefcase, Target, Activity, HelpCircle, Globe, Calendar, TrendingUp, ChevronDown } from 'lucide-react';
+import { ProcessedJobData, FilterOptions, TIME_RANGE_CONFIG } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { TimeframeProvider } from '../contexts/TimeframeContext';
+import { TimeframeProvider, useTimeframe } from '../contexts/TimeframeContext';
 import { getAgencyLogo } from '../utils/agencyLogos';
 import CategoryInsights from './CategoryInsightsNew';
-import TemporalTrends from './TemporalTrends';
-import CompetitiveIntel from './CompetitiveIntel';
-import WorkforceComposition from './WorkforceComposition';
+import WorkforceStructure from './WorkforceStructure';
 import Skills from './Skills';
 import MarketIntelligence from './overview/MarketIntelligence';
+import GeographyIntelligence from './GeographyIntelligence';
 import { CompactJobBrowser } from './CompactJobBrowser';
+import { parseISO, format } from 'date-fns';
 
 
 interface DashboardProps {
@@ -18,7 +18,7 @@ interface DashboardProps {
   dashboardData?: any; // Pre-computed analytics from backend
 }
 
-type TabType = 'overview' | 'categories' | 'temporal' | 'competitive' | 'workforce' | 'skills' | 'jobs';
+type TabType = 'overview' | 'categories' | 'workforce' | 'geography' | 'skills' | 'jobs';
 
 // Inner dashboard component that uses TimeframeContext
 const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setFilters: React.Dispatch<React.SetStateAction<FilterOptions>> }> = ({ 
@@ -43,6 +43,22 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
     metrics,
     marketMetrics
   } = useDashboardData(data, filters);
+
+  // Use timeframe context for period information
+  const { primaryPeriod, comparisonPeriod, getPeriodLabel, getComparisonLabel } = useTimeframe();
+
+  // Data collection start date
+  const dataStartDate = 'Oct 1, 2025';
+
+  // Time range options for the dropdown
+  const timeRangeOptions: { value: FilterOptions['timeRange']; label: string; sublabel: string }[] = [
+    { value: '4weeks', label: 'Last 4 weeks', sublabel: 'vs prior 4 weeks' },
+    { value: '8weeks', label: 'Last 8 weeks', sublabel: 'vs prior 8 weeks' },
+    { value: '3months', label: 'Last 3 months', sublabel: 'vs prior 3 months' },
+    { value: '6months', label: 'Last 6 months', sublabel: 'vs prior 6 months' },
+    { value: '1year', label: 'Last 12 months', sublabel: 'vs prior 12 months' },
+    { value: 'all', label: 'All time', sublabel: 'since Oct 2025' }
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -87,22 +103,16 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
       description: 'Deep-dive into job categories'
     },
     {
-      id: 'temporal' as TabType,
-      name: 'Trends',
-      icon: <Clock className="h-5 w-5" />,
-      description: 'Time-based analysis and forecasting'
-    },
-    {
-      id: 'competitive' as TabType,
-      name: 'Intelligence',
-      icon: <Eye className="h-5 w-5" />,
-      description: 'Competitive landscape and positioning'
-    },
-    {
       id: 'workforce' as TabType,
-      name: 'Workforce',
+      name: 'Workforce Structure',
       icon: <Users className="h-5 w-5" />,
-      description: 'Workforce composition and strategic analysis'
+      description: 'Organizational shape, grade distribution, and workforce evolution'
+    },
+    {
+      id: 'geography' as TabType,
+      name: 'Geography',
+      icon: <Globe className="h-5 w-5" />,
+      description: 'ICSC hardship classifications, operational footprint, and localization analysis'
     },
     {
       id: 'skills' as TabType,
@@ -144,25 +154,17 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
           />
         );
 
-      case 'temporal':
-        return (
-          <TemporalTrends
-            data={data}
-            filters={filters}
-          />
-        );
-
-      case 'competitive':
-        return (
-          <CompetitiveIntel
-            data={data}
-            filters={filters}
-          />
-        );
-
       case 'workforce':
         return (
-          <WorkforceComposition
+          <WorkforceStructure
+            data={data}
+            filters={filters}
+          />
+        );
+
+      case 'geography':
+        return (
+          <GeographyIntelligence
             data={data}
             filters={filters}
           />
@@ -186,153 +188,167 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            {/* Clean Integrated Header */}
-            <div className="flex items-center justify-between mb-8">
-              {/* Left side - App Branding */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <img
-                    src="/UNDP_logo.png"
-                    alt="UNDP"
-                    className="h-10 w-auto"
-                  />
-                  <div className="flex flex-col">
-                    <h1 className="text-xl font-bold text-gray-900 leading-tight">
-                      Baro Talent
-                    </h1>
-                    <p className="text-xs text-gray-600 leading-tight">
-                      Data Viewer
-                    </p>
-                  </div>
-                </div>
+          <div className="mb-4">
+            {/* Top Row - Agency & Time Filter */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {/* Agency Selection Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-400 transition-colors"
+                  >
+                    {filters.selectedAgency === 'all' ? (
+                      <>
+                        <span>🌍</span>
+                        <span className="font-medium">Market View</span>
+                      </>
+                    ) : (
+                      <>
+                        {getAgencyLogo(filters.selectedAgency) ? (
+                          <img
+                            src={getAgencyLogo(filters.selectedAgency)!}
+                            alt={filters.selectedAgency}
+                            className="h-4 w-4 object-contain"
+                          />
+                        ) : (
+                          <span>🏢</span>
+                        )}
+                        <span className="font-medium">{filters.selectedAgency}</span>
+                      </>
+                    )}
+                    <ChevronDown className="h-3 w-3 text-gray-400" />
+                  </button>
 
-                {/* Integrated Agency Selection */}
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-px bg-gray-300"></div>
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white hover:border-gray-400 transition-colors"
-                    >
-                      {filters.selectedAgency === 'all' ? (
-                        <>
-                          <span>🌍</span>
-                          <span className="font-medium">Market View</span>
-                        </>
-                      ) : (
-                        <>
-                          {getAgencyLogo(filters.selectedAgency) ? (
+                  {showAgencyDropdown && (
+                    <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setFilters(prev => ({ ...prev, selectedAgency: 'all' }));
+                          setShowAgencyDropdown(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors border-b border-gray-100"
+                      >
+                        <span>🌍</span>
+                        <span className="font-medium">Market View</span>
+                      </button>
+                      {agencies.map(agency => (
+                        <button
+                          key={agency}
+                          onClick={() => {
+                            setFilters(prev => ({ ...prev, selectedAgency: agency }));
+                            setShowAgencyDropdown(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
+                        >
+                          {getAgencyLogo(agency) ? (
                             <img
-                              src={getAgencyLogo(filters.selectedAgency)!}
-                              alt={filters.selectedAgency}
+                              src={getAgencyLogo(agency)!}
+                              alt={agency}
                               className="h-4 w-4 object-contain"
                             />
                           ) : (
                             <span>🏢</span>
                           )}
-                          <span className="font-medium">{filters.selectedAgency}</span>
-                        </>
-                      )}
-                      <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-
-                    {showAgencyDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                        <button
-                          onClick={() => {
-                            setFilters(prev => ({ ...prev, selectedAgency: 'all' }));
-                            setShowAgencyDropdown(false);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors border-b border-gray-100"
-                        >
-                          <span>🌍</span>
-                          <span className="font-medium">Market View</span>
+                          <span className="font-medium">{agency}</span>
                         </button>
-                        {agencies.map(agency => (
-                          <button
-                            key={agency}
-                            onClick={() => {
-                              setFilters(prev => ({ ...prev, selectedAgency: agency }));
-                              setShowAgencyDropdown(false);
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors"
-                          >
-                            {getAgencyLogo(agency) ? (
-                              <img
-                                src={getAgencyLogo(agency)!}
-                                alt={agency}
-                                className="h-4 w-4 object-contain"
-                              />
-                            ) : (
-                              <span>🏢</span>
-                            )}
-                            <span className="font-medium">{agency}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                  {/* Time Filter */}
+                {/* Enhanced Time Filter */}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-400" />
                   <select
                     value={filters.timeRange}
-                    onChange={(e) => setFilters(prev => ({ ...prev, timeRange: e.target.value as any }))}
-                    className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => setFilters(prev => ({ ...prev, timeRange: e.target.value as FilterOptions['timeRange'] }))}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white font-medium text-gray-700"
                   >
-                    <option value="all">All Time</option>
-                    <option value="3months">3 Months</option>
-                    <option value="6months">6 Months</option>
-                    <option value="1year">1 Year</option>
+                    {timeRangeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Right side - MOFA Branding */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600">Funded by</span>
-                <img
-                  src="/MOFA.png"
-                  alt="Ministry of Foreign Affairs"
-                  className="h-6 w-auto"
-                />
+              {/* Agency/Market Title - Right aligned */}
+              <div className="flex items-center gap-3">
+                {isAgencyView ? (
+                  <>
+                    {getAgencyLogo(selectedAgencyName) && (
+                      <img
+                        src={getAgencyLogo(selectedAgencyName)!}
+                        alt={selectedAgencyName}
+                        className="h-8 w-8 object-contain"
+                      />
+                    )}
+                    <h2 className="text-xl font-bold text-gray-900">{selectedAgencyName}</h2>
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src="/logo/logo/United_Nations.png"
+                      alt="UN System"
+                      className="h-8 w-8 object-contain"
+                    />
+                    <h2 className="text-xl font-bold text-gray-900">UN Talent Market</h2>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Dynamic Page Title */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {isAgencyView && getAgencyLogo(selectedAgencyName) && (
-                  <img
-                    src={getAgencyLogo(selectedAgencyName)!}
-                    alt={selectedAgencyName}
-                    className="h-16 w-16 object-contain"
-                  />
-                )}
-                <div className="flex flex-col">
-                  <h2 className="text-4xl font-bold text-gray-900">
-                    {isAgencyView ? selectedAgencyName : 'Talent Analytics'}
-                  </h2>
-                  <p className="text-lg text-gray-600 mt-1">
-                    {isAgencyView
-                      ? 'Internal Analytics & Strategic Insights'
-                      : 'Data-driven insights for strategic workforce planning'
-                    }
-                  </p>
+            {/* Context Bar - Shows what data is being analyzed */}
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg border border-slate-200 px-4 py-3">
+              <div className="flex items-center justify-between">
+                {/* Stats */}
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
+                      <Briefcase className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{metrics.totalJobs.toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">positions</div>
+                    </div>
+                  </div>
+                  {!isAgencyView && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100">
+                        <Users className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">{metrics.totalAgencies}</div>
+                        <div className="text-xs text-gray-500">agencies</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">
-                  {metrics.totalJobs}
-                </div>
-                <div className="text-sm text-gray-600">
-                  positions {!isAgencyView && `• ${metrics.totalAgencies} agencies`}
+                {/* Time Context */}
+                <div className="text-right">
+                  <div className="flex items-center gap-2 justify-end">
+                    <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {filters.timeRange === 'all' 
+                        ? `All data since ${dataStartDate}`
+                        : `${format(primaryPeriod.start, 'MMM d')} - ${format(primaryPeriod.end, 'MMM d, yyyy')}`
+                      }
+                    </span>
+                  </div>
+                  {comparisonPeriod && filters.timeRange !== 'all' && (
+                    <div className="flex items-center gap-2 justify-end mt-1">
+                      <TrendingUp className="h-3 w-3 text-gray-400" />
+                      <span className="text-xs text-gray-500">
+                        Trends compare to {format(comparisonPeriod.start, 'MMM d')} - {format(comparisonPeriod.end, 'MMM d')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -380,7 +396,7 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
 const Dashboard: React.FC<DashboardProps> = ({ data, dashboardData }) => {
   const [filters, setFilters] = useState<FilterOptions>({
     selectedAgency: 'all',
-    timeRange: 'all'
+    timeRange: '3months' // Default to 3 months for more focused analysis
   });
 
   return (

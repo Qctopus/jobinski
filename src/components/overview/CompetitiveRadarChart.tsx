@@ -98,7 +98,7 @@ const CompetitiveRadarChart: React.FC<CompetitiveRadarChartProps> = ({
                       const rawValue = dataPoint?.rawValues[name];
                       return [
                         `${rawValue}% (scaled: ${value}%)`, 
-                        name === selectedAgencyName ? 'Your Agency' : name
+                        name
                       ];
                     }}
                     labelFormatter={(label) => {

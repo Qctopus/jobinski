@@ -63,7 +63,7 @@ const DashboardPanels: React.FC<DashboardPanelsProps> = ({
             </h3>
           </div>
           <p className="text-sm text-gray-600 mt-1">
-            {isAgencyView ? 'Your agency hiring trends and focus areas' : 'Recent hiring activity and market hotspots'}
+            {isAgencyView ? 'Agency hiring trends and focus areas' : 'Recent hiring activity and market hotspots'}
           </p>
         </div>
         <div className="p-6">
@@ -160,7 +160,7 @@ const DashboardPanels: React.FC<DashboardPanelsProps> = ({
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">{isAgencyView ? agencyMarketShare.toFixed(1) : '---'}%</div>
-                <div className="text-sm text-gray-600">{isAgencyView ? 'Our Share' : 'Your Share'}</div>
+                <div className="text-sm text-gray-600">{isAgencyView ? 'Agency Share' : 'Market Share'}</div>
                 <div className="text-xs text-green-600">{isAgencyView ? (agencyRank ? `#${agencyRank} position` : 'Unranked') : 'Select agency'}</div>
               </div>
             </div>
@@ -193,7 +193,7 @@ const DashboardPanels: React.FC<DashboardPanelsProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">Strategic Insights</h3>
           </div>
           <p className="text-sm text-gray-600 mt-1">
-            {isAgencyView ? 'Actionable insights for your agency' : 'Key market opportunities and trends'}
+            {isAgencyView ? 'Actionable strategic insights' : 'Key market opportunities and trends'}
           </p>
         </div>
         <div className="p-6">
@@ -207,7 +207,7 @@ const DashboardPanels: React.FC<DashboardPanelsProps> = ({
                 </div>
                 <div className="text-sm text-gray-700 mb-2">
                   {isAgencyView 
-                    ? `${topCategories[0]?.category || 'Top category'} represents ${(topCategories[0]?.percentage || 0).toFixed(1)}% of your hiring`
+                    ? `${topCategories[0]?.category || 'Top category'} represents ${(topCategories[0]?.percentage || 0).toFixed(1)}% of hiring`
                     : `${topCategories[0]?.category || 'Climate & Environment'} category growing +${monthOverMonthGrowth.toFixed(0)}% this month`
                   }
                 </div>

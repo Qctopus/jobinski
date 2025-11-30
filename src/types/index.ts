@@ -129,10 +129,20 @@ export interface DashboardMetrics {
 
 export interface FilterOptions {
   selectedAgency: string;
-  timeRange: '3months' | '6months' | '1year' | 'all';
+  timeRange: '4weeks' | '8weeks' | '3months' | '6months' | '1year' | 'all';
   startDate?: string;
   endDate?: string;
 }
+
+// Time range display configuration
+export const TIME_RANGE_CONFIG: Record<FilterOptions['timeRange'], { label: string; comparisonLabel: string; weeks?: number; months?: number }> = {
+  '4weeks': { label: 'Last 4 weeks', comparisonLabel: 'vs prior 4 weeks', weeks: 4 },
+  '8weeks': { label: 'Last 8 weeks', comparisonLabel: 'vs prior 8 weeks', weeks: 8 },
+  '3months': { label: 'Last 3 months', comparisonLabel: 'vs prior 3 months', months: 3 },
+  '6months': { label: 'Last 6 months', comparisonLabel: 'vs prior 6 months', months: 6 },
+  '1year': { label: 'Last 12 months', comparisonLabel: 'vs prior 12 months', months: 12 },
+  'all': { label: 'All time', comparisonLabel: 'since Oct 2025' }
+};
 
 // Enhanced category analytics interfaces
 export interface CategoryAnalytics {

@@ -9,15 +9,17 @@
 
 import React, { useMemo, useState } from 'react';
 import { 
-  Brain, TrendingUp, Eye, Download, Filter, 
-  ArrowUp, ArrowDown, AlertCircle, Clock, Zap, MapPin, Users, Calendar
+  Brain, TrendingUp, Download, Filter, 
+  ArrowUp, ArrowDown, AlertCircle, Clock, Zap, MapPin, Users, Calendar, ChevronDown, Eye
 } from 'lucide-react';
 import { DashboardMetrics, ProcessedJobData, FilterOptions } from '../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { getAgencyPeerGroup, getPeerAgencies } from '../config/peerGroups';
+import { getAgencyLogo } from '../utils/agencyLogos';
 import { SurgeDetector } from '../services/analytics/SurgeDetector';
 import { CategoryShiftAnalyzer } from '../services/analytics/CategoryShiftAnalyzer';
 import { parseISO, subWeeks, subMonths, format } from 'date-fns';
+import { useTimeframe } from '../contexts/TimeframeContext';
 
 // Components
 import MandateAlignmentSummary from './categories/MandateAlignmentSummary';
@@ -52,40 +54,7 @@ interface CategoryInsightsProps {
   isAgencyView: boolean;
 }
 
-// Helper to get period boundaries
-const getPeriodBoundaries = (comparisonType: '4weeks' | '8weeks' | '3months') => {
-  const now = new Date();
-  
-  switch (comparisonType) {
-    case '4weeks':
-      return {
-        currentStart: subWeeks(now, 4),
-        currentEnd: now,
-        previousStart: subWeeks(now, 8),
-        previousEnd: subWeeks(now, 4),
-        currentLabel: `${format(subWeeks(now, 4), 'MMM d')} - ${format(now, 'MMM d')}`,
-        previousLabel: `${format(subWeeks(now, 8), 'MMM d')} - ${format(subWeeks(now, 4), 'MMM d')}`
-      };
-    case '8weeks':
-      return {
-        currentStart: subWeeks(now, 8),
-        currentEnd: now,
-        previousStart: subWeeks(now, 16),
-        previousEnd: subWeeks(now, 8),
-        currentLabel: `${format(subWeeks(now, 8), 'MMM d')} - ${format(now, 'MMM d')}`,
-        previousLabel: `${format(subWeeks(now, 16), 'MMM d')} - ${format(subWeeks(now, 8), 'MMM d')}`
-      };
-    case '3months':
-      return {
-        currentStart: subMonths(now, 3),
-        currentEnd: now,
-        previousStart: subMonths(now, 6),
-        previousEnd: subMonths(now, 3),
-        currentLabel: `${format(subMonths(now, 3), 'MMM d')} - ${format(now, 'MMM d')}`,
-        previousLabel: `${format(subMonths(now, 6), 'MMM d')} - ${format(subMonths(now, 3), 'MMM d')}`
-      };
-  }
-};
+// getPeriodBoundaries removed - now using global timeframe context
 
 const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   metrics,
@@ -97,15 +66,26 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   const [drillDownOpen, setDrillDownOpen] = useState(false);
   const [drillDownCategoryId, setDrillDownCategoryId] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
-  const [comparisonPeriod, setComparisonPeriod] = useState<'4weeks' | '8weeks' | '3months'>('4weeks');
   const [shiftPeriod, setShiftPeriod] = useState<12 | 6 | 3>(6);
+
+  // Use global timeframe context
+  const { primaryPeriod, comparisonPeriod: contextComparisonPeriod } = useTimeframe();
 
   const agencyName = isAgencyView ? filters.selectedAgency : null;
   const peerAgencies = useMemo(() => agencyName ? getPeerAgencies(agencyName) : [], [agencyName]);
   const peerGroupInfo = useMemo(() => agencyName ? getAgencyPeerGroup(agencyName) : null, [agencyName]);
 
-  // Calculate period boundaries based on comparison period
-  const periodBoundaries = useMemo(() => getPeriodBoundaries(comparisonPeriod), [comparisonPeriod]);
+  // Calculate period boundaries from global timeframe
+  const periodBoundaries = useMemo(() => ({
+    currentStart: primaryPeriod.start,
+    currentEnd: primaryPeriod.end,
+    previousStart: contextComparisonPeriod?.start || primaryPeriod.start,
+    previousEnd: contextComparisonPeriod?.end || primaryPeriod.start,
+    currentLabel: `${format(primaryPeriod.start, 'MMM d')} - ${format(primaryPeriod.end, 'MMM d')}`,
+    previousLabel: contextComparisonPeriod 
+      ? `${format(contextComparisonPeriod.start, 'MMM d')} - ${format(contextComparisonPeriod.end, 'MMM d')}`
+      : 'No comparison'
+  }), [primaryPeriod, contextComparisonPeriod]);
 
   // Surge detection
   const surgeAnalysis = useMemo(() => {
@@ -317,83 +297,83 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header - Harmonized */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-100 rounded-xl">
-              <Brain className="h-5 w-5 text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Categories</h2>
-              <p className="text-sm text-gray-500">
-                {isAgencyView ? `${agencyName} workforce composition` : 'UN System hiring patterns'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Period selector */}
-            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-              {(['4weeks', '8weeks', '3months'] as const).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setComparisonPeriod(period)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    comparisonPeriod === period
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {period === '4weeks' ? '4W' : period === '8weeks' ? '8W' : '3M'}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2.5 rounded-lg transition-colors ${
-                showFilters ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
-              }`}
-              title="More options"
-            >
-              <Filter className="h-4 w-4" />
-            </button>
-            <button
-              onClick={exportReport}
-              className="p-2.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
-              title="Export data"
-            >
-              <Download className="h-4 w-4" />
-            </button>
+    <div className="space-y-4">
+      {/* Header - Matching Intelligence tab style */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isAgencyView && agencyName ? (
+            getAgencyLogo(agencyName) ? (
+              <img src={getAgencyLogo(agencyName)!} alt={agencyName} className="h-5 w-5 object-contain" />
+            ) : (
+              <Brain className="h-4 w-4 text-blue-600" />
+            )
+          ) : (
+            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
+          )}
+          <div>
+            <span className="text-sm font-semibold text-gray-800">Category Analysis</span>
+            <span className="text-xs text-gray-500 ml-2">
+              {isAgencyView ? `${agencyName} composition` : 'UN System hiring patterns'}
+            </span>
           </div>
         </div>
+        
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-1.5 rounded transition-colors ${
+              showFilters ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title="Chart options"
+          >
+            <Filter className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={exportReport}
+            className="p-1.5 rounded text-gray-400 hover:text-gray-600 transition-colors"
+            title="Export data"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Period Context - now controlled by global filter */}
+      <div className="text-xs text-gray-500 flex items-center gap-4 px-1">
+        <span>{recentTrends.currentTotalCount.toLocaleString()} jobs in current period</span>
+        {contextComparisonPeriod && (
+          <>
+            <span>•</span>
+            <span><span className="font-medium text-gray-500">Trends compare to:</span> {periodBoundaries.previousLabel}</span>
+          </>
+        )}
+      </div>
 
-        {/* Collapsible options */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-6">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Evolution Chart Period</label>
-                <div className="flex gap-1">
-                  {([3, 6, 12] as const).map((months) => (
-                    <button
-                      key={months}
-                      onClick={() => setShiftPeriod(months)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        shiftPeriod === months
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {months} months
-                    </button>
-                  ))}
-                </div>
+      {/* Collapsible options */}
+      {showFilters && (
+        <div className="bg-white rounded-lg border border-gray-200 p-3">
+          <div className="flex items-center gap-6">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-2">Evolution Chart Period</label>
+              <div className="flex gap-1">
+                {([3, 6, 12] as const).map((months) => (
+                  <button
+                    key={months}
+                    onClick={() => setShiftPeriod(months)}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                      shiftPeriod === months
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {months}M
+                  </button>
+                ))}
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Visual Summary Dashboard */}
       <MandateAlignmentSummary 
@@ -434,7 +414,7 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
                 </div>
               </div>
               <div className="text-xs text-emerald-600 bg-white/60 px-2 py-1 rounded-lg">
-                vs prior {comparisonPeriod === '4weeks' ? '4 wks' : comparisonPeriod === '8weeks' ? '8 wks' : '3 mo'}
+                vs prior period
               </div>
             </div>
           </div>
@@ -487,7 +467,7 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
                 </div>
               </div>
               <div className="text-xs text-amber-600 bg-white/60 px-2 py-1 rounded-lg">
-                vs prior {comparisonPeriod === '4weeks' ? '4 wks' : comparisonPeriod === '8weeks' ? '8 wks' : '3 mo'}
+                vs prior period
               </div>
             </div>
           </div>

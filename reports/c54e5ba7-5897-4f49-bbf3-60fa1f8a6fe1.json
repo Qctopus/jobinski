@@ -1,0 +1,3003 @@
+{
+  "metadata": {
+    "reportId": "c54e5ba7-5897-4f49-bbf3-60fa1f8a6fe1",
+    "agency": "UNDP",
+    "agencyLongName": "United Nations Development Programme",
+    "reportTitle": "UNDP Monthly HR Intelligence Report",
+    "reportPeriod": {
+      "startDate": "2025-10-01",
+      "endDate": "2025-11-30",
+      "displayPeriod": "October - November 2025"
+    },
+    "generatedAt": "2025-11-28T11:50:00.688Z",
+    "generatedBy": "UN Jobs Analytics Platform",
+    "version": "1.0.0",
+    "pageCount": 15,
+    "dataPoints": 337
+  },
+  "agencyMetrics": {
+    "agencyInfo": {
+      "shortName": "UNDP",
+      "longName": "United Nations Development Programme",
+      "logoPath": "/logo/logo/UNDP.png",
+      "peerGroup": "Large Operational Agencies",
+      "tier": 1
+    },
+    "volumeMetrics": {
+      "totalPostings": 337,
+      "activePostings": 0,
+      "closingSoonPostings": 0,
+      "expiredPostings": 337,
+      "newPostingsThisMonth": 337,
+      "previousMonthPostings": 68,
+      "monthOverMonthChange": 395.5882352941177
+    },
+    "applicationMetrics": {
+      "avgApplicationWindow": 6.3,
+      "medianApplicationWindow": 6,
+      "minApplicationWindow": 1,
+      "maxApplicationWindow": 21,
+      "urgentPositionsCount": 79,
+      "urgentPositionsPercentage": 23.44213649851632
+    },
+    "workforceComposition": {
+      "gradeDistribution": [
+        {
+          "grade": "NPSA-9",
+          "count": 44,
+          "percentage": 13.056379821958458
+        },
+        {
+          "grade": "Intern",
+          "count": 37,
+          "percentage": 10.979228486646884
+        },
+        {
+          "grade": "NPSA-6",
+          "count": 35,
+          "percentage": 10.385756676557865
+        },
+        {
+          "grade": "Other",
+          "count": 33,
+          "percentage": 9.792284866468842
+        },
+        {
+          "grade": "NPSA-8",
+          "count": 32,
+          "percentage": 9.495548961424333
+        },
+        {
+          "grade": "NPSA-5",
+          "count": 28,
+          "percentage": 8.30860534124629
+        },
+        {
+          "grade": "NPSA-7",
+          "count": 24,
+          "percentage": 7.121661721068249
+        },
+        {
+          "grade": "NPSA-10",
+          "count": 21,
+          "percentage": 6.231454005934718
+        },
+        {
+          "grade": "NPSA-4",
+          "count": 14,
+          "percentage": 4.154302670623145
+        },
+        {
+          "grade": "NPSA-3",
+          "count": 12,
+          "percentage": 3.5608308605341246
+        },
+        {
+          "grade": "NOC",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "grade": "NPSA-2",
+          "count": 5,
+          "percentage": 1.483679525222552
+        },
+        {
+          "grade": "IPSA-10",
+          "count": 5,
+          "percentage": 1.483679525222552
+        },
+        {
+          "grade": "IPSA-8",
+          "count": 5,
+          "percentage": 1.483679525222552
+        },
+        {
+          "grade": "IPSA-11",
+          "count": 4,
+          "percentage": 1.1869436201780417
+        },
+        {
+          "grade": "P4",
+          "count": 4,
+          "percentage": 1.1869436201780417
+        },
+        {
+          "grade": "G6",
+          "count": 3,
+          "percentage": 0.8902077151335311
+        },
+        {
+          "grade": "NOA",
+          "count": 3,
+          "percentage": 0.8902077151335311
+        },
+        {
+          "grade": "NOB",
+          "count": 3,
+          "percentage": 0.8902077151335311
+        },
+        {
+          "grade": "NPSA-11",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "grade": "G2",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "grade": "G7",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "grade": "G4",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "grade": "IPSA-9",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "grade": "Consultant",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "P3",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "NB5",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "G5",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "NB2",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "NOD",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "NPSA-1",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "P2",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        {
+          "grade": "IPSA-13",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        }
+      ],
+      "seniorityDistribution": [
+        {
+          "level": "Unknown",
+          "count": 270,
+          "percentage": 80.1186943620178
+        },
+        {
+          "level": "Intern",
+          "count": 37,
+          "percentage": 10.979228486646884
+        },
+        {
+          "level": "Mid-Level",
+          "count": 14,
+          "percentage": 4.154302670623145
+        },
+        {
+          "level": "Entry",
+          "count": 9,
+          "percentage": 2.6706231454005933
+        },
+        {
+          "level": "Senior",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "level": "Consultant",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        }
+      ],
+      "staffTypeBreakdown": {
+        "international": {
+          "count": 17,
+          "percentage": 5.044510385756676
+        },
+        "national": {
+          "count": 217,
+          "percentage": 64.39169139465875
+        },
+        "consultant": {
+          "count": 1,
+          "percentage": 0.2967359050445104
+        },
+        "intern": {
+          "count": 38,
+          "percentage": 11.275964391691394
+        },
+        "other": {
+          "count": 64,
+          "percentage": 18.991097922848667
+        }
+      },
+      "locationDistribution": [
+        {
+          "station": "Unspecified",
+          "count": 31,
+          "percentage": 9.198813056379821
+        },
+        {
+          "station": "Mexico",
+          "count": 21,
+          "percentage": 6.231454005934718
+        },
+        {
+          "station": "Bangladesh",
+          "count": 20,
+          "percentage": 5.934718100890208
+        },
+        {
+          "station": "Panama",
+          "count": 14,
+          "percentage": 4.154302670623145
+        },
+        {
+          "station": "Baghdad",
+          "count": 11,
+          "percentage": 3.2640949554896146
+        },
+        {
+          "station": "Ukraine",
+          "count": 10,
+          "percentage": 2.967359050445104
+        },
+        {
+          "station": "New York",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Copenhagen",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Erbil",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Chisinau",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Addis Ababa",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Mozambique",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Ha Noi",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Beijing",
+          "count": 5,
+          "percentage": 1.483679525222552
+        },
+        {
+          "station": "Guatemala City",
+          "count": 5,
+          "percentage": 1.483679525222552
+        }
+      ],
+      "languageRequirements": {
+        "languageBreakdown": [
+          {
+            "language": "English",
+            "count": 249,
+            "percentage": 73.88724035608308
+          },
+          {
+            "language": "Spanish",
+            "count": 61,
+            "percentage": 18.100890207715135
+          },
+          {
+            "language": "Arabic",
+            "count": 42,
+            "percentage": 12.462908011869436
+          },
+          {
+            "language": "French",
+            "count": 26,
+            "percentage": 7.71513353115727
+          },
+          {
+            "language": "Bangla",
+            "count": 19,
+            "percentage": 5.637982195845697
+          },
+          {
+            "language": "Portuguese",
+            "count": 13,
+            "percentage": 3.857566765578635
+          },
+          {
+            "language": "Russian",
+            "count": 11,
+            "percentage": 3.2640949554896146
+          },
+          {
+            "language": "Ukrainian",
+            "count": 10,
+            "percentage": 2.967359050445104
+          },
+          {
+            "language": "Kurdish",
+            "count": 7,
+            "percentage": 2.0771513353115725
+          },
+          {
+            "language": "Vietnamese",
+            "count": 7,
+            "percentage": 2.0771513353115725
+          },
+          {
+            "language": "Romanian",
+            "count": 7,
+            "percentage": 2.0771513353115725
+          },
+          {
+            "language": "Chinese",
+            "count": 5,
+            "percentage": 1.483679525222552
+          },
+          {
+            "language": "Mongolian",
+            "count": 5,
+            "percentage": 1.483679525222552
+          },
+          {
+            "language": "Hindi",
+            "count": 5,
+            "percentage": 1.483679525222552
+          },
+          {
+            "language": "Dutch",
+            "count": 4,
+            "percentage": 1.1869436201780417
+          },
+          {
+            "language": "Armenian",
+            "count": 4,
+            "percentage": 1.1869436201780417
+          },
+          {
+            "language": "Uzbek",
+            "count": 3,
+            "percentage": 0.8902077151335311
+          },
+          {
+            "language": "Korean",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Malay",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Filipino",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Nepali",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Amharic",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Urdu",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Serbian",
+            "count": 2,
+            "percentage": 0.5934718100890208
+          },
+          {
+            "language": "Lao",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Tajik",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Kyrgyz",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Georgian",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Japanese",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Burmese",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Swahili",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Chichewa",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Bengali",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Tok Pisin",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Finnish",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Dari",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Bosnian",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Croatian",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          },
+          {
+            "language": "Tongan",
+            "count": 1,
+            "percentage": 0.2967359050445104
+          }
+        ],
+        "multilingualPercentage": 46.88427299703264
+      }
+    },
+    "categoryAnalysis": {
+      "distribution": [
+        {
+          "category": "operations-administration",
+          "count": 80,
+          "percentage": 23.738872403560833
+        },
+        {
+          "category": "policy-strategic-planning",
+          "count": 68,
+          "percentage": 20.178041543026705
+        },
+        {
+          "category": "communications-partnerships",
+          "count": 51,
+          "percentage": 15.133531157270031
+        },
+        {
+          "category": "digital-technology",
+          "count": 34,
+          "percentage": 10.089020771513352
+        },
+        {
+          "category": "leadership-executive",
+          "count": 24,
+          "percentage": 7.121661721068249
+        },
+        {
+          "category": "economic-affairs-trade",
+          "count": 22,
+          "percentage": 6.528189910979229
+        },
+        {
+          "category": "climate-environment",
+          "count": 17,
+          "percentage": 5.044510385756676
+        },
+        {
+          "category": "legal-compliance",
+          "count": 9,
+          "percentage": 2.6706231454005933
+        },
+        {
+          "category": "supply-chain-logistics",
+          "count": 9,
+          "percentage": 2.6706231454005933
+        },
+        {
+          "category": "social-affairs-human-rights",
+          "count": 8,
+          "percentage": 2.3738872403560833
+        },
+        {
+          "category": "education-development",
+          "count": 4,
+          "percentage": 1.1869436201780417
+        },
+        {
+          "category": "peace-security",
+          "count": 4,
+          "percentage": 1.1869436201780417
+        },
+        {
+          "category": "health-medical",
+          "count": 4,
+          "percentage": 1.1869436201780417
+        },
+        {
+          "category": "governance-rule-of-law",
+          "count": 2,
+          "percentage": 0.5934718100890208
+        },
+        {
+          "category": "translation-interpretation",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        }
+      ],
+      "trendingCategories": [
+        "operations-administration",
+        "policy-strategic-planning",
+        "communications-partnerships"
+      ],
+      "emergingCategories": [],
+      "categoryDiversity": 80.73649399188749
+    },
+    "geographicAnalysis": {
+      "regionDistribution": [
+        {
+          "region": "Asia",
+          "count": 107,
+          "percentage": 31.750741839762615
+        },
+        {
+          "region": "Latin America and the Caribbean",
+          "count": 78,
+          "percentage": 23.14540059347181
+        },
+        {
+          "region": "Africa",
+          "count": 70,
+          "percentage": 20.77151335311573
+        },
+        {
+          "region": "Europe",
+          "count": 37,
+          "percentage": 10.979228486646884
+        },
+        {
+          "region": "Other",
+          "count": 31,
+          "percentage": 9.198813056379821
+        },
+        {
+          "region": "Northern America",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "region": "Oceania",
+          "count": 3,
+          "percentage": 0.8902077151335311
+        },
+        {
+          "region": "Home-based",
+          "count": 3,
+          "percentage": 0.8902077151335311
+        },
+        {
+          "region": "N/A",
+          "count": 1,
+          "percentage": 0.2967359050445104
+        }
+      ],
+      "topDutyStations": [
+        {
+          "station": "Unspecified",
+          "count": 31,
+          "percentage": 9.198813056379821
+        },
+        {
+          "station": "Mexico",
+          "count": 21,
+          "percentage": 6.231454005934718
+        },
+        {
+          "station": "Bangladesh",
+          "count": 20,
+          "percentage": 5.934718100890208
+        },
+        {
+          "station": "Panama",
+          "count": 14,
+          "percentage": 4.154302670623145
+        },
+        {
+          "station": "Baghdad",
+          "count": 11,
+          "percentage": 3.2640949554896146
+        },
+        {
+          "station": "Ukraine",
+          "count": 10,
+          "percentage": 2.967359050445104
+        },
+        {
+          "station": "New York",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Copenhagen",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Erbil",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Chisinau",
+          "count": 7,
+          "percentage": 2.0771513353115725
+        },
+        {
+          "station": "Addis Ababa",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Mozambique",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Ha Noi",
+          "count": 6,
+          "percentage": 1.7804154302670623
+        },
+        {
+          "station": "Beijing",
+          "count": 5,
+          "percentage": 1.483679525222552
+        },
+        {
+          "station": "Guatemala City",
+          "count": 5,
+          "percentage": 1.483679525222552
+        }
+      ],
+      "hqVsFieldRatio": {
+        "hq": {
+          "count": 16,
+          "percentage": 4.747774480712167
+        },
+        "field": {
+          "count": 318,
+          "percentage": 94.3620178041543
+        },
+        "remote": {
+          "count": 3,
+          "percentage": 0.8902077151335311
+        }
+      }
+    },
+    "temporalAnalysis": {
+      "postingsByMonth": [
+        {
+          "month": "2025-10",
+          "count": 54
+        },
+        {
+          "month": "2025-11",
+          "count": 283
+        }
+      ],
+      "weekdayDistribution": [
+        {
+          "weekday": "Thursday",
+          "count": 28
+        },
+        {
+          "weekday": "Friday",
+          "count": 60
+        },
+        {
+          "weekday": "Sunday",
+          "count": 1
+        },
+        {
+          "weekday": "Monday",
+          "count": 56
+        },
+        {
+          "weekday": "Tuesday",
+          "count": 16
+        },
+        {
+          "weekday": "Wednesday",
+          "count": 175
+        },
+        {
+          "weekday": "Saturday",
+          "count": 1
+        }
+      ],
+      "peakPostingDay": "Wednesday"
+    }
+  },
+  "benchmarks": {
+    "marketAverages": {
+      "avgPostingsPerAgency": 125,
+      "avgApplicationWindow": 13,
+      "avgActivePositions": 0,
+      "marketTotalVolume": 3622
+    },
+    "peerAverages": {
+      "avgPostingsPerPeer": 469,
+      "totalPeersActive": 3,
+      "peerGroupVolume": 1407
+    },
+    "industryStandards": {
+      "targetApplicationWindow": 45,
+      "targetActivePositionRatio": 0.7,
+      "targetCategoryDiversity": 0.6
+    }
+  },
+  "competitiveIntelligence": {
+    "marketPosition": {
+      "marketRank": 5,
+      "totalAgenciesInMarket": 29,
+      "marketShare": 9.304251794588625,
+      "volumeVsMarketAverage": 169.82330204307013
+    },
+    "peerGroupComparison": {
+      "peerGroupName": "Large Operational Agencies",
+      "peerGroupTier": 1,
+      "peerAgencies": [
+        "UNICEF",
+        "WFP",
+        "UNHCR"
+      ],
+      "yourRankInGroup": 3,
+      "avgPostingsInGroup": 469,
+      "yourPostings": 337,
+      "performanceVsPeers": "below"
+    },
+    "competitorAnalysis": [
+      {
+        "agency": "UNICEF",
+        "volume": 910,
+        "categoryOverlap": 15,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UN Secretariat",
+        "volume": 679,
+        "categoryOverlap": 14,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "WFP",
+        "volume": 370,
+        "categoryOverlap": 12,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "FAO",
+        "volume": 361,
+        "categoryOverlap": 12,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UNEP",
+        "volume": 231,
+        "categoryOverlap": 13,
+        "competitionLevel": "high"
+      }
+    ],
+    "categoryCompetition": [
+      {
+        "category": "operations-administration",
+        "agencyShare": 11.7820324005891,
+        "totalMarketVolume": 679,
+        "competitorsCount": 23,
+        "agencyRank": 1
+      },
+      {
+        "category": "policy-strategic-planning",
+        "agencyShare": 7.188160676532769,
+        "totalMarketVolume": 946,
+        "competitorsCount": 24,
+        "agencyRank": 1
+      },
+      {
+        "category": "communications-partnerships",
+        "agencyShare": 9.239130434782608,
+        "totalMarketVolume": 552,
+        "competitorsCount": 22,
+        "agencyRank": 1
+      },
+      {
+        "category": "digital-technology",
+        "agencyShare": 10.526315789473683,
+        "totalMarketVolume": 323,
+        "competitorsCount": 19,
+        "agencyRank": 1
+      },
+      {
+        "category": "leadership-executive",
+        "agencyShare": 23.762376237623762,
+        "totalMarketVolume": 101,
+        "competitorsCount": 16,
+        "agencyRank": 1
+      }
+    ]
+  },
+  "insights": {
+    "volumeInsights": [
+      {
+        "type": "positive",
+        "title": "Significant Hiring Increase",
+        "description": "396% increase in postings compared to the previous period.",
+        "metric": "396%",
+        "value": 395.5882352941177
+      },
+      {
+        "type": "positive",
+        "title": "Faster Hiring Cycles",
+        "description": "Application windows average 7 days shorter than market average.",
+        "metric": "6 days",
+        "value": 6.3
+      },
+      {
+        "type": "neutral",
+        "title": "Total Postings",
+        "description": "337 total job postings in this period.",
+        "metric": "337 jobs",
+        "value": 337
+      }
+    ],
+    "competitiveInsights": [
+      {
+        "type": "positive",
+        "title": "Market Presence",
+        "description": "9.3% of total UN system job postings.",
+        "metric": "9.3%",
+        "value": 9.304251794588625
+      },
+      {
+        "type": "positive",
+        "title": "Market Ranking",
+        "description": "Ranked #5 out of 29 agencies by hiring volume.",
+        "metric": "#5",
+        "value": 5
+      },
+      {
+        "type": "warning",
+        "title": "Below Peer Average",
+        "description": "Hiring volume below peer group average.",
+        "metric": "337 vs 469 avg",
+        "value": 337
+      }
+    ],
+    "strategicInsights": [
+      {
+        "type": "positive",
+        "title": "Strong Localization",
+        "description": "National staff positions (64%) exceed international positions (5%).",
+        "metric": "64% national",
+        "value": 64.39169139465875
+      },
+      {
+        "type": "neutral",
+        "title": "Top Location",
+        "description": "Unspecified is the primary duty station with 9% of positions.",
+        "metric": "31 jobs",
+        "value": 31
+      },
+      {
+        "type": "neutral",
+        "title": "Primary Focus Area",
+        "description": "operations-administration represents 24% of all positions.",
+        "metric": "80 jobs",
+        "value": 80
+      }
+    ]
+  },
+  "recommendations": [
+    {
+      "priority": "medium",
+      "area": "Leadership Pipeline",
+      "recommendation": "Strengthen Senior Talent Pipeline",
+      "rationale": "Only 2% of positions are at senior level.",
+      "impact": "Stronger succession planning and organizational capability"
+    }
+  ],
+  "rawJobsData": [
+    {
+      "id": 65953,
+      "title": "Project Manager-ARTEMIS [Open to external applicants]",
+      "grade": "NPSA-10",
+      "location": "Yerevan",
+      "postingDate": "2025-11-27T16:29:23.678373",
+      "deadline": "2025-12-12T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65952,
+      "title": "Asistente de Operaciones",
+      "grade": "NPSA-5",
+      "location": "Guatemala City",
+      "postingDate": "2025-11-27T16:29:23.678326",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65951,
+      "title": "Senior Policy Advisor: Human Rights & Key Populations - Home Based  (Open to all applicants)",
+      "grade": "IPSA-13",
+      "location": "South Africa",
+      "postingDate": "2025-11-27T16:29:23.678278",
+      "deadline": "2025-12-05T23:59:59",
+      "status": "archived",
+      "category": "health-medical"
+    },
+    {
+      "id": 65950,
+      "title": "Project Technical Officer (Open to External Applicants)",
+      "grade": "NPSA-8",
+      "location": "Lebanon",
+      "postingDate": "2025-11-27T16:29:23.678220",
+      "deadline": "2025-12-12T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65949,
+      "title": "Communications Design Coordinator - Content, Brand & Multimedia-[Open to all applicants]",
+      "grade": "IPSA-8",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-27T16:29:23.678170",
+      "deadline": "2025-12-12T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65947,
+      "title": "Finance and Administrative Associate",
+      "grade": "NPSA-7",
+      "location": "Equatorial Guinea",
+      "postingDate": "2025-11-27T16:29:23.678048",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65946,
+      "title": "Civil Engineering Associate (3 posts), NPSA 6, part time 90%; Open to Tier 1 and Tier 2 applicants",
+      "grade": "NPSA-6",
+      "location": "Belgrade",
+      "postingDate": "2025-11-27T16:29:23.677992",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65945,
+      "title": "Intern - Project Vision/BOLD",
+      "grade": "Intern",
+      "location": "Thailand",
+      "postingDate": "2025-11-27T16:29:23.677923",
+      "deadline": "2025-12-11T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65944,
+      "title": "Programme Manager (Open to external applicants)",
+      "grade": "NPSA-10",
+      "location": "Palestine",
+      "postingDate": "2025-11-27T16:29:23.677812",
+      "deadline": "2025-12-07T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65943,
+      "title": "Field Security Associate [Open to external applicants]",
+      "grade": "G6",
+      "location": "Damascus",
+      "postingDate": "2025-11-27T16:29:23.659845",
+      "deadline": "2025-12-05T23:59:59",
+      "status": "archived",
+      "category": "peace-security"
+    },
+    {
+      "id": 65144,
+      "title": "Social Media Support Intern",
+      "grade": "Intern",
+      "location": "Germany",
+      "postingDate": "2025-11-26T16:27:36.577404",
+      "deadline": "2025-12-10T23:59:59",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65143,
+      "title": "Legal Specialist, Performance-Based Climate Finance Legal Templates (Home-Based)",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.577386",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65142,
+      "title": "Associé au secrétariat de l'OMT",
+      "grade": "NPSA-6",
+      "location": "Haiti",
+      "postingDate": "2025-11-26T16:27:36.577341",
+      "deadline": "2025-12-16T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65141,
+      "title": "Electricien",
+      "grade": "Other",
+      "location": "Haiti",
+      "postingDate": "2025-11-26T16:27:36.577295",
+      "deadline": "2025-12-16T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65139,
+      "title": "Digital Transformation Analyst [Open to external applicants]",
+      "grade": "NPSA-9",
+      "location": "Yerevan",
+      "postingDate": "2025-11-26T16:27:36.577203",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65138,
+      "title": "Analista Desenvolvedor Back-End (Home Based) [Open to all applicants]",
+      "grade": "NPSA-8",
+      "location": "Fortaleza",
+      "postingDate": "2025-11-26T16:27:36.577156",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65137,
+      "title": "Operations Associate (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "Paramaribo",
+      "postingDate": "2025-11-26T16:27:36.577109",
+      "deadline": "2025-12-08T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65136,
+      "title": "People Development Intern",
+      "grade": "Intern",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.577089",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65135,
+      "title": "Audit Analyst [Open to External applicants]",
+      "grade": "P2",
+      "location": "Istanbul",
+      "postingDate": "2025-11-26T16:27:36.577042",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65134,
+      "title": "Monitoring & Evaluation Analyst (Nationals Only)",
+      "grade": "NOA",
+      "location": "Colombia",
+      "postingDate": "2025-11-26T16:27:36.576997",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65133,
+      "title": "Finance Analyst (Open to all applicants)",
+      "grade": "NOB",
+      "location": "Kathmandu",
+      "postingDate": "2025-11-26T16:27:36.576951",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65132,
+      "title": "Driver",
+      "grade": "NPSA-2",
+      "location": "Cameroon",
+      "postingDate": "2025-11-26T16:27:36.576904",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65131,
+      "title": "Analista de Infraestrutura (Office Based - Brasília) [Open to all applicants]",
+      "grade": "NPSA-8",
+      "location": "Brasilia",
+      "postingDate": "2025-11-26T16:27:36.576856",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65130,
+      "title": "Analista Desenvolvedor Front-End (Home Based) [Open to all applicants]",
+      "grade": "NPSA-8",
+      "location": "Fortaleza",
+      "postingDate": "2025-11-26T16:27:36.576807",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65129,
+      "title": "Budget Specialist [Open to external applicants]",
+      "grade": "P4",
+      "location": "New York",
+      "postingDate": "2025-11-26T16:27:36.576750",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65128,
+      "title": "Monitoring and Evaluation Associate (open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "Equatorial Guinea",
+      "postingDate": "2025-11-26T16:27:36.576657",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65126,
+      "title": "Project Assistant (Multiple Openings)",
+      "grade": "NPSA-4",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-26T16:27:36.570605",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65125,
+      "title": "Driver",
+      "grade": "NPSA-2",
+      "location": "Palestine",
+      "postingDate": "2025-11-26T16:27:36.570563",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65124,
+      "title": "Intern – Social and Environmental Compliance Unit – Office of Audit and Investigations",
+      "grade": "Intern",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.570545",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65123,
+      "title": "Associado de Projeto (Office-Based) [Open to all applicants]",
+      "grade": "NPSA-7",
+      "location": "Brasilia",
+      "postingDate": "2025-11-26T16:27:36.570503",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65122,
+      "title": "Technicien de Laboratoire  [Ouvert à tous les candidats]",
+      "grade": "G6",
+      "location": "Bamako",
+      "postingDate": "2025-11-26T16:27:36.570440",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65121,
+      "title": "Telecommunications Assistant (Open to External Applicants)",
+      "grade": "NPSA-5",
+      "location": "Erbil",
+      "postingDate": "2025-11-26T16:27:36.570398",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65120,
+      "title": "RBA MST Operations and Data Analysis Intern",
+      "grade": "Intern",
+      "location": "New York",
+      "postingDate": "2025-11-26T16:27:36.570357",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65119,
+      "title": "Analista de cumplimiento contractual de servicios de limpieza y ornato (Basado en oficina) (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Guatemala City",
+      "postingDate": "2025-11-26T16:27:36.570314",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65118,
+      "title": "Telecommunication Assistant (Open to All Applicants)",
+      "grade": "NPSA-5",
+      "location": "Baghdad",
+      "postingDate": "2025-11-26T16:27:36.570272",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65117,
+      "title": "Procurement Analyst (multiple openings) - [Open to All Applicants]",
+      "grade": "NPSA-8",
+      "location": "Chisinau",
+      "postingDate": "2025-11-26T16:27:36.570229",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65116,
+      "title": "Project Associate (2 positions) (Open to all applicants)",
+      "grade": "NPSA-6",
+      "location": "Maldives",
+      "postingDate": "2025-11-26T16:27:36.570188",
+      "deadline": "2025-12-11T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65115,
+      "title": "Capacity Building Officer, Short-Term",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.570170",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65114,
+      "title": "Small Grants National Programme Coordinator (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Islamabad",
+      "postingDate": "2025-11-26T16:27:36.570129",
+      "deadline": "2025-12-11T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65113,
+      "title": "Analista en Financiamiento Verde (Open to all appliants)",
+      "grade": "NPSA-8",
+      "location": "Guatemala City",
+      "postingDate": "2025-11-26T16:27:36.570088",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65112,
+      "title": "Food Systems Community Intern, Nature Hub, BPPS (Home-based)",
+      "grade": "Intern",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.570046",
+      "deadline": "2025-12-08T23:59:59",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65111,
+      "title": "Project Associate [Open to All Applicants]",
+      "grade": "NPSA-7",
+      "location": "Chisinau",
+      "postingDate": "2025-11-26T16:27:36.570003",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65110,
+      "title": "Programme Finance Associate [Open to All Applicants]",
+      "grade": "NPSA-7",
+      "location": "Chisinau",
+      "postingDate": "2025-11-26T16:27:36.569961",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65109,
+      "title": "National Coastal Engineer (Open to all applicants)",
+      "grade": "NPSA-10",
+      "location": "Tonga",
+      "postingDate": "2025-11-26T16:27:36.569920",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65108,
+      "title": "Communications Associate (Asociado(a) en Comunicaciones)",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569879",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65107,
+      "title": "SIG Technical Assistant (Asistente Técnico en SIG)",
+      "grade": "NPSA-5",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569837",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65106,
+      "title": "Forestry Associate (Asociado/a Forestal)",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569797",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65105,
+      "title": "Biodiversity Associate (Asociado(a) en Biodiversidad)",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569756",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65104,
+      "title": "Associate in Circular Economy (Asociado/a en Economía Circular)",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569714",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65103,
+      "title": "Gender, Social Participation and Safeguards Associate",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.569674",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65102,
+      "title": "Asociada(o) de Economía en Cambio Climático / Presencial (Open to all applicants)",
+      "grade": "NPSA-6",
+      "location": "Costa Rica",
+      "postingDate": "2025-11-26T16:27:36.569632",
+      "deadline": "2025-11-29T23:59:59",
+      "status": "closing_soon",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65101,
+      "title": "Energy Specialist [Open to Tier 1, 2 & 3 applicants]",
+      "grade": "IPSA-10",
+      "location": "Brazzaville",
+      "postingDate": "2025-11-26T16:27:36.569590",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65100,
+      "title": "Project Analyst, NPSA-9, DS-Kyiv, National position, (advertisement extended)",
+      "grade": "NPSA-9",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.569550",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65099,
+      "title": "Finance Assistant",
+      "grade": "NPSA-5",
+      "location": "Tajikistan",
+      "postingDate": "2025-11-26T16:27:36.569509",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65098,
+      "title": "Analista en Productos Sanitarios/Cadena de Suministro (PSM) con experiencia en el sector farmacéutico (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Equatorial Guinea",
+      "postingDate": "2025-11-26T16:27:36.569468",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65097,
+      "title": "Health Manager, UN Clinic Physician (Nationals only) (Open to all applicants)",
+      "grade": "NOC",
+      "location": "Sierra Leone",
+      "postingDate": "2025-11-26T16:27:36.569426",
+      "deadline": "2025-11-29T23:59:59",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65096,
+      "title": "Coordonnateur Medical (UN) [ open to all applicants ]",
+      "grade": "NOC",
+      "location": "Haiti",
+      "postingDate": "2025-11-26T16:27:36.569384",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65095,
+      "title": "Project Analyst [Open to external applicants]",
+      "grade": "NPSA-8",
+      "location": "Bosnia and Herzegovina",
+      "postingDate": "2025-11-26T16:27:36.569342",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65094,
+      "title": "Programme Analyst - Gender & Diversity (Open to all applicants - Mozambican Nationals)",
+      "grade": "NOB",
+      "location": "Mozambique",
+      "postingDate": "2025-11-26T16:27:36.569300",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65093,
+      "title": "Administrative Clerk (Open to Mozambican National Only)",
+      "grade": "NPSA-3",
+      "location": "Mozambique",
+      "postingDate": "2025-11-26T16:27:36.569260",
+      "deadline": "2025-12-11T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65092,
+      "title": "Project Assistant NPSA 5 NDC 3 (Amman, Jordan)",
+      "grade": "NPSA-5",
+      "location": "Jordan",
+      "postingDate": "2025-11-26T16:27:36.569220",
+      "deadline": "2025-12-10T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65091,
+      "title": "Project Specialist (Open to External Applicants)",
+      "grade": "NPSA-10",
+      "location": "Cairo",
+      "postingDate": "2025-11-26T16:27:36.569179",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65090,
+      "title": "Technical Associate - Livelihoods, (Gardez)",
+      "grade": "NPSA-6",
+      "location": "Afghanistan",
+      "postingDate": "2025-11-26T16:27:36.569138",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65089,
+      "title": "QRF Driver - UNDSS Maiduguri (with a possibility of building a roster)",
+      "grade": "Other",
+      "location": "Maiduguri",
+      "postingDate": "2025-11-26T16:27:36.569096",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65088,
+      "title": "Intern - Finance",
+      "grade": "Intern",
+      "location": "Nairobi",
+      "postingDate": "2025-11-26T16:27:36.569055",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65087,
+      "title": "Communications Associate (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "New Delhi",
+      "postingDate": "2025-11-26T16:27:36.569014",
+      "deadline": "2025-11-29T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65086,
+      "title": "Administrative Intern (Vietnamese National)",
+      "grade": "Intern",
+      "location": "Ha Noi",
+      "postingDate": "2025-11-26T16:27:36.568973",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65085,
+      "title": "CSR Research and Policy Intern",
+      "grade": "Intern",
+      "location": "India",
+      "postingDate": "2025-11-26T16:27:36.568932",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65084,
+      "title": "Knowledge Management Associate (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "New Delhi",
+      "postingDate": "2025-11-26T16:27:36.568891",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65083,
+      "title": "Project Associate (Gender) (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "New Delhi",
+      "postingDate": "2025-11-26T16:27:36.568850",
+      "deadline": "2025-11-27T23:59:59",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65082,
+      "title": "Project Analyst (Monitoring and Evaluation) (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-26T16:27:36.568809",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65081,
+      "title": "Rescue Service Task Analyst [Open to External Applicants]",
+      "grade": "NPSA-9",
+      "location": "Yerevan",
+      "postingDate": "2025-11-26T16:27:36.568767",
+      "deadline": "2025-12-09T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65080,
+      "title": "Project Associate",
+      "grade": "NPSA-6",
+      "location": "Belmopan",
+      "postingDate": "2025-11-26T16:27:36.568727",
+      "deadline": "2025-12-05T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65079,
+      "title": "Gouvernance Démocratique, Etat des droits, Développement Durable Inclusif",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.568709",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65078,
+      "title": "Administration Reform Specialist - [Open to all applicants]",
+      "grade": "NPSA-10",
+      "location": "Morocco",
+      "postingDate": "2025-11-26T16:27:36.568669",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65077,
+      "title": "Development Effectiveness Specialist [Open to all applicants]",
+      "grade": "P4",
+      "location": "Democratic Republic of the Congo",
+      "postingDate": "2025-11-26T16:27:36.568628",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 65076,
+      "title": "Enterprise Architect (Open to all applicants)",
+      "grade": "NPSA-11",
+      "location": "Philippines",
+      "postingDate": "2025-11-26T16:27:36.568586",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65075,
+      "title": "Communication and Public Outreach Analyst, Short-Term",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.568569",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65074,
+      "title": "Financial Data and Compliance Monitoring Analyst, Short-Term",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.568553",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65073,
+      "title": "Analista en Gestión Gubernamental y Política de Cooperación",
+      "grade": "NPSA-8",
+      "location": "Mexico",
+      "postingDate": "2025-11-26T16:27:36.568512",
+      "deadline": "2025-12-01T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65072,
+      "title": "Security Analysis and Operations Intern",
+      "grade": "Intern",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.568494",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65071,
+      "title": "Spécialiste en Coordination Nationale du Programme d’appui à la modernisation de l’administration publique, d’accompagnement à la transition numérique et à l’utilisation de l’amazigh - [Open to all applicants]",
+      "grade": "NPSA-10",
+      "location": "Morocco",
+      "postingDate": "2025-11-26T16:27:36.568450",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65070,
+      "title": "Project Manager and support for cross-functional project management - [Open to all applicants]",
+      "grade": "NPSA-9",
+      "location": "Morocco",
+      "postingDate": "2025-11-26T16:27:36.568407",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65069,
+      "title": "Reintegration Coordination Specialist",
+      "grade": "NPSA-10",
+      "location": "Addis Ababa",
+      "postingDate": "2025-11-26T16:27:36.568366",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65068,
+      "title": "Grants Coordinator (Analyst), Short-Term",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.568348",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65067,
+      "title": "Coordinador/a de Proyecto (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.568307",
+      "deadline": "2025-12-10T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65066,
+      "title": "Project Assistant (Asistente de Proyecto)",
+      "grade": "NPSA-5",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.568266",
+      "deadline": "2025-12-08T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65065,
+      "title": "Project Clerk (Auxiliar de Proyecto)",
+      "grade": "NPSA-4",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.568229",
+      "deadline": "2025-12-05T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65064,
+      "title": "Project Analyst [Open to All Applicants]",
+      "grade": "NPSA-8",
+      "location": "Chisinau",
+      "postingDate": "2025-11-26T16:27:36.568184",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65063,
+      "title": "Transportation Clerk/Driver, NPSA-4, DS-Kyiv, UNDSS, National position",
+      "grade": "NPSA-4",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.568143",
+      "deadline": "2025-12-10T23:59:59",
+      "status": "active",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65062,
+      "title": "Security Operations Center Assistant (Open to all applicants), UNDSS Bangladesh",
+      "grade": "NPSA-3",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-26T16:27:36.568102",
+      "deadline": "2025-12-07T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65060,
+      "title": "Project Analyst- Renewables (Solar) , NPSA-9, DS - Kyiv, National Position",
+      "grade": "NPSA-9",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.568006",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65059,
+      "title": "Operations Analyst [Open to all applicants / (Ouverts aux candidats internes et externes))",
+      "grade": "NPSA-9",
+      "location": "Mopti",
+      "postingDate": "2025-11-26T16:27:36.567962",
+      "deadline": "2025-12-04T23:59:59",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65058,
+      "title": "Asociado/a técnico/a en Movilidad Humana y Soluciones Duraderas - 2 vacantes - (Technical Associate on Human Mobility and Durable Solutions) (Abierto a todos_as los_las postulantes-Tier 3)",
+      "grade": "NPSA-7",
+      "location": "Colombia",
+      "postingDate": "2025-11-26T16:27:36.567916",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "governance-rule-of-law"
+    },
+    {
+      "id": 65057,
+      "title": "Coordinador/a de Proyecto para la Cartera de Prosperidad y Reducción de la Pobreza (Basado en oficina) (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "Lima",
+      "postingDate": "2025-11-26T16:27:36.567870",
+      "deadline": "2025-12-03T23:59:59",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65056,
+      "title": "Project Reconstruction and Recovery Analyst (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Pakistan",
+      "postingDate": "2025-11-26T16:27:36.567825",
+      "deadline": "2025-12-02T23:59:59",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65055,
+      "title": "Field Security Associate (FSA) - Training, NPSA-6, DS-Kyiv, UNDSS, Nationals only",
+      "grade": "NPSA-6",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.567781",
+      "deadline": "2025-11-29T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65054,
+      "title": "Security Operations Centre (SOC) Operator - Enugu, with a possibility of building a roster",
+      "grade": "Other",
+      "location": "Nigeria",
+      "postingDate": "2025-11-26T16:27:36.567737",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65053,
+      "title": "Security Operations Centre (SOC) Operator - Kaduna, with a possibility of building a roster",
+      "grade": "Other",
+      "location": "Nigeria",
+      "postingDate": "2025-11-26T16:27:36.567682",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65052,
+      "title": "Project Finance & Admin. Associate",
+      "grade": "NPSA-6",
+      "location": "Banjul",
+      "postingDate": "2025-11-26T16:27:36.567637",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65051,
+      "title": "Security Operations Centre (SOC) Operator - Maiduguri, with a possibility of building a roster",
+      "grade": "Other",
+      "location": "Maiduguri",
+      "postingDate": "2025-11-26T16:27:36.567592",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65050,
+      "title": "Security Operations Centre (SOC) Operator - Kano, with a possibility of building a roster",
+      "grade": "Other",
+      "location": "Nigeria",
+      "postingDate": "2025-11-26T16:27:36.567547",
+      "deadline": "2025-11-28T23:59:59",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65049,
+      "title": "Project Officer (Criminal Justice) (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Ha Noi",
+      "postingDate": "2025-11-26T16:27:36.567502",
+      "deadline": "2025-11-01T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65048,
+      "title": "Project Officer (Access to Justice) (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Ha Noi",
+      "postingDate": "2025-11-26T16:27:36.567456",
+      "deadline": "2025-11-01T23:59:59",
+      "status": "expired",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65046,
+      "title": "Technical Analyst (Open to all applicants)",
+      "grade": "IPSA-9",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-26T16:27:36.567364",
+      "deadline": "2025-11-01T23:59:59",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65045,
+      "title": "Stagiaire en Communication",
+      "grade": "Other",
+      "location": "Comoros",
+      "postingDate": "2025-11-26T16:27:36.567317",
+      "deadline": "2025-10-29T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65044,
+      "title": "Graphic Design and Communications Intern",
+      "grade": "Intern",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-26T16:27:36.567271",
+      "deadline": "2025-10-28T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65042,
+      "title": "Administrative Assistant",
+      "grade": "NPSA-5",
+      "location": "Mozambique",
+      "postingDate": "2025-11-26T16:27:36.567178",
+      "deadline": "2025-10-27T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65039,
+      "title": "Pasantía (práctica) Unidad de Adquisiciones",
+      "grade": "Intern",
+      "location": "Santiago",
+      "postingDate": "2025-11-26T16:27:36.567037",
+      "deadline": "2025-10-26T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65038,
+      "title": "Manager de projet (Open to external applicants)",
+      "grade": "NPSA-10",
+      "location": "Tunisia",
+      "postingDate": "2025-11-26T16:27:36.566988",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65037,
+      "title": "Programme Coordinator (Open to all applicants)",
+      "grade": "IPSA-8",
+      "location": "Beijing",
+      "postingDate": "2025-11-26T16:27:36.566939",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65036,
+      "title": "PASANTE EXPERIMENTACIÓN",
+      "grade": "Intern",
+      "location": "Buenos Aires",
+      "postingDate": "2025-11-26T16:27:36.566888",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65035,
+      "title": "Project Associate_UNDP Tunisia_NPSA 6",
+      "grade": "NPSA-6",
+      "location": "Tunisia",
+      "postingDate": "2025-11-26T16:27:36.566822",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65034,
+      "title": "Asociado de Logística y Adquisiciones con experiencia en el sector farmacéutico (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "Equatorial Guinea",
+      "postingDate": "2025-11-26T16:27:36.566766",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65033,
+      "title": "Project Analyst (Biodiversity and Environment) (Open to to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-26T16:27:36.566607",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65032,
+      "title": "Project Specialist [Open to external applicants]",
+      "grade": "NPSA-10",
+      "location": "Uzbekistan",
+      "postingDate": "2025-11-26T16:27:36.560576",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65031,
+      "title": "Programme Specialist / Team Lead of Sustainable Green Pathways (Open to all Applicants)",
+      "grade": "NOC",
+      "location": "Jordan",
+      "postingDate": "2025-11-26T16:27:36.560528",
+      "deadline": "2025-10-21T23:59:59",
+      "status": "expired",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65030,
+      "title": "Safeguards Researcher and Advocacy Specialist",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.560510",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65029,
+      "title": "Safeguards Monitoring and Evaluation Expert",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.560492",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65028,
+      "title": "Video and Communications Intern",
+      "grade": "Intern",
+      "location": "Beijing",
+      "postingDate": "2025-11-26T16:27:36.560451",
+      "deadline": "2025-10-20T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65026,
+      "title": "Driver",
+      "grade": "G2",
+      "location": "Saudi Arabia",
+      "postingDate": "2025-11-26T16:27:36.560358",
+      "deadline": "2025-10-29T23:59:59",
+      "status": "expired",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65025,
+      "title": "Finance Assistant: (Open to external applicants)",
+      "grade": "NPSA-5",
+      "location": "Erbil",
+      "postingDate": "2025-11-26T16:27:36.560312",
+      "deadline": "2025-10-27T23:59:59",
+      "status": "expired",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65024,
+      "title": "HR Assistant:(Open to external applicants)",
+      "grade": "NPSA-5",
+      "location": "Erbil",
+      "postingDate": "2025-11-26T16:27:36.560266",
+      "deadline": "2025-10-27T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65023,
+      "title": "Facilities Management Clerk: (Open to external applicants) 4 positions",
+      "grade": "NPSA-3",
+      "location": "Baghdad",
+      "postingDate": "2025-11-26T16:27:36.560219",
+      "deadline": "2025-10-26T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65022,
+      "title": "Communications Analyst (Open to all applicants)",
+      "grade": "NOB",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-26T16:27:36.560172",
+      "deadline": "2025-10-25T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65021,
+      "title": "Communications Assistant (Malaysian Nationals Only - Open to All Applicants)",
+      "grade": "NPSA-4",
+      "location": "Kuala Lumpur",
+      "postingDate": "2025-11-26T16:27:36.560130",
+      "deadline": "2025-10-25T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65020,
+      "title": "Telecommunications Assistant (Open to External Applicants)",
+      "grade": "NPSA-5",
+      "location": "Erbil",
+      "postingDate": "2025-11-26T16:27:36.560088",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65019,
+      "title": "Facilities Management Clerk: (Open to external applicants) 2 positions",
+      "grade": "NPSA-3",
+      "location": "Erbil",
+      "postingDate": "2025-11-26T16:27:36.560040",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65018,
+      "title": "Pasante para la Unidad de Análisis- UNDSS",
+      "grade": "Intern",
+      "location": "Colombia",
+      "postingDate": "2025-11-26T16:27:36.559992",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65016,
+      "title": "Procurement Clerk, Baghdad (Open to external applicants)",
+      "grade": "NPSA-3",
+      "location": "Iraq",
+      "postingDate": "2025-11-26T16:27:36.559901",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65015,
+      "title": "Associe (e) au Projet (Ouvert uniquement aux candidats de niveaux 1, 2 et 3)",
+      "grade": "NPSA-6",
+      "location": "Central African Republic",
+      "postingDate": "2025-11-26T16:27:36.559861",
+      "deadline": "2025-10-20T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65014,
+      "title": "Coordonnateur (trice) de Projet [Open to Tier 1 & 2 applicants] / (Ouvert aux candidatures de Niveau 1 et Niveau 2)",
+      "grade": "NPSA-9",
+      "location": "Central African Republic",
+      "postingDate": "2025-11-26T16:27:36.559820",
+      "deadline": "2025-10-25T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65013,
+      "title": "Gender Analyst (Open to All Applicants)",
+      "grade": "NPSA-8",
+      "location": "Mozambique",
+      "postingDate": "2025-11-26T16:27:36.559771",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65012,
+      "title": "Knowledge Management, Monitoring and Evaluation Analyst (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Monrovia",
+      "postingDate": "2025-11-26T16:27:36.559699",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65007,
+      "title": "Finnish Speaking Policy Analysis and Communications Intern for UNDPs Nordic Representation Office",
+      "grade": "Intern",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-26T16:27:36.559426",
+      "deadline": "2025-10-27T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65006,
+      "title": "Technical Officer- Social Development and Communications",
+      "grade": "NPSA-8",
+      "location": "Georgetown",
+      "postingDate": "2025-11-26T16:27:36.559385",
+      "deadline": "2025-10-30T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65005,
+      "title": "National Forest MRV Analyst (NFMRVA) (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Addis Ababa",
+      "postingDate": "2025-11-26T16:27:36.559344",
+      "deadline": "2025-10-25T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65004,
+      "title": "Visual Communications and Graphic Design Analyst (Home-Based) - [Open to all applicants]",
+      "grade": "IPSA-9",
+      "location": "New York",
+      "postingDate": "2025-11-26T16:27:36.559302",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65003,
+      "title": "National Project Coordinator (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Cairo",
+      "postingDate": "2025-11-26T16:27:36.559260",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65002,
+      "title": "National Project Manager (Open to All Applicants)",
+      "grade": "NPSA-9",
+      "location": "Papua New Guinea",
+      "postingDate": "2025-11-26T16:27:36.559205",
+      "deadline": "2025-10-20T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65001,
+      "title": "Project Analyst (Communications & Engagement) (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-26T16:27:36.559159",
+      "deadline": "2025-10-20T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65000,
+      "title": "Project Assistant",
+      "grade": "NPSA-5",
+      "location": "Bosnia and Herzegovina",
+      "postingDate": "2025-11-26T16:27:36.559113",
+      "deadline": "2025-10-19T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 64999,
+      "title": "Agricultural Finance Specialist (Home-based, SHORT-TERM)",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.559095",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 64998,
+      "title": "Facilitation and Learning Specialist (Home-based, SHORT-TERM)",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-26T16:27:36.559078",
+      "deadline": "",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 64997,
+      "title": "Public Finance Officer (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-26T16:27:36.559030",
+      "deadline": "2025-10-24T23:59:59",
+      "status": "expired",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 64996,
+      "title": "Risk Management, Strategic Communications and Stakeholder Relations Specialist-(Open to all applicants)",
+      "grade": "P4",
+      "location": "Uzbekistan",
+      "postingDate": "2025-11-26T16:27:36.558982",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 64995,
+      "title": "Coordinador/a de Proyecto (Ciudad de Colón) (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.558924",
+      "deadline": "2025-11-01T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 64994,
+      "title": "Project Associate (Asociado/a de Proyecto)",
+      "grade": "NPSA-6",
+      "location": "Panama",
+      "postingDate": "2025-11-26T16:27:36.558875",
+      "deadline": "2025-10-30T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 64993,
+      "title": "Communications Analyst, NPSA-9, DS-Kyiv (National position)",
+      "grade": "NPSA-9",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.558818",
+      "deadline": "2025-10-25T23:59:59",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 64992,
+      "title": "ICT Coordinator, NPSA-9, DS-Kyiv (Nationals only)",
+      "grade": "NPSA-9",
+      "location": "Ukraine",
+      "postingDate": "2025-11-26T16:27:36.558767",
+      "deadline": "2025-10-24T23:59:59",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 64991,
+      "title": "Policy Analyst-Green Recovery and Transition (Open to all applicants) (2 openings)",
+      "grade": "NPSA-8",
+      "location": "Republic of Korea",
+      "postingDate": "2025-11-26T16:27:36.558713",
+      "deadline": "2025-10-23T23:59:59",
+      "status": "expired",
+      "category": "climate-environment"
+    },
+    {
+      "id": 64990,
+      "title": "Project Analyst (Human Rights) (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-26T16:27:36.558650",
+      "deadline": "2025-10-22T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 64989,
+      "title": "Auxiliar Administrativo",
+      "grade": "NPSA-1",
+      "location": "Mexico",
+      "postingDate": "2025-11-26T16:27:36.558546",
+      "deadline": "2025-10-21T23:59:59",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 64988,
+      "title": "Asociado(a) en Cooperación para la Alianza del Pacífico",
+      "grade": "NPSA-7",
+      "location": "Mexico",
+      "postingDate": "2025-11-26T16:27:36.530537",
+      "deadline": "2025-10-21T23:59:59",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63845,
+      "title": "Communications Intern (National only)",
+      "grade": "Intern",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-21T17:16:18.540962",
+      "deadline": "2025-11-23T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63830,
+      "title": "ICT Specialist (Open to External Applicants)",
+      "grade": "NPSA-10",
+      "location": "Baghdad",
+      "postingDate": "2025-11-21T17:16:18.534267",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 63829,
+      "title": "HR Assistant (Short-term)",
+      "grade": "NPSA-5",
+      "location": "Suva",
+      "postingDate": "2025-11-21T17:16:18.534219",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63828,
+      "title": "Engineering Specialist- (Open to External Applicants)",
+      "grade": "NPSA-10",
+      "location": "Baghdad",
+      "postingDate": "2025-11-21T17:16:18.534168",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 63827,
+      "title": "AI Governance Analyst-IPSA 8/ST-Office Based",
+      "grade": "IPSA-8",
+      "location": "N/A",
+      "postingDate": "2025-11-21T17:16:18.534147",
+      "deadline": "",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63826,
+      "title": "Financial Management Clerk (Office based) [Open to all applicants]",
+      "grade": "NPSA-3",
+      "location": "Brasilia",
+      "postingDate": "2025-11-21T17:16:18.534092",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63819,
+      "title": "Strategic ESG Analyst, Short-Term",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-21T17:16:18.533773",
+      "deadline": "",
+      "status": "archived",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 63818,
+      "title": "Monitoring and Evaluation Analyst [Open to all applicants]",
+      "grade": "NPSA-9",
+      "location": "Chisinau",
+      "postingDate": "2025-11-21T17:16:18.533723",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63817,
+      "title": "Asociada(o) Administrativa(o) -Abierto a todo/as los/as postulantes - 2 vacantes",
+      "grade": "NPSA-6",
+      "location": "Costa Rica",
+      "postingDate": "2025-11-21T17:16:18.533674",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63816,
+      "title": "Project Manager (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-21T17:16:18.533624",
+      "deadline": "2025-11-23T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63815,
+      "title": "Communications Associate",
+      "grade": "NPSA-6",
+      "location": "La Habana",
+      "postingDate": "2025-11-21T17:16:18.533575",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63812,
+      "title": "Monitoring, Reporting and Evaluation Analyst (Global Fund) (Open to all applicants)",
+      "grade": "NPSA-8",
+      "location": "Cairo",
+      "postingDate": "2025-11-21T17:16:18.533427",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63811,
+      "title": "UN Clinic Medical Physician",
+      "grade": "NPSA-10",
+      "location": "Baghdad",
+      "postingDate": "2025-11-21T17:16:18.533377",
+      "deadline": "2025-11-25T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 63803,
+      "title": "Technical Associate - Infrastructure",
+      "grade": "NPSA-6",
+      "location": "Afghanistan",
+      "postingDate": "2025-11-21T17:16:18.532987",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63802,
+      "title": "Project Associate (Climate Policy) (Open to all applicants)",
+      "grade": "NPSA-7",
+      "location": "New Delhi",
+      "postingDate": "2025-11-21T17:16:18.532939",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63801,
+      "title": "Project Manager [Open to All Applicants]",
+      "grade": "NPSA-9",
+      "location": "Chisinau",
+      "postingDate": "2025-11-21T17:16:18.532882",
+      "deadline": "2025-11-25T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63800,
+      "title": "Pasantía (práctica) Unidad ICT (Ciberseguridad)",
+      "grade": "Intern",
+      "location": "Santiago",
+      "postingDate": "2025-11-21T17:16:18.532751",
+      "deadline": "2025-11-23T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63794,
+      "title": "Project Manager (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-21T17:16:18.532445",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63793,
+      "title": "Analista para la Política de Cooperación con la Unión Europea",
+      "grade": "NPSA-8",
+      "location": "Mexico",
+      "postingDate": "2025-11-21T17:16:18.532394",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63792,
+      "title": "Asociado de Análisis Económico",
+      "grade": "NPSA-6",
+      "location": "Mexico",
+      "postingDate": "2025-11-21T17:16:18.532342",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 63791,
+      "title": "Driver (NPSA-2) in Bukhara",
+      "grade": "NPSA-2",
+      "location": "Uzbekistan",
+      "postingDate": "2025-11-21T17:16:18.532292",
+      "deadline": "2025-11-25T23:59:59",
+      "status": "archived",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 63790,
+      "title": "Team Leader - Democratic Governance & Peace Building (Open to all applicants)",
+      "grade": "NOD",
+      "location": "Addis Ababa",
+      "postingDate": "2025-11-21T17:16:18.532243",
+      "deadline": "2025-11-25T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 63784,
+      "title": "National Grant Officer (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Lilongwe",
+      "postingDate": "2025-11-21T17:16:18.532000",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 63783,
+      "title": "Project Associate-ICT, GCA Project (Open to all applicants)",
+      "grade": "NPSA-6",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-21T17:16:18.531952",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63782,
+      "title": "SDG Finance Specialist (Home-Based)",
+      "grade": "IPSA-11",
+      "location": "New York",
+      "postingDate": "2025-11-21T17:16:18.531903",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63773,
+      "title": "Community Resilience Analyst",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-21T17:16:18.531487",
+      "deadline": "",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63772,
+      "title": "Local Coordinator, NPSA-9, DS-Kharkiv, National position",
+      "grade": "NPSA-9",
+      "location": "Kharkiv",
+      "postingDate": "2025-11-21T17:16:18.531438",
+      "deadline": "2025-11-26T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63771,
+      "title": "Security Operations Center (SOC) Assistant in Homs| NPSA-5  (Open to All Candidates)",
+      "grade": "NPSA-5",
+      "location": "Syria",
+      "postingDate": "2025-11-21T17:16:18.531388",
+      "deadline": "2025-11-25T23:59:59",
+      "status": "archived",
+      "category": "translation-interpretation"
+    },
+    {
+      "id": 63770,
+      "title": "Security Operations Center (SOC) Assistant in Qamishli | NPSA-4 (Open to All Candidates) | 2 Vacancies",
+      "grade": "NPSA-4",
+      "location": "Syria",
+      "postingDate": "2025-11-21T17:16:18.531339",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63769,
+      "title": "Security Operations Center (SOC) Assistant in Dayr-az-Zawr| NPSA-4 (Open to All Candidates)",
+      "grade": "NPSA-4",
+      "location": "Syria",
+      "postingDate": "2025-11-21T17:16:18.531289",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63768,
+      "title": "Security Operations Center (SOC) Assistant in Aleppo | NPSA-4 (Open to All Candidates)",
+      "grade": "NPSA-4",
+      "location": "Syria",
+      "postingDate": "2025-11-21T17:16:18.531238",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63767,
+      "title": "Re-advertisement - Economist (Open to external applicants)",
+      "grade": "NOC",
+      "location": "Damascus",
+      "postingDate": "2025-11-21T17:16:18.531188",
+      "deadline": "2025-11-24T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63766,
+      "title": "Procurement Associate, NPSA-7, DS - Kyiv, National Position",
+      "grade": "NPSA-7",
+      "location": "Ukraine",
+      "postingDate": "2025-11-21T17:16:18.531137",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63765,
+      "title": "Communications Associate, NPSA-7, DS - Kyiv, National Position",
+      "grade": "NPSA-7",
+      "location": "Ukraine",
+      "postingDate": "2025-11-21T17:16:18.531085",
+      "deadline": "2025-11-22T23:59:59",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 62757,
+      "title": "Procurement Associate (Open to all applicants)",
+      "grade": "G7",
+      "location": "Belmopan",
+      "postingDate": "2025-11-19T16:32:33.758716",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 62756,
+      "title": "Programme Specialist and Head of Structural Transformation and Inclusive Growth Unit (STRING) (Open to all applicants)",
+      "grade": "NOC",
+      "location": "Kigali",
+      "postingDate": "2025-11-19T16:32:33.758630",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 62755,
+      "title": "Digital Product Analyst (multiple post)",
+      "grade": "Other",
+      "location": "N/A",
+      "postingDate": "2025-11-19T16:32:33.758610",
+      "deadline": "",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 62754,
+      "title": "Strategy Expert for Linguistic Diversity in AI",
+      "grade": "IPSA-10",
+      "location": "Home-based",
+      "postingDate": "2025-11-19T16:32:33.758533",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 62753,
+      "title": "Project Manager (Open to all applicants)",
+      "grade": "NPSA-9",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-19T16:32:33.758457",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 62752,
+      "title": "Procurement Intern (Vietnamese National)",
+      "grade": "Intern",
+      "location": "Ha Noi",
+      "postingDate": "2025-11-19T16:32:33.758381",
+      "deadline": "2025-11-20T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 62750,
+      "title": "Project Assistant - Finance and Admin [3 Positions: Rangamati, Bandarban, Khagrachari] (Open to all applicants)",
+      "grade": "NPSA-5",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-19T16:32:33.758228",
+      "deadline": "2025-11-19T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 62733,
+      "title": "Opérateur Radio (Ouvert à tous les Candidats)",
+      "grade": "G4",
+      "location": "Nouakchott",
+      "postingDate": "2025-11-19T16:32:33.756890",
+      "deadline": "2025-11-20T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 62721,
+      "title": "Security Operations Assistant - UNDSS (4 Positions)",
+      "grade": "NPSA-5",
+      "location": "East Jerusalem",
+      "postingDate": "2025-11-19T16:32:33.755775",
+      "deadline": "2025-11-19T23:59:59",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 62708,
+      "title": "Energy Finance Specialist (Open to all applicants)",
+      "grade": "IPSA-11",
+      "location": "Italy",
+      "postingDate": "2025-11-19T16:32:33.748848",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 62707,
+      "title": "Biodiversity Project Lead and Finance Specialist (Open to all applicants)",
+      "grade": "NPSA-10",
+      "location": "Gambia",
+      "postingDate": "2025-11-19T16:32:33.748807",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 62706,
+      "title": "AgroForestry Officer [Open to all applicants]",
+      "grade": "NPSA-9",
+      "location": "Chisinau",
+      "postingDate": "2025-11-19T16:32:33.748766",
+      "deadline": "2025-11-21T23:59:59",
+      "status": "archived",
+      "category": "digital-technology"
+    }
+  ]
+}

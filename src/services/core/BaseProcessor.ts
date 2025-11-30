@@ -68,6 +68,12 @@ export abstract class BaseProcessor {
     let cutoffDate: Date;
     
     switch (timeRange) {
+      case '4weeks':
+        cutoffDate = subMonths(now, 1); // ~4 weeks
+        break;
+      case '8weeks':
+        cutoffDate = subMonths(now, 2); // ~8 weeks
+        break;
       case '3months':
         cutoffDate = subMonths(now, 3);
         break;

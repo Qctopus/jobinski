@@ -174,66 +174,35 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
   const fieldDiff = metrics.peerData ? metrics.fieldPercentage - metrics.peerData.fieldPct : 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isAgencyView ? (
-              <div className="p-2.5 bg-blue-100 rounded-xl">
-                <Building2 className="h-5 w-5 text-blue-600" />
-              </div>
-            ) : (
-              <div className="p-2.5 bg-emerald-100 rounded-xl">
-                <Globe className="h-5 w-5 text-emerald-600" />
-              </div>
-            )}
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">
-                {isAgencyView ? agency : 'UN System'}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {isAgencyView ? 'Agency Workforce Summary' : 'Market Overview'}
-              </p>
-            </div>
-          </div>
-          {periodLabel && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg">
-              <Calendar className="h-4 w-4" />
-              <span className="text-sm font-medium">{periodLabel}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="p-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Compact Metrics Grid */}
+      <div className="p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Total Positions */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">Positions</span>
+              <Users className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-medium text-gray-500">Positions</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl font-bold text-gray-900">
               {metrics.totalPositions.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-[10px] text-gray-400">
               {metrics.categoryCount} categories
             </div>
           </div>
 
           {/* Programme Countries */}
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <div className="flex items-center gap-2 mb-1">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">Field</span>
+              <MapPin className="h-4 w-4 text-green-500" />
+              <span className="text-xs font-medium text-gray-500">Field</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl font-bold text-gray-900">
               {metrics.fieldPercentage.toFixed(0)}%
             </div>
             {metrics.peerData && (
-              <div className={`text-xs flex items-center gap-1 ${fieldDiff >= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              <div className={`text-[10px] flex items-center gap-1 ${fieldDiff >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
                 {fieldDiff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                 {Math.abs(fieldDiff).toFixed(0)}pp vs peers
               </div>
@@ -241,46 +210,46 @@ const MandateAlignmentSummary: React.FC<MandateAlignmentSummaryProps> = ({
           </div>
 
           {/* HQ + Remote */}
-          <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-100">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <div className="flex items-center gap-2 mb-1">
-              <Building2 className="h-4 w-4 text-purple-600" />
-              <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">HQ</span>
+              <Building2 className="h-4 w-4 text-purple-500" />
+              <span className="text-xs font-medium text-gray-500">HQ</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl font-bold text-gray-900">
               {metrics.hqPercentage.toFixed(0)}%
             </div>
-            <div className="text-xs text-gray-500 flex items-center gap-1">
+            <div className="text-[10px] text-gray-400 flex items-center gap-1">
               <Home className="h-3 w-3" />
               {metrics.homePercentage.toFixed(0)}% remote
             </div>
           </div>
 
           {/* Application Window */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-amber-600" />
-              <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">Window</span>
+              <Clock className="h-4 w-4 text-orange-500" />
+              <span className="text-xs font-medium text-gray-500">Window</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl font-bold text-gray-900">
               {metrics.medianApplicationWindow}d
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-[10px] text-gray-400">
               median posting
             </div>
           </div>
         </div>
 
         {/* Category Distribution */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold text-gray-700">Top Categories</span>
-            <span className="text-xs text-gray-400">
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600">Top Categories</span>
+            <span className="text-[10px] text-gray-400">
               {metrics.topCategories.slice(0, 3).reduce((sum, c) => sum + c.percentage, 0).toFixed(0)}% of total
             </span>
           </div>
           
           {/* Stacked bar with category colors */}
-          <div className="h-10 rounded-xl overflow-hidden flex bg-gray-100 shadow-inner">
+          <div className="h-6 rounded-lg overflow-hidden flex bg-gray-100">
             {metrics.topCategories.slice(0, 5).map((cat, i) => (
               <div 
                 key={cat.id}

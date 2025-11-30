@@ -11,6 +11,8 @@ interface PeriodConfig {
 }
 
 const TIMEFRAME_CONFIGS: Record<string, PeriodConfig> = {
+  '4weeks': { primaryMonths: 1, comparisonMonths: 1, subPeriodType: 'week', subPeriodCount: 4 },
+  '8weeks': { primaryMonths: 2, comparisonMonths: 2, subPeriodType: 'week', subPeriodCount: 4 },
   '3months': { primaryMonths: 3, comparisonMonths: 3, subPeriodType: 'week', subPeriodCount: 4 },
   '6months': { primaryMonths: 6, comparisonMonths: 6, subPeriodType: 'month', subPeriodCount: 6 },
   '1year': { primaryMonths: 12, comparisonMonths: 12, subPeriodType: 'month', subPeriodCount: 6 },
@@ -92,6 +94,25 @@ export const TimeframeProvider: React.FC<TimeframeProviderProps> = ({ children, 
       };
     }
     
+    // Handle week-based periods
+    if (timeRange === '4weeks') {
+      const start = subWeeks(now, 4);
+      return {
+        start,
+        end: now,
+        label: 'Last 4 weeks'
+      };
+    }
+    
+    if (timeRange === '8weeks') {
+      const start = subWeeks(now, 8);
+      return {
+        start,
+        end: now,
+        label: 'Last 8 weeks'
+      };
+    }
+    
     const start = subMonths(now, config.primaryMonths);
     return {
       start,
@@ -104,8 +125,28 @@ export const TimeframeProvider: React.FC<TimeframeProviderProps> = ({ children, 
   const comparisonPeriod = useMemo((): TimePeriod | null => {
     if (timeRange === 'all') return null;
     
-    const config = TIMEFRAME_CONFIGS[timeRange];
     const comparisonEnd = primaryPeriod.start;
+    
+    // Handle week-based periods
+    if (timeRange === '4weeks') {
+      const comparisonStart = subWeeks(comparisonEnd, 4);
+      return {
+        start: comparisonStart,
+        end: comparisonEnd,
+        label: 'Previous 4 weeks'
+      };
+    }
+    
+    if (timeRange === '8weeks') {
+      const comparisonStart = subWeeks(comparisonEnd, 8);
+      return {
+        start: comparisonStart,
+        end: comparisonEnd,
+        label: 'Previous 8 weeks'
+      };
+    }
+    
+    const config = TIMEFRAME_CONFIGS[timeRange];
     const comparisonStart = subMonths(comparisonEnd, config.comparisonMonths);
     
     return {
@@ -296,4 +337,8 @@ export const useMetricWithTrend = (
   const { getMetricComparison } = useTimeframe();
   return useMemo(() => getMetricComparison(data, metricFn), [data, metricFn, getMetricComparison]);
 };
+
+
+
+
 

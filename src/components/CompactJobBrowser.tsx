@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Eye, CheckCircle } from 'lucide-react';
+import { Search, Eye, CheckCircle, ChevronDown, ExternalLink } from 'lucide-react';
 import { ProcessedJobData } from '../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { JobFeedback } from '../types/feedback';
@@ -245,115 +245,133 @@ export const CompactJobBrowser: React.FC<CompactJobBrowserProps> = ({ data }) =>
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-3 mb-4">
-          <Eye className="h-6 w-6 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Job Classification Review</h1>
+    <div className="space-y-4">
+      {/* Header - Matching Intelligence tab style */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Eye className="h-4 w-4 text-blue-600" />
+          <div>
+            <span className="text-sm font-semibold text-gray-800">Job Browser</span>
+            <span className="text-xs text-gray-500 ml-2">Review and reclassify job postings</span>
+          </div>
         </div>
-        <p className="text-gray-600">
-          Review job classifications quickly. <strong>Click category badges</strong> or job titles to reclassify. Low confidence jobs appear first.
-        </p>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500">{filteredJobs.length.toLocaleString()} jobs</span>
+        </div>
+      </div>
+      
+      {/* Context line */}
+      <div className="text-xs text-gray-500 px-1">
+        Click category badges or job titles to reclassify. Low confidence jobs appear first.
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
             <input
               type="text"
               placeholder="Search jobs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Category Filter */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Categories</option>
-            {JOB_CLASSIFICATION_DICTIONARY.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Categories</option>
+              {JOB_CLASSIFICATION_DICTIONARY.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+          </div>
 
           {/* Agency Filter */}
-          <select
-            value={selectedAgency}
-            onChange={(e) => setSelectedAgency(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Agencies</option>
-            {agencies.map(agency => (
-              <option key={agency} value={agency}>
-                {agency}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedAgency}
+              onChange={(e) => setSelectedAgency(e.target.value)}
+              className="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Agencies</option>
+              {agencies.map(agency => (
+                <option key={agency} value={agency}>
+                  {agency}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+          </div>
 
           {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="confidence">Sort by Confidence (Low First)</option>
-            <option value="date">Sort by Date</option>
-            <option value="title">Sort by Title</option>
-            <option value="grade">Sort by Grade</option>
-          </select>
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="confidence">Confidence (Low First)</option>
+              <option value="date">Date</option>
+              <option value="title">Title</option>
+              <option value="grade">Grade</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+          </div>
         </div>
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-gray-600">
-          <span className="font-medium">{data.length} total jobs</span>
-          <span className="text-gray-500 ml-2">
-            ({data.filter(j => j.status === 'active' || (!j.archived && j.days_remaining > 0)).length} active,{' '}
-            {data.filter(j => j.status === 'archived' || j.archived || j.days_remaining <= 0).length} archived)
+      <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+        <div>
+          <span className="font-medium text-gray-700">{data.length} total</span>
+          <span className="ml-2">
+            ({data.filter(j => j.status === 'active' || (!j.archived && j.days_remaining > 0)).length} active)
           </span>
           {filteredJobs.length < data.length && (
-            <span className="ml-3 text-sm">
-              • Showing {startIndex + 1}-{Math.min(startIndex + jobsPerPage, filteredJobs.length)} of {filteredJobs.length} filtered
+            <span className="ml-2">
+              • Showing {startIndex + 1}-{Math.min(startIndex + jobsPerPage, filteredJobs.length)} of {filteredJobs.length}
             </span>
           )}
         </div>
-        <div className="text-sm text-gray-500">
-          Low confidence jobs appear first for review
+        <div>
+          Page {currentPage} of {totalPages || 1}
         </div>
       </div>
 
       {/* Job Table */}
       {paginatedJobs.length === 0 ? (
-        <div className="text-center py-12">
-          <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
-          <p className="text-gray-600">Try adjusting your search criteria</p>
+        <div className="text-center py-8 text-gray-500">
+          <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No jobs found</p>
+          <p className="text-xs text-gray-400">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Job Title</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Category</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Confidence</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Agency</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Grade</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-900">Actions</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Job Title</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Category</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Confidence</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Agency</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600">Grade</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {paginatedJobs.map((job, index) => {
                 const category = JOB_CLASSIFICATION_DICTIONARY.find(cat => cat.id === job.primary_category);
                 const confidenceScore = job.classification_confidence ? Math.max(0, Math.min(100, Math.round(job.classification_confidence))) : 0;
@@ -362,84 +380,106 @@ export const CompactJobBrowser: React.FC<CompactJobBrowserProps> = ({ data }) =>
                 return (
                   <tr
                     key={job.id || index}
-                    className={`hover:bg-gray-50 ${isUserCorrected ? 'bg-green-50 border-green-200' : ''}`}
+                    className={`hover:bg-gray-50 ${isUserCorrected ? 'bg-green-50' : ''} ${!job.is_active ? 'opacity-60' : ''}`}
                   >
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelectedJob(job)}
-                        className="text-left hover:text-blue-600 font-medium text-gray-900"
-                      >
-                        {job.title}
-                      </button>
-                      {isUserCorrected && (
-                        <span className="ml-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                          Corrected
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setSelectedJob(job)}
+                          className={`text-left text-xs hover:text-blue-600 font-medium truncate max-w-xs ${job.is_active ? 'text-gray-800' : 'text-gray-500'}`}
+                        >
+                          {job.title}
+                        </button>
+                        {isUserCorrected && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded flex-shrink-0">
+                            ✓
+                          </span>
+                        )}
+                        {job.url && (
+                          <a
+                            href={job.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 flex-shrink-0"
+                            title="View Job Ad"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink size={10} />
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      {job.is_active ? (
+                        job.days_remaining <= 3 ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] rounded font-medium">
+                            {job.days_remaining}d left
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-medium">
+                            Open
+                          </span>
+                        )
+                      ) : (
+                        <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded font-medium">
+                          Closed
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <button
                         onClick={() => setSelectedJob(job)}
-                        className="inline-block px-3 py-1 rounded-full text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer"
+                        className="inline-block px-2 py-0.5 rounded text-[10px] font-medium hover:opacity-80 transition-all cursor-pointer"
                         style={{
                           backgroundColor: category?.color + '20',
                           color: category?.color || '#6B7280'
                         }}
-                        title="Click to review and reclassify"
+                        title="Click to reclassify"
                       >
                         {category?.name || 'Unknown'}
-                        <span className="ml-1 text-xs opacity-70">✏️</span>
                       </button>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-sm px-2 py-1 rounded-full ${getConfidenceColor(confidenceScore)}`}>
+                    <td className="px-3 py-2">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${getConfidenceColor(confidenceScore)}`}>
                         {confidenceScore}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-3 py-2 text-[10px] text-gray-500">
                       {job.short_agency}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-3 py-2 text-[10px] text-gray-500">
                       {job.up_grade}
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center space-x-2">
+                    <td className="px-3 py-2 text-center">
+                      <div className="flex items-center justify-center gap-1">
                         {/* Confirm Correct Button */}
                         {!isUserCorrected && !confirmedJobs.has(job.id?.toString() || 'unknown') && !temporaryConfirmations.has(job.id?.toString() || 'unknown') && (
                           <button
                             onClick={() => handleConfirmCorrect(job.id?.toString() || 'unknown')}
-                            className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
-                            title="Mark this classification as correct"
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            title="Confirm correct"
                           >
-                            <CheckCircle size={12} className="mr-1" />
-                            Is this correct?
+                            <CheckCircle size={12} />
                           </button>
                         )}
 
                         {/* Temporary Confirmation Feedback */}
                         {temporaryConfirmations.has(job.id?.toString() || 'unknown') && (
-                          <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-800 bg-green-200 rounded-full animate-pulse">
-                            <CheckCircle size={12} className="mr-1" />
-                            ✓ Confirmed Correct
-                          </span>
+                          <span className="text-[10px] text-green-600">✓</span>
                         )}
 
                         {/* Final Confirmed Status */}
                         {confirmedJobs.has(job.id?.toString() || 'unknown') && (
-                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-full">
-                            <CheckCircle size={12} className="mr-1" />
-                            Verified
-                          </span>
+                          <span className="text-[10px] text-gray-400">✓</span>
                         )}
 
                         {/* View Details Button */}
                         <button
                           onClick={() => setSelectedJob(job)}
-                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
-                          title="View details and edit category"
+                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          title="View/Edit"
                         >
-                          <Eye size={12} className="mr-1" />
-                          {isUserCorrected ? 'Edited' : 'Edit'}
+                          <Eye size={12} />
                         </button>
                       </div>
                     </td>
@@ -451,94 +491,71 @@ export const CompactJobBrowser: React.FC<CompactJobBrowserProps> = ({ data }) =>
         </div>
       )}
 
-      {/* Enhanced Pagination */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0 bg-white border border-gray-200 px-4 py-3 rounded-lg">
-          {/* Results info */}
-          <div className="flex items-center text-sm text-gray-700">
-            <span>
-              Page <span className="font-medium">{currentPage}</span> of{' '}
-              <span className="font-medium">{totalPages}</span>
-              <span className="hidden sm:inline">
-                {' '}({filteredJobs.length} total jobs)
-              </span>
-            </span>
-          </div>
+        <div className="flex items-center justify-center gap-1 py-2">
+          {/* Previous button */}
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            ←
+          </button>
 
-          {/* Navigation */}
-          <div className="flex items-center space-x-1">
-            {/* Previous button */}
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-            >
-              Previous
-            </button>
+          {/* Page numbers */}
+          {(() => {
+            const pages = [];
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
 
-            {/* Page numbers with proper logic to avoid duplicates */}
-            {(() => {
-              const pages = [];
-              let startPage = Math.max(1, currentPage - 2);
-              let endPage = Math.min(totalPages, currentPage + 2);
-
-              // Adjust range to always show 5 pages when possible, without duplicates
-              if (endPage - startPage < 4) {
-                if (startPage === 1) {
-                  endPage = Math.min(totalPages, startPage + 4);
-                } else if (endPage === totalPages) {
-                  startPage = Math.max(1, endPage - 4);
-                }
+            if (endPage - startPage < 4) {
+              if (startPage === 1) {
+                endPage = Math.min(totalPages, startPage + 4);
+              } else if (endPage === totalPages) {
+                startPage = Math.max(1, endPage - 4);
               }
+            }
 
-              // Add first page and ellipsis if needed
-              if (startPage > 1) {
-                pages.push(
-                  <button
-                    key={1}
-                    onClick={() => setCurrentPage(1)}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    1
-                  </button>
-                );
-
-                if (startPage > 2) {
-                  pages.push(
-                    <span key="ellipsis-start" className="px-2 py-2 text-sm text-gray-500">...</span>
-                  );
-                }
+            if (startPage > 1) {
+              pages.push(
+                <button
+                  key={1}
+                  onClick={() => setCurrentPage(1)}
+                  className="px-2 py-1 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50"
+                >
+                  1
+                </button>
+              );
+              if (startPage > 2) {
+                pages.push(<span key="ellipsis-start" className="px-1 text-[10px] text-gray-400">...</span>);
               }
+            }
 
-              // Add the main page range
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i)}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === i
-                      ? 'bg-blue-600 text-white border border-blue-600'
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                      }`}
+            for (let i = startPage; i <= endPage; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`px-2 py-1 text-[10px] font-medium rounded ${currentPage === i
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-500 bg-white border border-gray-200 hover:bg-gray-50'
+                    }`}
                   >
                     {i}
                   </button>
                 );
               }
 
-              // Add ellipsis and last page if needed
               if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
-                  pages.push(
-                    <span key="ellipsis-end" className="px-2 py-2 text-sm text-gray-500">...</span>
-                  );
+                  pages.push(<span key="ellipsis-end" className="px-1 text-[10px] text-gray-400">...</span>);
                 }
-
                 pages.push(
                   <button
                     key={totalPages}
                     onClick={() => setCurrentPage(totalPages)}
-                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    className="px-2 py-1 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded hover:bg-gray-50"
                   >
                     {totalPages}
                   </button>
@@ -548,33 +565,14 @@ export const CompactJobBrowser: React.FC<CompactJobBrowserProps> = ({ data }) =>
               return pages;
             })()}
 
-            {/* Next button */}
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-            >
-              Next
-            </button>
-          </div>
-
-          {/* Quick jump */}
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="text-gray-500">Go to:</span>
-            <input
-              type="number"
-              min="1"
-              max={totalPages}
-              value={currentPage}
-              onChange={(e) => {
-                const page = parseInt(e.target.value);
-                if (page >= 1 && page <= totalPages) {
-                  setCurrentPage(page);
-                }
-              }}
-              className="w-16 px-2 py-1 text-center border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          {/* Next button */}
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          >
+            →
+          </button>
         </div>
       )}
 

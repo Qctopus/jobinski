@@ -10,6 +10,7 @@ import { testConnection, closeDatabase } from './config/database';
 import { initializeDatabase, closeDb } from './config/sqlite';
 import readonlyJobsRouter from './routes/readonly-jobs';
 import dashboardRouter from './routes/dashboard';
+import reportsRouter from './routes/reports';
 import { ApiResponse } from './types';
 
 // Load environment variables
@@ -82,6 +83,7 @@ try {
 // API routes
 app.use(`${API_PREFIX}/jobs`, readonlyJobsRouter);
 app.use(`${API_PREFIX}/dashboard`, dashboardRouter);
+app.use(`${API_PREFIX}/reports`, reportsRouter);
 
 // API Health check endpoint
 app.get(`${API_PREFIX}/health`, (req, res) => {
@@ -114,6 +116,13 @@ app.get('/', (req, res) => {
         jobs: `${API_PREFIX}/dashboard/jobs`,
         filters: `${API_PREFIX}/dashboard/filters`,
         syncStatus: `${API_PREFIX}/dashboard/sync-status`
+      },
+      reports: {
+        generate: `${API_PREFIX}/reports/generate`,
+        list: `${API_PREFIX}/reports/list`,
+        agencies: `${API_PREFIX}/reports/agencies`,
+        preview: `${API_PREFIX}/reports/preview/:agency`,
+        download: `${API_PREFIX}/reports/download/:reportId`
       }
     },
     timestamp: new Date().toISOString()

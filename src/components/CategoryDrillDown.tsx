@@ -15,13 +15,12 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  BarChart3,
   HelpCircle,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import CategoryAnalyticsView from './CategoryAnalyticsView';
+// CategoryAnalyticsView removed - functionality not working
 
 interface CategoryDrillDownProps {
   isOpen: boolean;
@@ -52,7 +51,6 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
   const [selectedAgencies, setSelectedAgencies] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Get category information
   const category = useMemo(() => {
@@ -421,14 +419,6 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
               </button>
 
               <button
-                onClick={() => setShowAnalytics(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Analytics
-              </button>
-
-              <button
                 onClick={exportJobs}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -573,10 +563,28 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
             {filteredJobs.length > 0 ? (
               <div className="divide-y divide-gray-200">
                 {filteredJobs.map((job, index) => (
-                  <div key={job.id || index} className="px-6 py-4 hover:bg-gray-50 grid grid-cols-12 gap-4 items-start">
-                    {/* Job Title */}
+                  <div key={job.id || index} className={`px-6 py-4 hover:bg-gray-50 grid grid-cols-12 gap-4 items-start ${!job.is_active ? 'opacity-60' : ''}`}>
+                    {/* Job Title with Status */}
                     <div className="col-span-4">
-                      <h3 className="font-medium text-gray-900 leading-tight mb-1">{job.title}</h3>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className={`font-medium leading-tight ${job.is_active ? 'text-gray-900' : 'text-gray-500'}`}>{job.title}</h3>
+                        {/* Status Badge */}
+                        {job.is_active ? (
+                          job.days_remaining <= 3 ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-medium flex-shrink-0">
+                              {job.days_remaining}d left
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded font-medium flex-shrink-0">
+                              Open
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-500 text-xs rounded font-medium flex-shrink-0">
+                            Closed
+                          </span>
+                        )}
+                      </div>
                       {job.job_labels && (
                         <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                           {job.job_labels}
@@ -589,7 +597,7 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center gap-1"
                         >
-                          View Details <ExternalLink className="h-3 w-3" />
+                          View Job Ad <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
@@ -719,18 +727,6 @@ const CategoryDrillDown: React.FC<CategoryDrillDownProps> = ({
         </div>
       </div>
 
-      {/* Category Analytics Modal */}
-      {showAnalytics && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
-          <div className="w-full max-w-7xl h-full max-h-[95vh] overflow-hidden">
-            <CategoryAnalyticsView
-              category={category.name}
-              data={data}
-              onClose={() => setShowAnalytics(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

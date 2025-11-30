@@ -5,7 +5,28 @@ import {
   ArrowUpRight, ArrowDownRight, Minus, ChevronDown, Zap, BarChart3
 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions, DashboardMetrics } from '../../types';
-import { parseISO, subWeeks, subMonths, format } from 'date-fns';
+import { parseISO, subWeeks, subMonths, format, eachWeekOfInterval, eachMonthOfInterval, endOfWeek, endOfMonth } from 'date-fns';
+import { JOB_CLASSIFICATION_DICTIONARY } from '../../dictionary';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { getAgencyLogo } from '../../utils/agencyLogos';
+import { useTimeframe } from '../../contexts/TimeframeContext';
+
+// Helper to get beautiful category name and color from dictionary
+const getCategoryInfo = (categoryIdOrName: string) => {
+  const cat = JOB_CLASSIFICATION_DICTIONARY.find(
+    c => c.id === categoryIdOrName || c.name === categoryIdOrName
+  );
+  if (cat) {
+    return { name: cat.name, color: cat.color, id: cat.id };
+  }
+  // Fallback: convert slug to title case
+  const fallbackName = categoryIdOrName
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace(' And ', ' & ');
+  return { name: fallbackName, color: '#6B7280', id: categoryIdOrName };
+};
 
 interface MarketIntelligenceProps {
   data: ProcessedJobData[];
@@ -17,7 +38,7 @@ interface MarketIntelligenceProps {
   selectedAgencyName: string;
 }
 
-type ComparisonPeriod = '4weeks' | '8weeks' | '3months';
+// ComparisonPeriod type removed - now using global timeframe context
 
 interface PeriodData {
   current: ProcessedJobData[];
@@ -55,6 +76,52 @@ const TrendIndicator: React.FC<{
       {showIcon && <Icon className={iconSize} />}
       {isPositive && !isNeutral ? '+' : ''}{value.toFixed(0)}{suffix}
     </span>
+  );
+};
+
+// Mini sparkline for inline trend visualization
+const MiniSparkline: React.FC<{
+  data: { period: string; value: number }[];
+  color?: 'blue' | 'green' | 'amber' | 'auto';
+  width?: number;
+  height?: number;
+}> = ({ data, color = 'auto', width = 64, height = 28 }) => {
+  if (data.length === 0) return null;
+  
+  const values = data.map(d => d.value);
+  const max = Math.max(...values, 1);
+  const min = Math.min(...values, 0);
+  const range = max - min || 1;
+  
+  const trend = values[values.length - 1] >= values[0];
+  const strokeColor = color === 'auto' 
+    ? (trend ? '#22c55e' : '#f59e0b') 
+    : color === 'blue' ? '#3b82f6' 
+    : color === 'green' ? '#22c55e' 
+    : '#f59e0b';
+  
+  const points = values.map((v, i) => {
+    const x = (i / Math.max(values.length - 1, 1)) * (width - 4) + 2;
+    const y = height - 4 - ((v - min) / range) * (height - 8);
+    return { x, y };
+  });
+  
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  
+  return (
+    <svg width={width} height={height} className="flex-shrink-0">
+      <path
+        d={pathD}
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={strokeColor} />
+      ))}
+    </svg>
   );
 };
 
@@ -170,32 +237,15 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
   isAgencyView,
   selectedAgencyName
 }) => {
-  const [comparisonPeriod, setComparisonPeriod] = useState<ComparisonPeriod>('4weeks');
+  // Use global timeframe context instead of local state
+  const { primaryPeriod, comparisonPeriod: contextComparisonPeriod, filterToPeriod } = useTimeframe();
   
-  // Calculate period boundaries based on selected comparison
+  // Calculate period data using global timeframe
   const periodData = useMemo((): PeriodData => {
-    const now = new Date();
-    let currentStart: Date;
-    let previousStart: Date;
-    let previousEnd: Date;
-    
-    switch (comparisonPeriod) {
-      case '4weeks':
-        currentStart = subWeeks(now, 4);
-        previousEnd = currentStart;
-        previousStart = subWeeks(previousEnd, 4);
-        break;
-      case '8weeks':
-        currentStart = subWeeks(now, 8);
-        previousEnd = currentStart;
-        previousStart = subWeeks(previousEnd, 8);
-        break;
-      case '3months':
-        currentStart = subMonths(now, 3);
-        previousEnd = currentStart;
-        previousStart = subMonths(previousEnd, 3);
-        break;
-    }
+    const currentStart = primaryPeriod.start;
+    const currentEnd = primaryPeriod.end;
+    const previousStart = contextComparisonPeriod?.start || currentStart;
+    const previousEnd = contextComparisonPeriod?.end || currentStart;
     
     const filterByPeriod = (jobs: ProcessedJobData[], start: Date, end: Date) => {
       return jobs.filter(job => {
@@ -207,43 +257,27 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
     };
     
     return {
-      current: filterByPeriod(data, currentStart, now),
-      previous: filterByPeriod(data, previousStart, previousEnd),
-      currentLabel: format(currentStart, 'MMM d') + ' - ' + format(now, 'MMM d'),
-      previousLabel: format(previousStart, 'MMM d') + ' - ' + format(previousEnd, 'MMM d'),
+      current: filterByPeriod(data, currentStart, currentEnd),
+      previous: contextComparisonPeriod ? filterByPeriod(data, previousStart, previousEnd) : [],
+      currentLabel: format(currentStart, 'MMM d') + ' - ' + format(currentEnd, 'MMM d'),
+      previousLabel: contextComparisonPeriod 
+        ? format(previousStart, 'MMM d') + ' - ' + format(previousEnd, 'MMM d')
+        : 'No comparison',
       currentStart,
-      currentEnd: now,
+      currentEnd,
       previousStart,
       previousEnd
     };
-  }, [comparisonPeriod, data]);
+  }, [primaryPeriod, contextComparisonPeriod, data]);
   
   // Agency-specific period data
   const agencyPeriodData = useMemo(() => {
     if (!isAgencyView) return null;
     
-    const now = new Date();
-    let currentStart: Date;
-    let previousStart: Date;
-    let previousEnd: Date;
-    
-    switch (comparisonPeriod) {
-      case '4weeks':
-        currentStart = subWeeks(now, 4);
-        previousEnd = currentStart;
-        previousStart = subWeeks(previousEnd, 4);
-        break;
-      case '8weeks':
-        currentStart = subWeeks(now, 8);
-        previousEnd = currentStart;
-        previousStart = subWeeks(previousEnd, 8);
-        break;
-      case '3months':
-        currentStart = subMonths(now, 3);
-        previousEnd = currentStart;
-        previousStart = subMonths(previousEnd, 3);
-        break;
-    }
+    const currentStart = primaryPeriod.start;
+    const currentEnd = primaryPeriod.end;
+    const previousStart = contextComparisonPeriod?.start || currentStart;
+    const previousEnd = contextComparisonPeriod?.end || currentStart;
     
     const filterByPeriod = (jobs: ProcessedJobData[], start: Date, end: Date) => {
       return jobs.filter(job => {
@@ -255,10 +289,17 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
     };
     
     return {
-      current: filterByPeriod(filteredData, currentStart, now),
-      previous: filterByPeriod(filteredData, previousStart, previousEnd)
+      current: filterByPeriod(filteredData, currentStart, currentEnd),
+      previous: contextComparisonPeriod ? filterByPeriod(filteredData, previousStart, previousEnd) : []
     };
-  }, [comparisonPeriod, filteredData, isAgencyView]);
+  }, [primaryPeriod, contextComparisonPeriod, filteredData, isAgencyView]);
+  
+  // Determine if using weekly or monthly granularity for charts
+  const useWeeklyGranularity = useMemo(() => {
+    // Use weekly for periods <= 3 months
+    const daysDiff = Math.ceil((primaryPeriod.end.getTime() - primaryPeriod.start.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff <= 100; // ~3 months
+  }, [primaryPeriod]);
 
   // ============================================================================
   // AGENCY-SPECIFIC CALCULATIONS
@@ -642,9 +683,10 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
     // Category alignment
     if (categoryComparison.overIndexed.length > 0) {
       const top = categoryComparison.overIndexed[0];
+      const topCatInfo = getCategoryInfo(top.category);
       alerts.push({
         type: 'info',
-        message: `Strong focus on ${top.category} (+${top.diff.toFixed(0)}pp vs market)`
+        message: `Strong focus on ${topCatInfo.name} (+${top.diff.toFixed(0)}pp vs market)`
       });
     }
     
@@ -769,11 +811,87 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
       return (classified.filter(j => { const g = (j.up_grade || '').toUpperCase(); return /^(P|D|G|NO|L|USG|ASG)/.test(g) && !g.includes('CONSULT'); }).length / classified.length) * 100;
     };
     
+    // Calculate location breakdown
+    const getLocationBreakdown = (jobs: ProcessedJobData[]) => {
+      if (jobs.length === 0) return { field: 0, regional: 0, hq: 0, remote: 0 };
+      const counts = { field: 0, regional: 0, hq: 0, remote: 0 };
+      jobs.forEach(j => {
+        const locType = (j.location_type || '').toLowerCase();
+        const duty = (j.duty_country || j.duty_station || '').toLowerCase();
+        if (duty.includes('home-based') || duty.includes('remote') || locType.includes('remote')) {
+          counts.remote++;
+        } else if (locType.includes('field') || locType.includes('country')) {
+          counts.field++;
+        } else if (locType.includes('regional')) {
+          counts.regional++;
+        } else {
+          counts.hq++;
+        }
+      });
+      const total = jobs.length;
+      return { 
+        field: (counts.field / total) * 100, 
+        regional: (counts.regional / total) * 100, 
+        hq: (counts.hq / total) * 100, 
+        remote: (counts.remote / total) * 100 
+      };
+    };
+
     return {
       seniority: { current: getSeniorityMix(current), previous: getSeniorityMix(previous) },
       remoteRate: { current: getRemoteRate(current), previous: getRemoteRate(previous) },
-      staffRate: { current: getStaffRate(current), previous: getStaffRate(previous) }
+      staffRate: { current: getStaffRate(current), previous: getStaffRate(previous) },
+      locationBreakdown: { current: getLocationBreakdown(current), previous: getLocationBreakdown(previous) }
     };
+  }, [periodData]);
+  
+  // Calculate mini trend data for staff rate and remote rate over time periods
+  const workforceTrendData = useMemo(() => {
+    const { currentStart, currentEnd } = periodData;
+    
+    // Divide the current period into 4 sub-periods for mini sparkline
+    const totalDays = Math.ceil((currentEnd.getTime() - currentStart.getTime()) / (1000 * 60 * 60 * 24));
+    const periodLength = Math.floor(totalDays / 4);
+    
+    const subPeriods: { start: Date; end: Date; label: string }[] = [];
+    for (let i = 0; i < 4; i++) {
+      const start = new Date(currentStart.getTime() + i * periodLength * 24 * 60 * 60 * 1000);
+      const end = i === 3 ? currentEnd : new Date(currentStart.getTime() + (i + 1) * periodLength * 24 * 60 * 60 * 1000);
+      subPeriods.push({ start, end, label: format(start, 'MMM d') });
+    }
+    
+    const getStaffRate = (jobs: ProcessedJobData[]) => {
+      const classified = jobs.filter(j => j.up_grade);
+      if (classified.length === 0) return 0;
+      return (classified.filter(j => { const g = (j.up_grade || '').toUpperCase(); return /^(P|D|G|NO|L|USG|ASG)/.test(g) && !g.includes('CONSULT'); }).length / classified.length) * 100;
+    };
+    
+    const getRemoteRate = (jobs: ProcessedJobData[]) => {
+      if (jobs.length === 0) return 0;
+      const remote = jobs.filter(j => {
+        const duty = (j.duty_country || j.duty_station || '').toLowerCase();
+        const locType = (j.location_type || '').toLowerCase();
+        return duty.includes('home-based') || duty.includes('remote') || locType.includes('remote');
+      });
+      return (remote.length / jobs.length) * 100;
+    };
+    
+    const staffTrend: { period: string; value: number }[] = [];
+    const remoteTrend: { period: string; value: number }[] = [];
+    
+    subPeriods.forEach(({ start, end, label }) => {
+      const periodJobs = periodData.current.filter(job => {
+        try {
+          const postingDate = parseISO(job.posting_date);
+          return postingDate >= start && postingDate <= end;
+        } catch { return false; }
+      });
+      
+      staffTrend.push({ period: label, value: getStaffRate(periodJobs) });
+      remoteTrend.push({ period: label, value: getRemoteRate(periodJobs) });
+    });
+    
+    return { staffTrend, remoteTrend };
   }, [periodData]);
   
   const competitiveDynamics = useMemo(() => {
@@ -835,11 +953,142 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
     return issues.slice(0, 4);
   }, [marketPulse, categoryShifts, competitiveDynamics]);
   
-  const periodOptions: { value: ComparisonPeriod; label: string }[] = [
-    { value: '4weeks', label: '4 weeks' },
-    { value: '8weeks', label: '8 weeks' },
-    { value: '3months', label: '3 months' }
+  // Period options removed - now using global time filter from Dashboard
+
+  // State for agency selection in chart
+  const [selectedAgenciesForChart, setSelectedAgenciesForChart] = useState<string[]>([]);
+  const [showAgencySelector, setShowAgencySelector] = useState(false);
+
+  // Get top agencies for chart display
+  const topAgencies = useMemo(() => {
+    const agencyCounts = new Map<string, number>();
+    periodData.current.forEach(job => {
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      agencyCounts.set(agency, (agencyCounts.get(agency) || 0) + 1);
+    });
+    return Array.from(agencyCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name]) => name);
+  }, [periodData.current]);
+
+  // Initialize selected agencies with top 5
+  React.useEffect(() => {
+    if (selectedAgenciesForChart.length === 0 && topAgencies.length > 0) {
+      setSelectedAgenciesForChart(topAgencies.slice(0, 5));
+    }
+  }, [topAgencies]);
+
+  // Predefined colors for agencies
+  const agencyColors = [
+    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+    '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
   ];
+
+  // Hiring volume over time data with agency breakdown
+  const hiringVolumeOverTime = useMemo(() => {
+    const { currentStart, currentEnd } = periodData;
+    const useWeekly = useWeeklyGranularity;
+    
+    // Determine agencies to show
+    const agenciesToShow = isAgencyView 
+      ? [selectedAgencyName] 
+      : selectedAgenciesForChart.length > 0 
+        ? selectedAgenciesForChart 
+        : topAgencies.slice(0, 5);
+    
+    if (useWeekly) {
+      const weeks = eachWeekOfInterval({ start: currentStart, end: currentEnd }, { weekStartsOn: 1 });
+      
+      return weeks.map(weekStart => {
+        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+        const jobsInWeek = periodData.current.filter(job => {
+          try {
+            const postingDate = parseISO(job.posting_date);
+            return postingDate >= weekStart && postingDate <= weekEnd;
+          } catch { return false; }
+        });
+        
+        const dataPoint: any = {
+          period: format(weekStart, 'MMM d'),
+          total: jobsInWeek.length,
+          date: weekStart
+        };
+        
+        // Add per-agency counts
+        agenciesToShow.forEach(agency => {
+          dataPoint[agency] = jobsInWeek.filter(j => 
+            (j.short_agency || j.long_agency) === agency
+          ).length;
+        });
+        
+        // Calculate "Others" if in market view
+        if (!isAgencyView) {
+          const selectedTotal = agenciesToShow.reduce((sum, agency) => sum + (dataPoint[agency] || 0), 0);
+          dataPoint['Others'] = jobsInWeek.length - selectedTotal;
+        }
+        
+        return dataPoint;
+      });
+    } else {
+      const months = eachMonthOfInterval({ start: currentStart, end: currentEnd });
+      
+      return months.map(monthStart => {
+        const monthEnd = endOfMonth(monthStart);
+        const jobsInMonth = periodData.current.filter(job => {
+          try {
+            const postingDate = parseISO(job.posting_date);
+            return postingDate >= monthStart && postingDate <= monthEnd;
+          } catch { return false; }
+        });
+        
+        const dataPoint: any = {
+          period: format(monthStart, 'MMM'),
+          total: jobsInMonth.length,
+          date: monthStart
+        };
+        
+        // Add per-agency counts
+        agenciesToShow.forEach(agency => {
+          dataPoint[agency] = jobsInMonth.filter(j => 
+            (j.short_agency || j.long_agency) === agency
+          ).length;
+        });
+        
+        // Calculate "Others" if in market view
+        if (!isAgencyView) {
+          const selectedTotal = agenciesToShow.reduce((sum, agency) => sum + (dataPoint[agency] || 0), 0);
+          dataPoint['Others'] = jobsInMonth.length - selectedTotal;
+        }
+        
+        return dataPoint;
+      });
+    }
+  }, [periodData, useWeeklyGranularity, selectedAgenciesForChart, topAgencies, isAgencyView, selectedAgencyName]);
+
+  // Get all unique agencies for selection
+  const allAgencies = useMemo(() => {
+    const agencyCounts = new Map<string, number>();
+    periodData.current.forEach(job => {
+      const agency = job.short_agency || job.long_agency || 'Unknown';
+      agencyCounts.set(agency, (agencyCounts.get(agency) || 0) + 1);
+    });
+    return Array.from(agencyCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }));
+  }, [periodData.current]);
+
+  // Toggle agency selection
+  const toggleAgencySelection = (agency: string) => {
+    setSelectedAgenciesForChart(prev => {
+      if (prev.includes(agency)) {
+        return prev.filter(a => a !== agency);
+      } else if (prev.length < 10) {
+        return [...prev, agency];
+      }
+      return prev;
+    });
+  };
 
   // ============================================================================
   // RENDER: AGENCY VIEW
@@ -848,49 +1097,104 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
     return (
       <div className="space-y-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 px-4 py-3">
+        <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              {getAgencyLogo(selectedAgencyName) ? (
+                <img 
+                  src={getAgencyLogo(selectedAgencyName)!} 
+                  alt={selectedAgencyName} 
+                  className="h-5 w-5 object-contain"
+                />
+              ) : (
+                <BarChart3 className="h-4 w-4 text-blue-600" />
+              )}
               <div>
                 <span className="text-sm font-semibold text-gray-800">{selectedAgencyName} Intelligence</span>
-                <span className="text-xs text-gray-500 ml-2">How you compare to the UN talent market</span>
+                <span className="text-xs text-gray-500 ml-2">vs UN talent market</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">Compare:</span>
-              <div className="relative inline-flex">
-                <select
-                  value={comparisonPeriod}
-                  onChange={(e) => setComparisonPeriod(e.target.value as ComparisonPeriod)}
-                  className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1 pr-8 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  {periodOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label} vs prior {opt.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+          </div>
+        </div>
+        
+        {/* Period Context - now controlled by global filter */}
+        <div className="text-xs text-gray-500 flex items-center gap-4 px-1">
+          <span className="text-blue-600 font-medium">{agencyPeriodData?.current.length.toLocaleString()} {selectedAgencyName} jobs</span>
+          <span className="text-gray-400">of {periodData.current.length.toLocaleString()} market total</span>
+          {contextComparisonPeriod && (
+            <>
+              <span>•</span>
+              <span><span className="font-medium text-gray-500">Trends compare to:</span> {periodData.previousLabel}</span>
+            </>
+          )}
+        </div>
+
+        {/* AGENCY HIRING VOLUME OVER TIME */}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+            <span className="text-sm font-semibold text-gray-800">{selectedAgencyName} Hiring Volume</span>
+            <span className="text-[10px] text-gray-400 ml-auto">{periodData.currentLabel}</span>
+          </div>
+          
+          <div className="p-4">
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={hiringVolumeOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorAgency" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                  <XAxis 
+                    dataKey="period" 
+                    tick={{ fontSize: 10, fill: '#6B7280' }}
+                    axisLine={{ stroke: '#E5E7EB' }}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 10, fill: '#6B7280' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={35}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '12px'
+                    }}
+                    formatter={(value: number) => [`${value} jobs`, selectedAgencyName]}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey={selectedAgencyName} 
+                    stroke="#3B82F6" 
+                    strokeWidth={2}
+                    fill="url(#colorAgency)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 flex items-center justify-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0.5 bg-blue-500 rounded"></div>
+                <span>{selectedAgencyName} postings per {useWeeklyGranularity ? 'week' : 'month'}</span>
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Period Context */}
-        <div className="text-xs text-gray-500 flex items-center gap-4 px-1">
-          <span><span className="font-medium text-gray-700">Current:</span> {periodData.currentLabel}</span>
-          <span>•</span>
-          <span><span className="font-medium text-gray-700">Previous:</span> {periodData.previousLabel}</span>
-          <span>•</span>
-          <span className="text-blue-600 font-medium">{agencyPeriodData?.current.length.toLocaleString()} {selectedAgencyName} jobs</span>
-          <span className="text-gray-400">of {periodData.current.length.toLocaleString()} market total</span>
-        </div>
 
-        {/* SECTION 1: YOUR PERFORMANCE */}
+        {/* SECTION 1: AGENCY PERFORMANCE */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
             <Award className="h-4 w-4 text-blue-500" />
-            <span className="text-sm font-semibold text-gray-800">Your Performance</span>
+            <span className="text-sm font-semibold text-gray-800">{selectedAgencyName} Performance</span>
             <span className="text-[10px] text-gray-400 ml-auto">vs prior period & market</span>
           </div>
           
@@ -933,36 +1237,42 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
           </div>
         </div>
 
-        {/* SECTION 2: YOU VS MARKET - CATEGORIES */}
+        {/* SECTION 2: AGENCY VS MARKET - CATEGORIES */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
             <Target className="h-4 w-4 text-purple-500" />
-            <span className="text-sm font-semibold text-gray-800">You vs Market</span>
+            <span className="text-sm font-semibold text-gray-800">{selectedAgencyName} vs Market</span>
             <span className="text-[10px] text-gray-400 ml-auto">Category focus comparison</span>
           </div>
           
           <div className="p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Your Top Categories */}
+              {/* Agency Top Categories */}
               <div>
-                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">Your Top Categories</div>
+                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">{selectedAgencyName} Top Categories</div>
                 <div className="space-y-2">
-                  {categoryComparison.yourTopCategories.map((cat, i) => (
-                    <div key={cat.category} className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-700 truncate">{cat.category}</span>
-                          <span className="text-xs font-semibold text-gray-800">{cat.percentage.toFixed(0)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1 mt-1">
-                          <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${cat.percentage}%` }} />
+                  {categoryComparison.yourTopCategories.map((cat, i) => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                              <span className="text-xs text-gray-700 truncate">{catInfo.name}</span>
+                            </div>
+                            <span className="text-xs font-semibold text-gray-800">{cat.percentage.toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-1 mt-1">
+                            <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${cat.percentage}%` }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               
@@ -970,22 +1280,28 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
               <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Market Top Categories</div>
                 <div className="space-y-2">
-                  {categoryComparison.marketTopCategories.map((cat, i) => (
-                    <div key={cat.category} className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-700 truncate">{cat.category}</span>
-                          <span className="text-xs font-semibold text-gray-600">{cat.percentage.toFixed(0)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1 mt-1">
-                          <div className="bg-gray-400 h-1 rounded-full" style={{ width: `${cat.percentage}%` }} />
+                  {categoryComparison.marketTopCategories.map((cat, i) => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                              <span className="text-xs text-gray-700 truncate">{catInfo.name}</span>
+                            </div>
+                            <span className="text-xs font-semibold text-gray-600">{cat.percentage.toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-1 mt-1">
+                            <div className="bg-gray-400 h-1 rounded-full" style={{ width: `${cat.percentage}%` }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -995,24 +1311,36 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
               {categoryComparison.overIndexed.length > 0 && (
                 <div className="bg-green-50 rounded-lg p-3 border border-green-100">
                   <div className="text-[10px] font-semibold text-green-700 uppercase tracking-wide mb-2">💡 You Over-index On</div>
-                  {categoryComparison.overIndexed.map(cat => (
-                    <div key={cat.category} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-700 truncate">{cat.category}</span>
-                      <span className="text-green-600 font-semibold">+{cat.diff.toFixed(0)}pp vs market</span>
-                    </div>
-                  ))}
+                  {categoryComparison.overIndexed.map(cat => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                          <span className="text-gray-700 truncate">{catInfo.name}</span>
+                        </div>
+                        <span className="text-green-600 font-semibold flex-shrink-0 ml-2">+{cat.diff.toFixed(0)}pp vs market</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               
               {categoryComparison.underIndexed.length > 0 && (
                 <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
                   <div className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-2">⚠️ You Under-index On</div>
-                  {categoryComparison.underIndexed.map(cat => (
-                    <div key={cat.category} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-700 truncate">{cat.category}</span>
-                      <span className="text-amber-600 font-semibold">{cat.diff.toFixed(0)}pp vs market</span>
-                    </div>
-                  ))}
+                  {categoryComparison.underIndexed.map(cat => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                          <span className="text-gray-700 truncate">{catInfo.name}</span>
+                        </div>
+                        <span className="text-amber-600 font-semibold flex-shrink-0 ml-2">{cat.diff.toFixed(0)}pp vs market</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1029,10 +1357,15 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
           
           <div className="p-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {categoryHiringProfiles.map(profile => (
+              {categoryHiringProfiles.map(profile => {
+                const catInfo = getCategoryInfo(profile.category);
+                return (
                 <div key={profile.category} className="border border-gray-100 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-gray-800 truncate">{profile.category}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                      <span className="text-xs font-semibold text-gray-800 truncate">{catInfo.name}</span>
+                    </div>
                     <span className="text-[10px] text-gray-400">{profile.jobCount} jobs</span>
                   </div>
                   
@@ -1061,7 +1394,8 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         </div>
@@ -1071,7 +1405,7 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
           <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
             <Activity className="h-4 w-4 text-amber-500" />
             <span className="text-sm font-semibold text-gray-800">Workforce Profile</span>
-            <span className="text-[10px] text-gray-400 ml-auto">Your composition vs market</span>
+            <span className="text-[10px] text-gray-400 ml-auto">Composition vs market</span>
           </div>
           
           <div className="p-4">
@@ -1110,7 +1444,7 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
             <Zap className="h-4 w-4 text-green-500" />
-            <span className="text-sm font-semibold text-gray-800">Your Position</span>
+            <span className="text-sm font-semibold text-gray-800">Competitive Position</span>
             <span className="text-[10px] text-gray-400 ml-auto">Competitive summary</span>
           </div>
           
@@ -1196,37 +1530,28 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
       {/* Period Selector Header */}
       <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Activity className="h-4 w-4 text-blue-600" />
+          <img 
+            src="/logo/logo/United_Nations.png" 
+            alt="UN System" 
+            className="h-5 w-5 object-contain"
+          />
           <div>
             <span className="text-sm font-semibold text-gray-800">Market Intelligence</span>
             <span className="text-xs text-gray-500 ml-2">UN System Overview</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">Compare:</span>
-          <div className="relative inline-flex">
-            <select
-              value={comparisonPeriod}
-              onChange={(e) => setComparisonPeriod(e.target.value as ComparisonPeriod)}
-              className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1 pr-8 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              {periodOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label} vs prior {opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
       </div>
       
-      {/* Period Context */}
+      {/* Period Context - now controlled by global filter */}
       <div className="text-xs text-gray-500 flex items-center gap-4 px-1">
-        <span><span className="font-medium text-gray-700">Current:</span> {periodData.currentLabel}</span>
-        <span>•</span>
-        <span><span className="font-medium text-gray-700">Previous:</span> {periodData.previousLabel}</span>
-        <span>•</span>
-        <span>{periodData.current.length.toLocaleString()} jobs in current period</span>
+        <span>{periodData.current.length.toLocaleString()} job postings</span>
+        {contextComparisonPeriod && (
+          <>
+            <span>•</span>
+            <span><span className="font-medium text-gray-500">Trends compare to:</span> {periodData.previousLabel}</span>
+          </>
+        )}
       </div>
 
       {/* SECTION 1: MARKET PULSE */}
@@ -1242,6 +1567,144 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
           <MetricCard label="Active Agencies" currentValue={marketPulse.agencies.current} previousValue={marketPulse.agencies.previous} subtitle="posting jobs" />
           <MetricCard label="Avg Window" currentValue={marketPulse.window.current} previousValue={marketPulse.window.previous} format="days" subtitle="application period" />
           <MetricCard label="Urgent Rate" currentValue={marketPulse.urgentRate.current} previousValue={marketPulse.urgentRate.previous} format="percent" subtitle="< 14 days" highlight={marketPulse.urgentRate.current > 35 ? 'negative' : marketPulse.urgentRate.current < 20 ? 'positive' : 'neutral'} />
+        </div>
+      </div>
+
+      {/* HIRING VOLUME OVER TIME CHART - BY AGENCY */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-semibold text-gray-800">Hiring Volume by Agency</span>
+            <span className="text-[10px] text-gray-400">{periodData.currentLabel}</span>
+          </div>
+          <button
+            onClick={() => setShowAgencySelector(!showAgencySelector)}
+            className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+          >
+            <Users className="h-3 w-3" />
+            {showAgencySelector ? 'Hide Selection' : 'Select Agencies'}
+          </button>
+        </div>
+        
+        {/* Agency selector dropdown */}
+        {showAgencySelector && (
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="text-xs text-gray-500 mb-2">
+              Select up to 10 agencies to compare ({selectedAgenciesForChart.length}/10 selected)
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              {allAgencies.map((agency, i) => {
+                const isSelected = selectedAgenciesForChart.includes(agency.name);
+                const colorIndex = selectedAgenciesForChart.indexOf(agency.name);
+                return (
+                  <button
+                    key={agency.name}
+                    onClick={() => toggleAgencySelection(agency.name)}
+                    disabled={!isSelected && selectedAgenciesForChart.length >= 10}
+                    className={`px-2 py-1 text-[10px] rounded-full flex items-center gap-1 transition-colors ${
+                      isSelected 
+                        ? 'text-white' 
+                        : selectedAgenciesForChart.length >= 10
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    style={isSelected ? { backgroundColor: agencyColors[colorIndex % agencyColors.length] } : {}}
+                  >
+                    {agency.name}
+                    <span className="opacity-70">({agency.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        <div className="p-4">
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={hiringVolumeOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  {selectedAgenciesForChart.map((agency, i) => (
+                    <linearGradient key={agency} id={`color-${i}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={agencyColors[i % agencyColors.length]} stopOpacity={0.6}/>
+                      <stop offset="95%" stopColor={agencyColors[i % agencyColors.length]} stopOpacity={0.1}/>
+                    </linearGradient>
+                  ))}
+                  <linearGradient id="colorOthers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#9CA3AF" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#9CA3AF" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                <XAxis 
+                  dataKey="period" 
+                  tick={{ fontSize: 10, fill: '#6B7280' }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10, fill: '#6B7280' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    fontSize: '11px',
+                    padding: '8px 12px'
+                  }}
+                  formatter={(value: number, name: string) => [`${value} jobs`, name]}
+                  labelFormatter={(label) => `Week of ${label}`}
+                />
+                {/* Render stacked areas in reverse order so first agency is on top */}
+                <Area 
+                  type="monotone" 
+                  dataKey="Others" 
+                  stackId="1"
+                  stroke="#9CA3AF" 
+                  strokeWidth={0}
+                  fill="url(#colorOthers)" 
+                  name="Others"
+                />
+                {[...selectedAgenciesForChart].reverse().map((agency, i) => {
+                  const colorIndex = selectedAgenciesForChart.length - 1 - i;
+                  return (
+                    <Area 
+                      key={agency}
+                      type="monotone" 
+                      dataKey={agency} 
+                      stackId="1"
+                      stroke={agencyColors[colorIndex % agencyColors.length]} 
+                      strokeWidth={1}
+                      fill={`url(#color-${colorIndex})`}
+                      name={agency}
+                    />
+                  );
+                })}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Legend */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[10px] text-gray-600">
+            {selectedAgenciesForChart.map((agency, i) => (
+              <div key={agency} className="flex items-center gap-1">
+                <div 
+                  className="w-3 h-2 rounded-sm"
+                  style={{ backgroundColor: agencyColors[i % agencyColors.length] }}
+                />
+                <span>{agency}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-2 rounded-sm bg-gray-400" />
+              <span>Others</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1266,20 +1729,26 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
                 <TrendingUp className="h-3.5 w-3.5 text-green-500" />
                 <span className="text-xs font-semibold text-gray-700">Heating Up</span>
               </div>
-              {categoryShifts.growing.length > 0 ? (
+                  {categoryShifts.growing.length > 0 ? (
                 <div className="space-y-2">
-                  {categoryShifts.growing.map(cat => (
-                    <div key={cat.category} className="bg-green-50 rounded-lg p-2.5 border border-green-100">
-                      <div className="flex items-start justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-800 leading-tight">{cat.category.length > 25 ? cat.category.slice(0, 25) + '...' : cat.category}</span>
-                        <TrendIndicator value={cat.change} size="sm" />
+                  {categoryShifts.growing.map(cat => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="bg-green-50 rounded-lg p-2.5 border border-green-100">
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                            <span className="text-xs font-medium text-gray-800 leading-tight">{catInfo.name.length > 25 ? catInfo.name.slice(0, 25) + '...' : catInfo.name}</span>
+                          </div>
+                          <TrendIndicator value={cat.change} size="sm" />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-gray-500">{cat.current} jobs (was {cat.previous})</span>
+                          {cat.topAgency && <span className="text-gray-400">Led by: {cat.topAgency}</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="text-gray-500">{cat.current} jobs (was {cat.previous})</span>
-                        {cat.topAgency && <span className="text-gray-400">Led by: {cat.topAgency}</span>}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 italic p-2">No significant growth detected</p>
@@ -1293,15 +1762,21 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
               </div>
               {categoryShifts.declining.length > 0 ? (
                 <div className="space-y-2">
-                  {categoryShifts.declining.map(cat => (
-                    <div key={cat.category} className="bg-red-50 rounded-lg p-2.5 border border-red-100">
-                      <div className="flex items-start justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-800 leading-tight">{cat.category.length > 25 ? cat.category.slice(0, 25) + '...' : cat.category}</span>
-                        <TrendIndicator value={cat.change} size="sm" />
+                  {categoryShifts.declining.map(cat => {
+                    const catInfo = getCategoryInfo(cat.category);
+                    return (
+                      <div key={cat.category} className="bg-red-50 rounded-lg p-2.5 border border-red-100">
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
+                            <span className="text-xs font-medium text-gray-800 leading-tight">{catInfo.name.length > 25 ? catInfo.name.slice(0, 25) + '...' : catInfo.name}</span>
+                          </div>
+                          <TrendIndicator value={cat.change} size="sm" />
+                        </div>
+                        <div className="text-[10px] text-gray-500">{cat.current} jobs (was {cat.previous})</div>
                       </div>
-                      <div className="text-[10px] text-gray-500">{cat.current} jobs (was {cat.previous})</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 italic p-2">No significant decline detected</p>
@@ -1348,34 +1823,96 @@ const MarketIntelligence: React.FC<MarketIntelligenceProps> = ({
           </div>
           
           <div className="border border-gray-100 rounded-lg p-3">
-            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Employment Model</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Employment Model</div>
+              <MiniSparkline data={workforceTrendData.staffTrend} color="blue" width={56} height={24} />
+            </div>
             <div className="space-y-2">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-600">Staff Positions</span>
-                  <span className="text-xs font-semibold text-gray-800">{workforceEvolution.staffRate.current.toFixed(0)}%</span>
+              {/* Stacked progress bar */}
+              <div className="w-full h-3 rounded-full overflow-hidden flex bg-gray-100">
+                <div 
+                  className="bg-blue-500 h-full transition-all duration-300 relative" 
+                  style={{ width: `${workforceEvolution.staffRate.current}%` }}
+                  title="Staff positions"
+                >
+                  {workforceEvolution.staffRate.current > 15 && (
+                    <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-white">Staff</span>
+                  )}
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style={{ width: `${workforceEvolution.staffRate.current}%` }}></div>
+                <div 
+                  className="bg-amber-400 h-full transition-all duration-300 relative" 
+                  style={{ width: `${100 - workforceEvolution.staffRate.current}%` }}
+                  title="Consultants"
+                >
+                  {(100 - workforceEvolution.staffRate.current) > 15 && (
+                    <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-amber-900">Consult</span>
+                  )}
                 </div>
               </div>
-              <div className="text-[10px] text-gray-500">
-                Consultant share: {(100 - workforceEvolution.staffRate.current).toFixed(0)}%
-                <TrendIndicator value={(100 - workforceEvolution.staffRate.current) - (100 - workforceEvolution.staffRate.previous)} suffix="pp" />
+              {/* Values row */}
+              <div className="flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-blue-500"></span>
+                  <span className="text-gray-600">Staff</span>
+                  <span className="font-semibold text-gray-800">{workforceEvolution.staffRate.current.toFixed(0)}%</span>
+                  <TrendIndicator value={workforceEvolution.staffRate.current - workforceEvolution.staffRate.previous} suffix="pp" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-amber-400"></span>
+                  <span className="text-gray-600">Consult</span>
+                  <span className="font-semibold text-gray-800">{(100 - workforceEvolution.staffRate.current).toFixed(0)}%</span>
+                  <TrendIndicator value={(100 - workforceEvolution.staffRate.current) - (100 - workforceEvolution.staffRate.previous)} suffix="pp" />
+                </div>
               </div>
             </div>
           </div>
           
           <div className="border border-gray-100 rounded-lg p-3">
-            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Location Trend</div>
-            <div className="flex items-center gap-3">
-              <Globe className="h-8 w-8 text-blue-100" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-gray-800">{workforceEvolution.remoteRate.current.toFixed(0)}%</span>
-                  <TrendIndicator value={workforceEvolution.remoteRate.current - workforceEvolution.remoteRate.previous} suffix="pp" size="md" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Location Model</div>
+              <MiniSparkline data={workforceTrendData.remoteTrend} color="auto" width={56} height={24} />
+            </div>
+            <div className="space-y-2">
+              {/* Location breakdown bar */}
+              <div className="w-full h-3 rounded-full overflow-hidden flex bg-gray-100">
+                <div 
+                  className="bg-emerald-500 h-full transition-all duration-300" 
+                  style={{ width: `${workforceEvolution.locationBreakdown.current.field}%` }}
+                  title={`Field: ${workforceEvolution.locationBreakdown.current.field.toFixed(0)}%`}
+                />
+                <div 
+                  className="bg-blue-500 h-full transition-all duration-300" 
+                  style={{ width: `${workforceEvolution.locationBreakdown.current.hq}%` }}
+                  title={`HQ: ${workforceEvolution.locationBreakdown.current.hq.toFixed(0)}%`}
+                />
+                <div 
+                  className="bg-violet-400 h-full transition-all duration-300" 
+                  style={{ width: `${workforceEvolution.locationBreakdown.current.remote}%` }}
+                  title={`Remote: ${workforceEvolution.locationBreakdown.current.remote.toFixed(0)}%`}
+                />
+              </div>
+              {/* Breakdown values */}
+              <div className="grid grid-cols-3 gap-1 text-[10px]">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-emerald-500"></span>
+                  <span className="text-gray-600">Field</span>
+                  <span className="font-semibold text-gray-800">{workforceEvolution.locationBreakdown.current.field.toFixed(0)}%</span>
                 </div>
-                <span className="text-[10px] text-gray-500">Remote / Home-based</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-blue-500"></span>
+                  <span className="text-gray-600">HQ</span>
+                  <span className="font-semibold text-gray-800">{workforceEvolution.locationBreakdown.current.hq.toFixed(0)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-sm bg-violet-400"></span>
+                  <span className="text-gray-600">Remote</span>
+                  <span className="font-semibold text-gray-800">{workforceEvolution.locationBreakdown.current.remote.toFixed(0)}%</span>
+                </div>
+              </div>
+              {/* Remote trend highlight */}
+              <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                <span className="text-[10px] text-gray-500">Remote trend</span>
+                <TrendIndicator value={workforceEvolution.remoteRate.current - workforceEvolution.remoteRate.previous} suffix="pp" />
               </div>
             </div>
           </div>
