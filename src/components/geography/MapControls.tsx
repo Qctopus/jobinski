@@ -27,12 +27,24 @@ import {
 } from './types';
 import { HardshipClass } from '../../data/icscHardshipClassifications';
 
+// Region center coordinates for zooming
+const REGION_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
+  'Sub-Saharan Africa': { center: [20, 0], zoom: 2.5 },
+  'Middle East & North Africa': { center: [30, 28], zoom: 3 },
+  'Asia & Pacific': { center: [105, 20], zoom: 2 },
+  'Europe & CIS': { center: [25, 52], zoom: 2.5 },
+  'Latin America & Caribbean': { center: [-70, -10], zoom: 2 },
+  'Western Europe & Other': { center: [5, 48], zoom: 3 },
+  'Other': { center: [0, 20], zoom: 1 },
+};
+
 interface MapControlsProps {
   viewState: MapViewState;
   onViewModeChange: (mode: MapViewMode) => void;
   onVisualizationModeChange: (mode: VisualizationMode) => void;
   onColorByChange: (colorBy: ColorByOption) => void;
   onFiltersChange: (filters: Partial<MapViewState['filters']>) => void;
+  onZoomToRegion?: (center: [number, number], zoom: number) => void;
   onReset: () => void;
   onExport?: () => void;
   agencies: string[];
@@ -48,6 +60,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   onVisualizationModeChange,
   onColorByChange,
   onFiltersChange,
+  onZoomToRegion,
   onReset,
   onExport,
   agencies,
@@ -207,12 +220,13 @@ const MapControls: React.FC<MapControlsProps> = ({
             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
           </div>
           
-          {/* Quick add popular agencies */}
+          {/* Quick add top agencies (agencies list is pre-sorted by job count) */}
           {viewState.comparisonAgencies.length < 5 && (
             <div className="flex flex-wrap gap-1 mt-2">
+              <span className="text-[9px] text-gray-400 mr-1">Top agencies:</span>
               {agencies
                 .filter(a => a !== selectedAgencyName && !viewState.comparisonAgencies.includes(a))
-                .slice(0, 6)
+                .slice(0, 5)
                 .map(agency => (
                   <button
                     key={agency}
@@ -277,9 +291,20 @@ const MapControls: React.FC<MapControlsProps> = ({
           <div className="relative">
             <select
               value={viewState.filters.regions[0] || 'all'}
-              onChange={(e) => onFiltersChange({ 
-                regions: e.target.value === 'all' ? [] : [e.target.value] 
-              })}
+              onChange={(e) => {
+                const selectedRegion = e.target.value;
+                onFiltersChange({ 
+                  regions: selectedRegion === 'all' ? [] : [selectedRegion] 
+                });
+                // Zoom to region when selected
+                if (selectedRegion !== 'all' && onZoomToRegion && REGION_CENTERS[selectedRegion]) {
+                  const { center, zoom } = REGION_CENTERS[selectedRegion];
+                  onZoomToRegion(center, zoom);
+                } else if (selectedRegion === 'all' && onZoomToRegion) {
+                  // Reset to world view
+                  onZoomToRegion([0, 20], 1);
+                }
+              }}
               className="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="all">All Regions</option>

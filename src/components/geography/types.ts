@@ -130,6 +130,10 @@ export interface MapSummaryStats {
   // Gap analysis
   gapLocations: string[];
   gapCount: number;
+  
+  // Home-based/Remote positions (tracked separately, not on map)
+  homeBasedCount: number;
+  homeBasedMarketCount: number;
 }
 
 /**

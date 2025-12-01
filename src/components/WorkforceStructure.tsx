@@ -9,11 +9,11 @@
  * how the workforce is evolving.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { 
-  Users, Building2, MapPin, TrendingUp, Info, 
-  ChevronDown, ChevronUp, Briefcase, Globe, BarChart3, 
-  PieChart as PieChartIcon
+  Users, Building2, MapPin, TrendingUp, AlertTriangle, 
+  Briefcase, Globe, BarChart3, 
+  PieChart as PieChartIcon, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { ProcessedJobData, FilterOptions } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -27,8 +27,7 @@ import GradeGeographyChart from './workforce/GradeGeographyChart';
 import AgencyFingerprints from './workforce/AgencyFingerprints';
 import StaffNonStaffAnalysis from './workforce/StaffNonStaffAnalysis';
 import WorkforceEvolutionChart from './workforce/WorkforceEvolutionChart';
-import WorkforceInsightsPanel from './workforce/WorkforceInsightsPanel';
-// TimeComparisonSelector removed - now using global time filter
+// WorkforceInsightsPanel removed - insights now integrated into metric cards
 
 interface WorkforceStructureProps {
   data: ProcessedJobData[];
@@ -45,8 +44,6 @@ const mapTimeRangeToEvolutionPeriod = (timeRange: FilterOptions['timeRange']): '
 };
 
 const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }) => {
-  const [expandedSection, setExpandedSection] = useState<string | null>('pyramid');
-  
   // Map global timeRange to evolution comparison format
   const evolutionPeriod = mapTimeRangeToEvolutionPeriod(filters.timeRange);
   
@@ -60,40 +57,46 @@ const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }
   // Initialize analyzer
   const analyzer = useMemo(() => new WorkforceStructureAnalyzer(), []);
   
-  // Calculate all analytics
+  // Use filtered data (time-filtered) for all calculations
+  // For agency view: filteredData contains agency-specific data
+  // For market view: marketData contains all data (already time-filtered by useDashboardData)
+  const timeFilteredData = isAgencyView ? filteredData : marketData;
+  
+  // Calculate all analytics using time-filtered data
   const pyramidData = useMemo(() => 
-    analyzer.calculatePyramid(data, isAgencyView ? selectedAgencyName : undefined),
-    [analyzer, data, isAgencyView, selectedAgencyName]
+    analyzer.calculatePyramid(timeFilteredData, isAgencyView ? selectedAgencyName : undefined),
+    [analyzer, timeFilteredData, isAgencyView, selectedAgencyName]
   );
   
   const marketPyramidData = useMemo(() => 
-    isAgencyView ? analyzer.calculatePyramid(data) : null,
-    [analyzer, data, isAgencyView]
+    isAgencyView ? analyzer.calculatePyramid(marketData) : null,
+    [analyzer, marketData, isAgencyView]
   );
   
   const gradeCategoryMatrix = useMemo(() => 
-    analyzer.calculateGradeCategoryMatrix(data, isAgencyView ? selectedAgencyName : undefined),
-    [analyzer, data, isAgencyView, selectedAgencyName]
+    analyzer.calculateGradeCategoryMatrix(timeFilteredData, isAgencyView ? selectedAgencyName : undefined),
+    [analyzer, timeFilteredData, isAgencyView, selectedAgencyName]
   );
   
   const gradeGeography = useMemo(() => 
-    analyzer.calculateGradeGeography(data, isAgencyView ? selectedAgencyName : undefined),
-    [analyzer, data, isAgencyView, selectedAgencyName]
+    analyzer.calculateGradeGeography(timeFilteredData, isAgencyView ? selectedAgencyName : undefined),
+    [analyzer, timeFilteredData, isAgencyView, selectedAgencyName]
   );
   
+  // Agency fingerprints should use marketData (time-filtered market data)
   const agencyFingerprints = useMemo(() => 
-    analyzer.calculateAgencyFingerprints(data),
-    [analyzer, data]
+    analyzer.calculateAgencyFingerprints(marketData),
+    [analyzer, marketData]
   );
   
   const staffNonStaffData = useMemo(() => 
-    analyzer.calculateStaffNonStaffAnalysis(data, isAgencyView ? selectedAgencyName : undefined),
-    [analyzer, data, isAgencyView, selectedAgencyName]
+    analyzer.calculateStaffNonStaffAnalysis(timeFilteredData, isAgencyView ? selectedAgencyName : undefined),
+    [analyzer, timeFilteredData, isAgencyView, selectedAgencyName]
   );
   
   const evolutionData = useMemo(() => 
-    analyzer.calculateWorkforceEvolution(data, evolutionPeriod, isAgencyView ? selectedAgencyName : undefined),
-    [analyzer, data, evolutionPeriod, isAgencyView, selectedAgencyName]
+    analyzer.calculateWorkforceEvolution(timeFilteredData, evolutionPeriod, isAgencyView ? selectedAgencyName : undefined),
+    [analyzer, timeFilteredData, evolutionPeriod, isAgencyView, selectedAgencyName]
   );
   
   // Extract current and previous period pyramid data for comparison
@@ -125,22 +128,23 @@ const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }
   
   const insights = useMemo(() => 
     analyzer.generateInsights(
-      isAgencyView ? filteredData : data,
+      timeFilteredData,
       isAgencyView ? selectedAgencyName : undefined,
-      isAgencyView ? data : undefined
+      isAgencyView ? marketData : undefined
     ),
-    [analyzer, data, filteredData, isAgencyView, selectedAgencyName]
+    [analyzer, timeFilteredData, marketData, isAgencyView, selectedAgencyName]
   );
-  
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
 
   // Calculate field ratio for metrics
   const fieldPositions = gradeGeography.find(g => g.locationType === 'Field')?.totalCount || 0;
   const fieldPercentage = pyramidData.totalPositions > 0 
     ? (fieldPositions / pyramidData.totalPositions * 100) 
     : 0;
+
+  // Get high-impact insights for metric cards
+  const highImpactInsights = insights.filter(i => i.impact === 'high');
+  const staffInsight = insights.find(i => i.title.toLowerCase().includes('staff') || i.title.toLowerCase().includes('non-staff'));
+  const entryInsight = insights.find(i => i.title.toLowerCase().includes('entry') || i.title.toLowerCase().includes('pipeline'));
 
   return (
     <div className="space-y-4">
@@ -161,59 +165,66 @@ const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }
               {isAgencyView ? `${selectedAgencyName} Workforce Structure` : 'UN System Workforce Structure'}
             </span>
             <span className="text-xs text-gray-500 ml-2">
-              Analyzing {pyramidData.totalPositions.toLocaleString()} positions
+              {pyramidData.totalPositions.toLocaleString()} positions
             </span>
           </div>
         </div>
-        
+        {highImpactInsights.length > 0 && (
+          <div className="flex items-center gap-1.5 text-amber-600">
+            <AlertTriangle className="h-4 w-4" />
+            <span className="text-xs font-medium">{highImpactInsights.length} insight{highImpactInsights.length > 1 ? 's' : ''}</span>
+          </div>
+        )}
       </div>
       
-      {/* Period Context - now controlled by global filter */}
-      <div className="text-xs text-gray-500 flex items-center gap-4 px-1">
-        <span>{pyramidData.totalPositions.toLocaleString()} positions</span>
-        <span>•</span>
-        <span><span className="font-medium text-gray-500">Trends compare to:</span> {periodLabels.previous}</span>
-      </div>
-      
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <MetricCard
-          label="Staff Positions"
+      {/* Key Metrics Cards with Integrated Insights */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricCardWithInsight
+          label="Staff Ratio"
           value={`${pyramidData.staffPercentage.toFixed(0)}%`}
-          subtext={`${pyramidData.staffPositions.toLocaleString()} positions`}
+          subtext={`${pyramidData.staffPositions.toLocaleString()} staff positions`}
           icon={<Users className="h-4 w-4" />}
           color="blue"
+          trend={evolutionData.shifts.find(s => s.type === 'Staff Mix')?.direction}
+          insight={pyramidData.nonStaffPercentage > 50 ? 'High non-staff dependency' : undefined}
+          insightType={pyramidData.nonStaffPercentage > 50 ? 'warning' : undefined}
         />
-        <MetricCard
+        <MetricCardWithInsight
           label="Non-Staff"
           value={`${pyramidData.nonStaffPercentage.toFixed(0)}%`}
-          subtext={`${pyramidData.nonStaffPositions.toLocaleString()} positions`}
+          subtext={`${pyramidData.nonStaffPositions.toLocaleString()} consultants/interns`}
           icon={<Briefcase className="h-4 w-4" />}
           color={pyramidData.nonStaffPercentage > 40 ? 'orange' : 'green'}
+          trend={evolutionData.shifts.find(s => s.type === 'Staff Mix')?.direction === 'up' ? 'down' : 'up'}
+          insight={staffInsight?.title}
+          insightType={staffInsight?.impact === 'high' ? 'warning' : 'info'}
         />
-        <MetricCard
-          label="Field Positions"
-          value={fieldPositions.toLocaleString()}
-          subtext={`${fieldPercentage.toFixed(0)}% of total`}
+        <MetricCardWithInsight
+          label="Field Deployment"
+          value={`${fieldPercentage.toFixed(0)}%`}
+          subtext={`${fieldPositions.toLocaleString()} field positions`}
           icon={<Globe className="h-4 w-4" />}
           color="green"
+          trend={evolutionData.shifts.find(s => s.type === 'Geographic')?.direction}
+          insight={fieldPercentage > 60 ? 'Strong field presence' : undefined}
+          insightType="info"
         />
-        <MetricCard
-          label="Categories"
-          value={gradeCategoryMatrix.categories.length.toString()}
-          subtext="Functional areas"
+        <MetricCardWithInsight
+          label="Entry Pipeline"
+          value={`${((pyramidData.pyramid.find(t => t.tier === 'Entry Professional')?.count || 0) / pyramidData.totalPositions * 100).toFixed(0)}%`}
+          subtext="Entry-level positions"
           icon={<BarChart3 className="h-4 w-4" />}
           color="purple"
+          insight={entryInsight?.title}
+          insightType={entryInsight?.impact === 'high' ? 'warning' : 'info'}
         />
       </div>
       
       {/* Section 1: Workforce Pyramid */}
-      <CollapsibleSection
+      <Section
         title="Workforce Population Pyramid"
         subtitle="How workforce structure is evolving over time - compare current vs previous period"
         icon={<PieChartIcon className="h-4 w-4" />}
-        isExpanded={expandedSection === 'pyramid'}
-        onToggle={() => toggleSection('pyramid')}
       >
         <WorkforcePyramid 
           data={currentPeriodPyramid}
@@ -224,141 +235,130 @@ const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }
           currentPeriodLabel={periodLabels.current}
           previousPeriodLabel={periodLabels.previous}
         />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 2: Grade × Category Matrix */}
-      <CollapsibleSection
+      <Section
         title="Grade × Category Heatmap"
         subtitle="Which grades are being hired for which functional areas"
         icon={<BarChart3 className="h-4 w-4" />}
-        isExpanded={expandedSection === 'matrix'}
-        onToggle={() => toggleSection('matrix')}
       >
         <GradeCategoryHeatmap data={gradeCategoryMatrix} />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 3: Grade × Geography */}
-      <CollapsibleSection
+      <Section
         title="Grade × Geography"
         subtitle="Where different grade levels are being placed"
         icon={<MapPin className="h-4 w-4" />}
-        isExpanded={expandedSection === 'geography'}
-        onToggle={() => toggleSection('geography')}
       >
         <GradeGeographyChart data={gradeGeography} />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 4: Agency Fingerprints (System view only) */}
       {!isAgencyView && (
-        <CollapsibleSection
+        <Section
           title="Agency Workforce Fingerprints"
           subtitle="Compare how different agencies structure their workforce"
           icon={<Building2 className="h-4 w-4" />}
-          isExpanded={expandedSection === 'fingerprints'}
-          onToggle={() => toggleSection('fingerprints')}
         >
           <AgencyFingerprints data={agencyFingerprints} />
-        </CollapsibleSection>
+        </Section>
       )}
       
       {/* Section 5: Staff vs Non-Staff */}
-      <CollapsibleSection
+      <Section
         title="Staff vs Non-Staff Analysis"
         subtitle="Balance between permanent staff and flexible workforce"
         icon={<Briefcase className="h-4 w-4" />}
-        isExpanded={expandedSection === 'staffmix'}
-        onToggle={() => toggleSection('staffmix')}
       >
         <StaffNonStaffAnalysis data={staffNonStaffData} />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 6: Evolution Over Time */}
-      <CollapsibleSection
+      <Section
         title="Workforce Evolution"
         subtitle={`How structure is changing (${evolutionPeriod === '4weeks' ? '4 weeks' : evolutionPeriod === '8weeks' ? '8 weeks' : '3 months'} comparison)`}
         icon={<TrendingUp className="h-4 w-4" />}
-        isExpanded={expandedSection === 'evolution'}
-        onToggle={() => toggleSection('evolution')}
       >
         <WorkforceEvolutionChart data={evolutionData} />
-      </CollapsibleSection>
+      </Section>
       
-      {/* Section 7: Strategic Insights */}
-      <WorkforceInsightsPanel 
-        insights={insights}
-        isAgencyView={isAgencyView}
-        agencyName={selectedAgencyName}
-      />
     </div>
   );
 };
 
 // Helper Components
 
-interface MetricCardProps {
+interface MetricCardWithInsightProps {
   label: string;
   value: string;
   subtext: string;
   icon: React.ReactNode;
   color: 'blue' | 'green' | 'orange' | 'purple' | 'red';
+  trend?: 'up' | 'down';
+  insight?: string;
+  insightType?: 'warning' | 'info';
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ label, value, subtext, icon, color }) => {
-  const iconColorClasses = {
-    blue: 'text-blue-500',
-    green: 'text-green-500',
-    orange: 'text-orange-500',
-    purple: 'text-purple-500',
-    red: 'text-red-500'
+const MetricCardWithInsight: React.FC<MetricCardWithInsightProps> = ({ 
+  label, value, subtext, icon, color, trend, insight, insightType 
+}) => {
+  const colorClasses = {
+    blue: { icon: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
+    green: { icon: 'text-green-500', bg: 'bg-green-50', border: 'border-green-100' },
+    orange: { icon: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100' },
+    purple: { icon: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-100' },
+    red: { icon: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' }
   };
   
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3">
-      <div className="flex items-center gap-2 mb-1">
-        <span className={iconColorClasses[color]}>{icon}</span>
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+    <div className={`rounded-lg border p-3 ${colorClasses[color].bg} ${colorClasses[color].border}`}>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          <span className={colorClasses[color].icon}>{icon}</span>
+          <span className="text-xs font-medium text-gray-600">{label}</span>
+        </div>
+        {trend && (
+          <span className={`flex items-center ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+            {trend === 'up' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+          </span>
+        )}
       </div>
-      <div className="text-lg font-bold text-gray-900">{value}</div>
-      <div className="text-[10px] text-gray-400 mt-0.5">{subtext}</div>
+      <div className="text-xl font-bold text-gray-900">{value}</div>
+      <div className="text-[10px] text-gray-500 mt-0.5">{subtext}</div>
+      {insight && (
+        <div className={`mt-2 text-[10px] px-2 py-1 rounded ${
+          insightType === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
+        }`}>
+          {insight}
+        </div>
+      )}
     </div>
   );
 };
 
-interface CollapsibleSectionProps {
+interface SectionProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  isExpanded: boolean;
-  onToggle: () => void;
   children: React.ReactNode;
 }
 
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  title, subtitle, icon, isExpanded, onToggle, children
+const Section: React.FC<SectionProps> = ({
+  title, subtitle, icon, children
 }) => (
   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <button
-      onClick={onToggle}
-      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-gray-500">{icon}</span>
-        <div className="text-left">
-          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-          <p className="text-xs text-gray-500">{subtitle}</p>
-        </div>
+    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100 bg-gray-50/50">
+      <span className="text-gray-500">{icon}</span>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        <p className="text-xs text-gray-500">{subtitle}</p>
       </div>
-      {isExpanded ? (
-        <ChevronUp className="h-4 w-4 text-gray-400" />
-      ) : (
-        <ChevronDown className="h-4 w-4 text-gray-400" />
-      )}
-    </button>
-    {isExpanded && (
-      <div className="p-4 border-t border-gray-100">
-        {children}
-      </div>
-    )}
+    </div>
+    <div className="p-4">
+      {children}
+    </div>
   </div>
 );
 

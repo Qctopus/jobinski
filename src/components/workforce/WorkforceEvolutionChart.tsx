@@ -45,11 +45,11 @@ const WorkforceEvolutionChart: React.FC<WorkforceEvolutionChartProps> = ({ data 
     };
   }).reverse();
 
-  // Shift icon and color
+  // Shift icon and color (compact)
   const getShiftIcon = (direction: 'up' | 'down') => {
     return direction === 'up' 
-      ? <ArrowUp className="h-4 w-4 text-green-600" />
-      : <ArrowDown className="h-4 w-4 text-red-600" />;
+      ? <ArrowUp className="h-3 w-3 text-green-600" />
+      : <ArrowDown className="h-3 w-3 text-red-600" />;
   };
 
   const getMagnitudeColor = (magnitude: 'major' | 'moderate' | 'minor') => {
@@ -73,107 +73,58 @@ const WorkforceEvolutionChart: React.FC<WorkforceEvolutionChartProps> = ({ data 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Period Context */}
-      {hasTwoPeriods && previous && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-          <div className="flex items-center justify-between text-xs">
-            <div>
-              <span className="text-gray-500">Previous Period:</span>
-              <span className="ml-2 text-gray-700 font-medium">
-                {format(previous.startDate, 'MMM d')} - {format(previous.endDate, 'MMM d, yyyy')}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Current Period:</span>
-              <span className="ml-2 text-gray-700 font-medium">
-                {format(current.startDate, 'MMM d')} - {format(current.endDate, 'MMM d, yyyy')}
-              </span>
-            </div>
+    <div className="space-y-3">
+      {/* Compact Key Metrics */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-gray-50 rounded-lg p-2">
+          <div className="text-[10px] text-gray-500">Volume</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-bold text-gray-900">{current.totalPositions.toLocaleString()}</span>
+            <span className="text-[9px]"><ChangeIndicator value={volumeChange} suffix="%" /></span>
           </div>
         </div>
-      )}
-
-      {/* Key Metrics Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-white rounded-lg border border-gray-200 p-3">
-          <div className="text-xs text-gray-500 mb-1">Hiring Volume</div>
-          <div className="flex items-end justify-between">
-            <div className="text-xl font-bold text-gray-900">
-              {current.totalPositions.toLocaleString()}
-            </div>
-            <ChangeIndicator value={volumeChange} suffix="%" />
+        <div className="bg-gray-50 rounded-lg p-2">
+          <div className="text-[10px] text-gray-500">Staff Ratio</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-bold text-gray-900">{current.staffRatio.toFixed(0)}%</span>
+            <span className="text-[9px]"><ChangeIndicator value={staffRatioChange} suffix="pp" /></span>
           </div>
-          {previous && (
-            <div className="text-[10px] text-gray-400 mt-1">
-              vs {previous.totalPositions.toLocaleString()} previous
-            </div>
-          )}
         </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-3">
-          <div className="text-xs text-gray-500 mb-1">Staff Ratio</div>
-          <div className="flex items-end justify-between">
-            <div className="text-xl font-bold text-gray-900">
-              {current.staffRatio.toFixed(1)}%
-            </div>
-            <ChangeIndicator value={staffRatioChange} suffix="pp" />
+        <div className="bg-gray-50 rounded-lg p-2">
+          <div className="text-[10px] text-gray-500">Field</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-bold text-gray-900">{current.fieldRatio.toFixed(0)}%</span>
+            <span className="text-[9px]"><ChangeIndicator value={fieldRatioChange} suffix="pp" /></span>
           </div>
-          {previous && (
-            <div className="text-[10px] text-gray-400 mt-1">
-              vs {previous.staffRatio.toFixed(1)}% previous
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-3">
-          <div className="text-xs text-gray-500 mb-1">Field Deployment</div>
-          <div className="flex items-end justify-between">
-            <div className="text-xl font-bold text-gray-900">
-              {current.fieldRatio.toFixed(1)}%
-            </div>
-            <ChangeIndicator value={fieldRatioChange} suffix="pp" />
-          </div>
-          {previous && (
-            <div className="text-[10px] text-gray-400 mt-1">
-              vs {previous.fieldRatio.toFixed(1)}% previous
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Pyramid Comparison Chart */}
+      {/* Compact Pyramid Comparison */}
       {hasTwoPeriods && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="font-medium text-gray-900 mb-4">Grade Distribution Change</h4>
-          <div className="h-64">
+        <div className="bg-gray-50 rounded-lg p-2">
+          <div className="text-[10px] font-medium text-gray-600 mb-1">Grade Distribution Change</div>
+          <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={pyramidComparisonData}
                 layout="vertical"
-                margin={{ top: 10, right: 30, left: 120, bottom: 10 }}
+                margin={{ top: 5, right: 15, left: 80, bottom: 5 }}
               >
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="tier" width={110} tick={{ fontSize: 12 }} />
+                <XAxis type="number" tick={{ fontSize: 9 }} />
+                <YAxis type="category" dataKey="tier" width={75} tick={{ fontSize: 9 }} />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const d = payload[0].payload;
                       return (
-                        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
-                          <div className="font-semibold text-gray-900">{d.tier}</div>
-                          <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-                            <div>
-                              <div className="text-gray-500">Previous</div>
-                              <div className="font-medium">{d.previous} ({d.previousPerc.toFixed(1)}%)</div>
-                            </div>
-                            <div>
-                              <div className="text-gray-500">Current</div>
-                              <div className="font-medium">{d.current} ({d.currentPerc.toFixed(1)}%)</div>
-                            </div>
-                          </div>
-                          <div className={`mt-2 text-sm font-medium ${d.change > 0 ? 'text-green-600' : d.change < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                            Change: {d.change > 0 ? '+' : ''}{d.change.toFixed(1)}pp
+                        <div className="bg-white border border-gray-200 rounded p-2 shadow-lg text-xs">
+                          <div className="font-medium">{d.tier}</div>
+                          <div className="flex gap-2 mt-1">
+                            <span className="text-gray-500">Prev: {d.previous}</span>
+                            <span className="text-gray-700">Now: {d.current}</span>
+                            <span className={d.change > 0 ? 'text-green-600' : d.change < 0 ? 'text-red-600' : 'text-gray-500'}>
+                              {d.change > 0 ? '+' : ''}{d.change.toFixed(1)}pp
+                            </span>
                           </div>
                         </div>
                       );
@@ -181,9 +132,9 @@ const WorkforceEvolutionChart: React.FC<WorkforceEvolutionChartProps> = ({ data 
                     return null;
                   }}
                 />
-                <Legend />
-                <Bar dataKey="previous" fill="#CBD5E1" name="Previous Period" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="current" name="Current Period" radius={[0, 4, 4, 0]}>
+                <Legend wrapperStyle={{ fontSize: '9px' }} />
+                <Bar dataKey="previous" fill="#CBD5E1" name="Previous" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="current" name="Current" radius={[0, 3, 3, 0]}>
                   {pyramidComparisonData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -194,72 +145,27 @@ const WorkforceEvolutionChart: React.FC<WorkforceEvolutionChartProps> = ({ data 
         </div>
       )}
 
-      {/* Detected Shifts */}
-      {shifts.length > 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            Detected Workforce Shifts
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {shifts.map((shift, idx) => (
-              <div 
-                key={idx}
-                className={`rounded-lg border p-4 ${getMagnitudeColor(shift.magnitude)}`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {getShiftIcon(shift.direction)}
-                  <span className="font-semibold">{shift.type}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    shift.magnitude === 'major' ? 'bg-red-200' :
-                    shift.magnitude === 'moderate' ? 'bg-yellow-200' :
-                    'bg-blue-200'
-                  }`}>
-                    {shift.magnitude}
-                  </span>
-                </div>
-                <p className="text-sm">{shift.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
-          <Minus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600">No significant workforce shifts detected between periods</p>
-          <p className="text-sm text-gray-500 mt-1">
-            The workforce structure appears stable within the comparison period
-          </p>
+      {/* Compact Detected Shifts */}
+      {shifts.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {shifts.map((shift, idx) => (
+            <div 
+              key={idx}
+              className={`rounded px-2 py-1 text-[10px] flex items-center gap-1 ${getMagnitudeColor(shift.magnitude)}`}
+            >
+              {getShiftIcon(shift.direction)}
+              <span className="font-medium">{shift.type}</span>
+              <span className={`px-1 py-0.5 rounded text-[9px] ${
+                shift.magnitude === 'major' ? 'bg-red-200' :
+                shift.magnitude === 'moderate' ? 'bg-yellow-200' :
+                'bg-blue-200'
+              }`}>
+                {shift.magnitude}
+              </span>
+            </div>
+          ))}
         </div>
       )}
-
-      {/* Interpretation Guide */}
-      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-        <h4 className="font-medium text-indigo-900 mb-2">Understanding Workforce Evolution</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-indigo-800">
-          <div>
-            <div className="font-medium mb-1">Volume Changes</div>
-            <p className="text-indigo-700">
-              Changes in total positions indicate overall hiring activity. 
-              Large increases may signal expansion, decreases may indicate restructuring.
-            </p>
-          </div>
-          <div>
-            <div className="font-medium mb-1">Staff Ratio Shifts</div>
-            <p className="text-indigo-700">
-              Movement toward more staff positions suggests stabilization; 
-              toward non-staff suggests flexibility or cost management focus.
-            </p>
-          </div>
-          <div>
-            <div className="font-medium mb-1">Geographic Shifts</div>
-            <p className="text-indigo-700">
-              Increasing field deployment indicates program delivery focus; 
-              HQ concentration suggests policy or coordination emphasis.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

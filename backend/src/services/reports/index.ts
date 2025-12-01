@@ -9,6 +9,10 @@ export { InsightGenerator } from './InsightGenerator';
 export { ChartGenerator } from './ChartGenerator';
 export { PDFGenerator } from './PDFGenerator';
 
+// Enhanced Monthly Report Services
+export { HTMLReportGenerator } from './HTMLReportGenerator';
+export { MonthlyReportDataAggregator } from './MonthlyReportDataAggregator';
+
 // Utilities
 export { getAgencyLogo, getAgencyLogoAbsolutePath, getAgencyColor } from './utils/agencyLogos';
 export { 

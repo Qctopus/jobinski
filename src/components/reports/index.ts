@@ -1,4 +1,5 @@
 import { ReportGenerator } from './ReportGenerator';
+import { MonthlyReport } from './MonthlyReport';
 
-export { ReportGenerator };
+export { ReportGenerator, MonthlyReport };
 export default ReportGenerator;

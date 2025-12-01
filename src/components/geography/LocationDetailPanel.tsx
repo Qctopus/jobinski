@@ -80,8 +80,13 @@ const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
             <div className="text-[10px] text-slate-400">Type</div>
           </div>
           <div className="bg-slate-700/50 rounded-lg p-2 text-center">
-            <div className="text-xl font-bold">{location.agencyCount}</div>
-            <div className="text-[10px] text-slate-400">Agencies</div>
+            {/* In agency view, show job count; in market view, show agencies */}
+            <div className="text-xl font-bold">
+              {isAgencyView ? location.yourJobCount : location.agencyCount}
+            </div>
+            <div className="text-[10px] text-slate-400">
+              {isAgencyView ? 'Jobs' : 'Agencies'}
+            </div>
           </div>
         </div>
       </div>
@@ -141,43 +146,45 @@ const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           </div>
         )}
 
-        {/* Who Else Recruits Here */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-semibold text-gray-800">Agencies Recruiting Here</span>
+        {/* Who Else Recruits Here - Only show in market view (in agency view it only shows 1 agency) */}
+        {!isAgencyView && (
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-semibold text-gray-800">Agencies Recruiting Here</span>
+                </div>
+                <span className="text-xs text-gray-500">
+                  Total: {location.totalMarketJobs} positions
+                </span>
               </div>
-              <span className="text-xs text-gray-500">
-                Total: {location.totalMarketJobs} positions
-              </span>
+            </div>
+            
+            <div className="p-3 space-y-2 max-h-48 overflow-y-auto">
+              {agencyRanking.slice(0, 10).map((agency, idx) => (
+                <div 
+                  key={agency.agency}
+                  className={`flex items-center gap-2 p-2 rounded-lg ${
+                    agency.isYou ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    idx === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {idx + 1}
+                  </span>
+                  <span className={`flex-1 text-sm ${agency.isYou ? 'font-medium text-blue-800' : 'text-gray-700'}`}>
+                    {agency.agency}
+                    {agency.isYou && <span className="ml-1 text-[10px] text-blue-600">(you)</span>}
+                  </span>
+                  <span className="text-sm font-medium text-gray-600">{agency.count}</span>
+                  <span className="text-[10px] text-gray-400 w-12 text-right">{agency.share.toFixed(0)}%</span>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <div className="p-3 space-y-2 max-h-48 overflow-y-auto">
-            {agencyRanking.slice(0, 10).map((agency, idx) => (
-              <div 
-                key={agency.agency}
-                className={`flex items-center gap-2 p-2 rounded-lg ${
-                  agency.isYou ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
-                }`}
-              >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                  idx === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {idx + 1}
-                </span>
-                <span className={`flex-1 text-sm ${agency.isYou ? 'font-medium text-blue-800' : 'text-gray-700'}`}>
-                  {agency.agency}
-                  {agency.isYou && <span className="ml-1 text-[10px] text-blue-600">(you)</span>}
-                </span>
-                <span className="text-sm font-medium text-gray-600">{agency.count}</span>
-                <span className="text-[10px] text-gray-400 w-12 text-right">{agency.share.toFixed(0)}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Category Breakdown (only if you have positions) */}
         {location.yourJobCount > 0 && categoryBreakdown.length > 0 && (
@@ -248,54 +255,56 @@ const LocationDetailPanel: React.FC<LocationDetailPanelProps> = ({
           />
         )}
 
-        {/* Competition Insight */}
-        <div className={`rounded-lg p-4 ${
-          location.competitionLevel === 'high' 
-            ? 'bg-red-50 border border-red-200' 
-            : location.competitionLevel === 'medium'
-            ? 'bg-amber-50 border border-amber-200'
-            : 'bg-green-50 border border-green-200'
-        }`}>
-          <div className="flex items-start gap-3">
-            <div className={`p-2 rounded-full ${
-              location.competitionLevel === 'high' 
-                ? 'bg-red-100' 
-                : location.competitionLevel === 'medium'
-                ? 'bg-amber-100'
-                : 'bg-green-100'
-            }`}>
-              <AlertTriangle className={`h-4 w-4 ${
+        {/* Competition Insight - Only show in market view (doesn't make sense for single agency) */}
+        {!isAgencyView && (
+          <div className={`rounded-lg p-4 ${
+            location.competitionLevel === 'high' 
+              ? 'bg-red-50 border border-red-200' 
+              : location.competitionLevel === 'medium'
+              ? 'bg-amber-50 border border-amber-200'
+              : 'bg-green-50 border border-green-200'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className={`p-2 rounded-full ${
                 location.competitionLevel === 'high' 
-                  ? 'text-red-600' 
+                  ? 'bg-red-100' 
                   : location.competitionLevel === 'medium'
-                  ? 'text-amber-600'
-                  : 'text-green-600'
-              }`} />
-            </div>
-            <div>
-              <h4 className={`text-sm font-semibold mb-1 ${
-                location.competitionLevel === 'high' 
-                  ? 'text-red-800' 
-                  : location.competitionLevel === 'medium'
-                  ? 'text-amber-800'
-                  : 'text-green-800'
+                  ? 'bg-amber-100'
+                  : 'bg-green-100'
               }`}>
-                {location.competitionLevel === 'high' && 'High Competition'}
-                {location.competitionLevel === 'medium' && 'Moderate Competition'}
-                {location.competitionLevel === 'low' && 'Low Competition'}
-              </h4>
-              <p className={`text-xs ${
-                location.competitionLevel === 'high' 
-                  ? 'text-red-700' 
-                  : location.competitionLevel === 'medium'
-                  ? 'text-amber-700'
-                  : 'text-green-700'
-              }`}>
-                {data.competitionInsight}
-              </p>
+                <AlertTriangle className={`h-4 w-4 ${
+                  location.competitionLevel === 'high' 
+                    ? 'text-red-600' 
+                    : location.competitionLevel === 'medium'
+                    ? 'text-amber-600'
+                    : 'text-green-600'
+                }`} />
+              </div>
+              <div>
+                <h4 className={`text-sm font-semibold mb-1 ${
+                  location.competitionLevel === 'high' 
+                    ? 'text-red-800' 
+                    : location.competitionLevel === 'medium'
+                    ? 'text-amber-800'
+                    : 'text-green-800'
+                }`}>
+                  {location.competitionLevel === 'high' && 'High Competition'}
+                  {location.competitionLevel === 'medium' && 'Moderate Competition'}
+                  {location.competitionLevel === 'low' && 'Low Competition'}
+                </h4>
+                <p className={`text-xs ${
+                  location.competitionLevel === 'high' 
+                    ? 'text-red-700' 
+                    : location.competitionLevel === 'medium'
+                    ? 'text-amber-700'
+                    : 'text-green-700'
+                }`}>
+                  {data.competitionInsight}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Trend Insight */}
         {data.trendInsight && (

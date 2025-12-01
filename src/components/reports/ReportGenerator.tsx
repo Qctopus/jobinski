@@ -69,7 +69,11 @@ interface GenerateReportResponse {
   error?: string;
 }
 
-export const ReportGenerator: React.FC = () => {
+interface ReportGeneratorProps {
+  onViewReport?: (agency: string) => void;
+}
+
+export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ onViewReport }) => {
   // State
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [selectedAgency, setSelectedAgency] = useState<string>('');
@@ -384,28 +388,45 @@ export const ReportGenerator: React.FC = () => {
                   </div>
                 )}
 
-                {/* Generate Button */}
-                <button
-                  onClick={generateReport}
-                  disabled={!selectedAgency || generating}
-                  className={`w-full py-4 rounded-lg font-semibold text-base flex items-center justify-center gap-3 transition-all ${
-                    selectedAgency && !generating
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {generating ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Generating Report...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-5 h-5" />
-                      Generate & Download PDF Report
-                    </>
-                  )}
-                </button>
+                {/* Report Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* View Visual Report Button - NEW */}
+                  <button
+                    onClick={() => onViewReport?.(selectedAgency)}
+                    disabled={!selectedAgency}
+                    className={`py-4 rounded-lg font-semibold text-base flex items-center justify-center gap-3 transition-all ${
+                      selectedAgency
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    View Visual Report
+                  </button>
+                  
+                  {/* Generate PDF Button */}
+                  <button
+                    onClick={generateReport}
+                    disabled={!selectedAgency || generating}
+                    className={`py-4 rounded-lg font-semibold text-base flex items-center justify-center gap-3 transition-all ${
+                      selectedAgency && !generating
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-5 h-5" />
+                        Download PDF
+                      </>
+                    )}
+                  </button>
+                </div>
 
                 {/* Generation Result */}
                 {generationResult && (

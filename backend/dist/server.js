@@ -15,6 +15,7 @@ const database_1 = require("./config/database");
 const sqlite_1 = require("./config/sqlite");
 const readonly_jobs_1 = __importDefault(require("./routes/readonly-jobs"));
 const dashboard_1 = __importDefault(require("./routes/dashboard"));
+const reports_1 = __importDefault(require("./routes/reports"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -66,6 +67,7 @@ catch (err) {
 }
 app.use(`${API_PREFIX}/jobs`, readonly_jobs_1.default);
 app.use(`${API_PREFIX}/dashboard`, dashboard_1.default);
+app.use(`${API_PREFIX}/reports`, reports_1.default);
 app.get(`${API_PREFIX}/health`, (req, res) => {
     res.json({
         success: true,
@@ -94,6 +96,13 @@ app.get('/', (req, res) => {
                 jobs: `${API_PREFIX}/dashboard/jobs`,
                 filters: `${API_PREFIX}/dashboard/filters`,
                 syncStatus: `${API_PREFIX}/dashboard/sync-status`
+            },
+            reports: {
+                generate: `${API_PREFIX}/reports/generate`,
+                list: `${API_PREFIX}/reports/list`,
+                agencies: `${API_PREFIX}/reports/agencies`,
+                preview: `${API_PREFIX}/reports/preview/:agency`,
+                download: `${API_PREFIX}/reports/download/:reportId`
             }
         },
         timestamp: new Date().toISOString()

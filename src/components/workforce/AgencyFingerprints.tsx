@@ -5,19 +5,36 @@
  * Each "fingerprint" shows the agency's unique workforce composition pattern.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AgencyFingerprint } from '../../services/analytics/WorkforceStructureAnalyzer';
-import { Building2, Users, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
-import { JOB_CLASSIFICATION_DICTIONARY } from '../../dictionary';
+import { Building2, Users, MapPin, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { getCategoryById } from '../../utils/categoryUtils';
 
-// Helper function to get pretty category names
-const getCategoryInfo = (categoryKey: string) => {
-  const entry = JOB_CLASSIFICATION_DICTIONARY[categoryKey];
-  return {
-    name: entry?.name || categoryKey,
-    color: entry?.color || '#6B7280'
-  };
-};
+// Sort options
+type SortOption = 
+  | 'total' 
+  | 'staff-ratio' 
+  | 'nonstaff-ratio' 
+  | 'field-ratio' 
+  | 'hq-ratio'
+  | 'executive-rate'
+  | 'director-rate'
+  | 'mid-rate'
+  | 'entry-rate'
+  | 'consultant-rate';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'total', label: 'Total Jobs' },
+  { value: 'staff-ratio', label: 'Highest Staff %' },
+  { value: 'nonstaff-ratio', label: 'Highest Non-Staff %' },
+  { value: 'field-ratio', label: 'Highest Field %' },
+  { value: 'hq-ratio', label: 'Highest HQ %' },
+  { value: 'executive-rate', label: 'Highest Executive %' },
+  { value: 'director-rate', label: 'Highest Director %' },
+  { value: 'mid-rate', label: 'Highest Mid-Career %' },
+  { value: 'entry-rate', label: 'Highest Entry %' },
+  { value: 'consultant-rate', label: 'Highest Consultant %' },
+];
 
 interface AgencyFingerprintsProps {
   data: AgencyFingerprint[];
@@ -26,9 +43,47 @@ interface AgencyFingerprintsProps {
 const AgencyFingerprints: React.FC<AgencyFingerprintsProps> = ({ data }) => {
   const [expandedAgency, setExpandedAgency] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('total');
+
+  // Helper to get tier percentage
+  const getTierPercentage = (agency: AgencyFingerprint, tierName: string): number => {
+    const tier = agency.pyramid.find(p => p.tier === tierName);
+    if (!tier || agency.totalPositions === 0) return 0;
+    return (tier.count / agency.totalPositions) * 100;
+  };
+
+  // Sort agencies based on selected option
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => {
+      switch (sortBy) {
+        case 'total':
+          return b.totalPositions - a.totalPositions;
+        case 'staff-ratio':
+          return b.staffRatio - a.staffRatio;
+        case 'nonstaff-ratio':
+          return (100 - b.staffRatio) - (100 - a.staffRatio);
+        case 'field-ratio':
+          return b.fieldRatio - a.fieldRatio;
+        case 'hq-ratio':
+          return (100 - b.fieldRatio) - (100 - a.fieldRatio);
+        case 'executive-rate':
+          return getTierPercentage(b, 'Executive') - getTierPercentage(a, 'Executive');
+        case 'director-rate':
+          return getTierPercentage(b, 'Director') - getTierPercentage(a, 'Director');
+        case 'mid-rate':
+          return getTierPercentage(b, 'Mid Professional') - getTierPercentage(a, 'Mid Professional');
+        case 'entry-rate':
+          return getTierPercentage(b, 'Entry Professional') - getTierPercentage(a, 'Entry Professional');
+        case 'consultant-rate':
+          return getTierPercentage(b, 'Consultant') - getTierPercentage(a, 'Consultant');
+        default:
+          return b.totalPositions - a.totalPositions;
+      }
+    });
+  }, [data, sortBy]);
 
   // Show top 8 by default, all if showAll is true
-  const displayedAgencies = showAll ? data : data.slice(0, 8);
+  const displayedAgencies = showAll ? sortedData : sortedData.slice(0, 8);
 
   // Model badge colors
   const modelColors: Record<AgencyFingerprint['workforceModel'], string> = {
@@ -39,25 +94,45 @@ const AgencyFingerprints: React.FC<AgencyFingerprintsProps> = ({ data }) => {
     'Balanced': 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
-  // Mini pyramid component
+  // Mini pyramid component with labels
   const MiniPyramid: React.FC<{ pyramid: AgencyFingerprint['pyramid'] }> = ({ pyramid }) => {
     const maxCount = Math.max(...pyramid.map(p => p.count));
     
+    // Abbreviate tier names
+    const getTierAbbrev = (tier: string) => {
+      const abbrevs: Record<string, string> = {
+        'Executive': 'Exec',
+        'Director': 'Dir',
+        'Senior Professional': 'Sr Prof',
+        'Mid Professional': 'Mid',
+        'Entry Professional': 'Entry',
+        'Support': 'Supp',
+        'Consultant': 'Cons',
+        'Intern': 'Intern'
+      };
+      return abbrevs[tier] || tier.substring(0, 4);
+    };
+    
     return (
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {pyramid.map((tier, idx) => {
           const width = maxCount > 0 ? (tier.count / maxCount) * 100 : 0;
           return (
-            <div key={tier.tier} className="flex items-center gap-2">
-              <div 
-                className="h-2 rounded-sm transition-all duration-300" 
-                style={{ 
-                  width: `${Math.max(width, 2)}%`,
-                  backgroundColor: tier.color,
-                  minWidth: tier.count > 0 ? '8px' : '2px'
-                }}
-                title={`${tier.tier}: ${tier.count}`}
-              />
+            <div key={tier.tier} className="flex items-center gap-1.5">
+              <span className="text-[8px] text-gray-400 w-10 text-right truncate" title={tier.tier}>
+                {getTierAbbrev(tier.tier)}
+              </span>
+              <div className="flex-1 h-2 bg-gray-100 rounded-sm overflow-hidden">
+                <div 
+                  className="h-full rounded-sm transition-all duration-300" 
+                  style={{ 
+                    width: `${Math.max(width, tier.count > 0 ? 4 : 0)}%`,
+                    backgroundColor: tier.color,
+                  }}
+                  title={`${tier.tier}: ${tier.count}`}
+                />
+              </div>
+              <span className="text-[8px] text-gray-500 w-6 text-right">{tier.count > 0 ? tier.count : '-'}</span>
             </div>
           );
         })}
@@ -99,6 +174,26 @@ const AgencyFingerprints: React.FC<AgencyFingerprintsProps> = ({ data }) => {
           </div>
           <div className="text-xs text-gray-500">Total Positions</div>
         </div>
+      </div>
+
+      {/* Sort Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-gray-400" />
+          <span className="text-xs text-gray-500">Sort by:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            {SORT_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        <span className="text-xs text-gray-400">
+          {sortedData.length} agencies
+        </span>
       </div>
 
       {/* Agency Grid */}
@@ -184,7 +279,7 @@ const AgencyFingerprints: React.FC<AgencyFingerprintsProps> = ({ data }) => {
                   <div className="text-xs font-medium text-gray-700 mb-2">Top Categories</div>
                   <div className="space-y-1">
                     {agency.topCategories.map(cat => {
-                      const catInfo = getCategoryInfo(cat.category);
+                      const catInfo = getCategoryById(cat.category);
                       return (
                         <div key={cat.category} className="flex items-center justify-between text-xs">
                           <span className="text-gray-600 truncate flex-1" title={catInfo.name}>
@@ -228,13 +323,13 @@ const AgencyFingerprints: React.FC<AgencyFingerprintsProps> = ({ data }) => {
       </div>
 
       {/* Show More Button */}
-      {data.length > 8 && (
+      {sortedData.length > 8 && (
         <div className="text-center">
           <button
             onClick={() => setShowAll(!showAll)}
             className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
           >
-            {showAll ? `Show Less (Top 8)` : `Show All ${data.length} Agencies`}
+            {showAll ? `Show Less (Top 8)` : `Show All ${sortedData.length} Agencies`}
           </button>
         </div>
       )}

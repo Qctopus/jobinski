@@ -192,3 +192,6 @@ const MapSummaryBar: React.FC<MapSummaryBarProps> = ({
 export default MapSummaryBar;
 
 
+
+
+

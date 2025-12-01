@@ -221,68 +221,68 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <div className="space-y-3">
+      {/* Compact Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gradient-to-r from-indigo-500 to-violet-500"></div>
-            <span className="text-sm font-medium text-gray-700">{currentPeriodLabel}</span>
-            <span className="text-lg font-bold text-gray-900">{totals.current.toLocaleString()}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+            <span className="text-xs text-gray-600">{currentPeriodLabel}</span>
+            <span className="text-sm font-bold text-gray-900">{totals.current.toLocaleString()}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-300"></div>
-            <span className="text-sm font-medium text-gray-500">{previousPeriodLabel}</span>
-            <span className="text-lg font-bold text-gray-500">{totals.previous.toLocaleString()}</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-gray-300"></div>
+            <span className="text-xs text-gray-500">{previousPeriodLabel}</span>
+            <span className="text-sm font-bold text-gray-400">{totals.previous.toLocaleString()}</span>
           </div>
         </div>
         
         {previousPeriodData && (
-          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
             totals.change > 0 
               ? 'bg-emerald-100 text-emerald-700' 
               : totals.change < 0 
                 ? 'bg-rose-100 text-rose-700' 
                 : 'bg-gray-100 text-gray-600'
           }`}>
-            {totals.change > 0 ? <TrendingUp className="h-4 w-4" /> : totals.change < 0 ? <TrendingDown className="h-4 w-4" /> : null}
-            {totals.change > 0 ? '+' : ''}{totals.change} positions
+            {totals.change > 0 ? <TrendingUp className="h-3 w-3" /> : totals.change < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+            {totals.change > 0 ? '+' : ''}{totals.change}
           </div>
         )}
       </div>
 
-      {/* Pyramid Container */}
-      <div className="bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
+      {/* Pyramid Container - Compact */}
+      <div className="bg-gradient-to-b from-slate-50 to-white rounded-lg border border-slate-200 overflow-hidden">
         {/* Column Headers */}
-        <div className="grid grid-cols-[1fr_100px_1fr] bg-slate-100 border-b border-slate-200">
-          <div className="py-2 px-4 text-right">
-            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-              {currentPeriodLabel} →
+        <div className="grid grid-cols-[1fr_80px_1fr] bg-slate-100 border-b border-slate-200">
+          <div className="py-1.5 px-2 text-right">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+              Current →
             </span>
           </div>
-          <div className="py-2 px-2 text-center border-x border-slate-200 bg-white">
-            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Grade</span>
+          <div className="py-1.5 px-1 text-center border-x border-slate-200 bg-white">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Grade</span>
           </div>
-          <div className="py-2 px-4 text-left">
-            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-              ← {previousPeriodLabel}
+          <div className="py-1.5 px-2 text-left">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+              ← Previous
             </span>
           </div>
         </div>
 
-        {/* Pyramid Rows */}
+        {/* Pyramid Rows - Compact */}
         <div className="divide-y divide-slate-100">
           {rowsWithSeparators.map((item, idx) => {
             if (item.type === 'separator') {
               return (
-                <div key={`sep-${idx}`} className="grid grid-cols-[1fr_100px_1fr] bg-slate-50">
-                  <div className="py-1"></div>
-                  <div className="py-1 px-2 text-center border-x border-slate-200 bg-slate-100">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <div key={`sep-${idx}`} className="grid grid-cols-[1fr_80px_1fr] bg-slate-50">
+                  <div className="py-0.5"></div>
+                  <div className="py-0.5 px-1 text-center border-x border-slate-200 bg-slate-100">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
                       {categoryLabels[item.category!]}
                     </span>
                   </div>
-                  <div className="py-1"></div>
+                  <div className="py-0.5"></div>
                 </div>
               );
             }
@@ -295,26 +295,26 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
             return (
               <div 
                 key={row.grade} 
-                className="grid grid-cols-[1fr_100px_1fr] hover:bg-slate-50/50 transition-colors"
+                className="grid grid-cols-[1fr_80px_1fr] hover:bg-slate-50/50 transition-colors"
               >
                 {/* Left Bar (Current Period) - extends RIGHT from center */}
-                <div className="py-1.5 px-2 flex items-center justify-end gap-2">
-                  <span className="text-xs text-slate-500 tabular-nums">
+                <div className="py-1 px-1.5 flex items-center justify-end gap-1.5">
+                  <span className="text-[10px] text-slate-500 tabular-nums">
                     {row.currentCount > 0 ? row.currentCount.toLocaleString() : ''}
                   </span>
-                  <div className="h-5 flex items-center justify-end" style={{ width: '100%' }}>
+                  <div className="h-4 flex items-center justify-end" style={{ width: '100%' }}>
                     <div
-                      className="h-full rounded-l-md transition-all duration-500 relative group"
+                      className="h-full rounded-l-sm transition-all duration-500 relative group"
                       style={{
                         width: `${currentWidth}%`,
-                        minWidth: row.currentCount > 0 ? '4px' : '0',
+                        minWidth: row.currentCount > 0 ? '3px' : '0',
                         background: `linear-gradient(90deg, ${style.color}dd, ${style.color})`,
                       }}
                     >
                       {/* Tooltip on hover */}
-                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <div className="bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
-                          {row.currentCount} positions
+                      <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="bg-slate-800 text-white text-[10px] rounded px-1.5 py-0.5 whitespace-nowrap">
+                          {row.currentCount}
                         </div>
                       </div>
                     </div>
@@ -322,10 +322,10 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                 </div>
                 
                 {/* Center - Grade Label with Change Indicator */}
-                <div className="py-1.5 px-1 flex items-center justify-center gap-1 border-x border-slate-100 bg-white">
+                <div className="py-1 px-0.5 flex items-center justify-center gap-0.5 border-x border-slate-100 bg-white">
                   <ChangeArrow change={row.change} />
                   <span 
-                    className="text-xs font-semibold text-center"
+                    className="text-[10px] font-semibold text-center"
                     style={{ color: style.color }}
                   >
                     {row.grade}
@@ -333,17 +333,17 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                 </div>
                 
                 {/* Right Bar (Previous Period) - extends LEFT from center */}
-                <div className="py-1.5 px-2 flex items-center justify-start gap-2">
-                  <div className="h-5 flex items-center justify-start" style={{ width: '100%' }}>
+                <div className="py-1 px-1.5 flex items-center justify-start gap-1.5">
+                  <div className="h-4 flex items-center justify-start" style={{ width: '100%' }}>
                     <div
-                      className="h-full rounded-r-md transition-all duration-500 bg-slate-300"
+                      className="h-full rounded-r-sm transition-all duration-500 bg-slate-300"
                       style={{
                         width: `${previousWidth}%`,
-                        minWidth: row.previousCount > 0 ? '4px' : '0',
+                        minWidth: row.previousCount > 0 ? '3px' : '0',
                       }}
                     />
                   </div>
-                  <span className="text-xs text-slate-400 tabular-nums">
+                  <span className="text-[10px] text-slate-400 tabular-nums">
                     {row.previousCount > 0 ? row.previousCount.toLocaleString() : ''}
                   </span>
                 </div>
@@ -353,69 +353,69 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Compact */}
       {previousPeriodData && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {/* Growing */}
-          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-700 uppercase">Growing</span>
+          <div className="bg-emerald-50 rounded-lg p-2 border border-emerald-100">
+            <div className="flex items-center gap-1 mb-1.5">
+              <TrendingUp className="h-3 w-3 text-emerald-600" />
+              <span className="text-[10px] font-semibold text-emerald-700 uppercase">Growing</span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {gradeRows
                 .filter(g => g.change > 0)
                 .sort((a, b) => b.change - a.change)
                 .slice(0, 3)
                 .map(g => (
-                  <div key={g.grade} className="flex items-center justify-between text-sm">
+                  <div key={g.grade} className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-700">{g.grade}</span>
                     <span className="font-semibold text-emerald-600">+{g.change}</span>
                   </div>
                 ))
               }
               {gradeRows.filter(g => g.change > 0).length === 0 && (
-                <span className="text-xs text-slate-400">No growth</span>
+                <span className="text-[10px] text-slate-400">No growth</span>
               )}
             </div>
           </div>
 
           {/* Shrinking */}
-          <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-4 w-4 text-rose-600" />
-              <span className="text-xs font-semibold text-rose-700 uppercase">Shrinking</span>
+          <div className="bg-rose-50 rounded-lg p-2 border border-rose-100">
+            <div className="flex items-center gap-1 mb-1.5">
+              <TrendingDown className="h-3 w-3 text-rose-600" />
+              <span className="text-[10px] font-semibold text-rose-700 uppercase">Shrinking</span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {gradeRows
                 .filter(g => g.change < 0)
                 .sort((a, b) => a.change - b.change)
                 .slice(0, 3)
                 .map(g => (
-                  <div key={g.grade} className="flex items-center justify-between text-sm">
+                  <div key={g.grade} className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-700">{g.grade}</span>
                     <span className="font-semibold text-rose-600">{g.change}</span>
                   </div>
                 ))
               }
               {gradeRows.filter(g => g.change < 0).length === 0 && (
-                <span className="text-xs text-slate-400">No decline</span>
+                <span className="text-[10px] text-slate-400">No decline</span>
               )}
             </div>
           </div>
 
           {/* Staff Mix */}
-          <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold text-indigo-700 uppercase">Staff Mix</span>
+          <div className="bg-indigo-50 rounded-lg p-2 border border-indigo-100">
+            <div className="flex items-center gap-1 mb-1.5">
+              <span className="text-[10px] font-semibold text-indigo-700 uppercase">Staff Mix</span>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px]">
                 <span className="text-slate-600">Staff ratio</span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   <span className="font-semibold text-indigo-700">{data.staffPercentage.toFixed(0)}%</span>
                   {previousPeriodData.staffPercentage !== data.staffPercentage && (
-                    <span className={`text-xs ${
+                    <span className={`text-[9px] ${
                       data.staffPercentage > previousPeriodData.staffPercentage 
                         ? 'text-emerald-600' : 'text-rose-600'
                     }`}>
@@ -425,7 +425,7 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                   )}
                 </div>
               </div>
-              <div className="h-2 bg-slate-200 rounded-full overflow-hidden flex">
+              <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden flex">
                 <div 
                   className="h-full bg-indigo-500 transition-all"
                   style={{ width: `${data.staffPercentage}%` }}
@@ -435,7 +435,7 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                   style={{ width: `${data.nonStaffPercentage}%` }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-slate-500">
+              <div className="flex justify-between text-[9px] text-slate-500">
                 <span>Staff</span>
                 <span>Non-Staff</span>
               </div>
@@ -446,8 +446,8 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
 
       {/* No comparison message */}
       {!previousPeriodData && (
-        <div className="text-center py-4 text-sm text-slate-500 bg-slate-50 rounded-lg">
-          Select a comparison period to see workforce evolution over time
+        <div className="text-center py-2 text-xs text-slate-500 bg-slate-50 rounded-lg">
+          Select a comparison period to see evolution
         </div>
       )}
     </div>

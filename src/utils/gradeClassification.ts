@@ -27,13 +27,23 @@ export type ContractType =
   | 'Trainee'               // Intern, UNV
   | 'Other';
 
+// Staff category is binary - Service Agreements count as Non-Staff
+// But we track contractType separately for detailed analysis
 export type StaffCategory = 'Staff' | 'Non-Staff';
+
+/**
+ * Service Agreement types for detailed analysis
+ * NPSA = National Personnel Service Agreement (national, 1 day to 1 year)
+ * IPSA = International Personnel Service Agreement (international specialist, up to 4 years)
+ */
+export type ServiceAgreementType = 'NPSA' | 'IPSA' | 'PSA' | 'SB' | 'Other';
 
 export interface GradeAnalysis {
   originalGrade: string;
   tier: GradeTier;
   contractType: ContractType;
   staffCategory: StaffCategory;
+  serviceAgreementType?: ServiceAgreementType; // For NPSA/IPSA/PSA distinction
   numericLevel: number;        // For sorting: 1-12 scale
   isInternational: boolean;
   isNational: boolean;
@@ -118,6 +128,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Senior Professional',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'IPSA',
       numericLevel: 9,
       isInternational: true,
       isNational: false,
@@ -166,6 +177,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Mid Professional',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'IPSA',
       numericLevel: 7,
       isInternational: true,
       isNational: false,
@@ -182,6 +194,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Mid Professional',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'NPSA',
       numericLevel: 7,
       isInternational: false,
       isNational: true,
@@ -259,6 +272,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Entry Professional',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'NPSA',
       numericLevel: 5,
       isInternational: false,
       isNational: true,
@@ -275,6 +289,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Entry Professional',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'IPSA',
       numericLevel: 5,
       isInternational: true,
       isNational: false,
@@ -291,6 +306,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       tier: 'Entry Support',
       contractType: 'Service Agreement',
       staffCategory: 'Non-Staff',
+      serviceAgreementType: 'NPSA',
       numericLevel: 2,
       isInternational: false,
       isNational: true,
@@ -363,8 +379,24 @@ export function classifyGrade(grade: string): GradeAnalysis {
     };
   }
   
-  // Additional consultant patterns
-  if (g.includes('PSA') || g.includes('CON') || g.includes('CONTRACTOR')) {
+  // PSA (Personnel Service Agreement) - distinct from consultants
+  if (g.includes('PSA') && !g.includes('NPSA') && !g.includes('IPSA')) {
+    return {
+      originalGrade: grade,
+      tier: 'Consultant', // Keep in consultant tier for pyramid visualization
+      contractType: 'Service Agreement',
+      staffCategory: 'Non-Staff',
+      serviceAgreementType: 'PSA',
+      numericLevel: 0,
+      isInternational: false,
+      isNational: true,
+      pyramidPosition: 0,
+      displayLabel: 'PSA'
+    };
+  }
+  
+  // Contractor patterns (actual consultants)
+  if (g.includes('CON') || g.includes('CONTRACTOR')) {
     return {
       originalGrade: grade,
       tier: 'Consultant',
@@ -442,10 +474,41 @@ export const PYRAMID_TIERS = [
  * Non-staff categories (shown separately from pyramid)
  */
 export const NON_STAFF_CATEGORIES = [
-  { id: 'consultant', name: 'Consultants', color: '#F59E0B', description: 'IC, LICA, Consultants' },
+  { id: 'service-agreement', name: 'Service Agreements', color: '#0EA5E9', description: 'NPSA, IPSA, PSA - Project-based contracts' },
+  { id: 'consultant', name: 'Consultants', color: '#F59E0B', description: 'IC, LICA, Individual Contractors' },
   { id: 'intern', name: 'Interns', color: '#8B5CF6', description: 'Internship positions' },
   { id: 'volunteer', name: 'Volunteers', color: '#EC4899', description: 'UNV, Volunteer positions' },
 ];
+
+/**
+ * Service Agreement details for analytics
+ */
+export const SERVICE_AGREEMENT_INFO = {
+  NPSA: {
+    name: 'National Personnel Service Agreement',
+    shortName: 'NPSA',
+    color: '#0EA5E9',
+    description: 'National, 1 day to 1 year, office or home-based',
+    isInternational: false,
+    maxDuration: '1 year',
+  },
+  IPSA: {
+    name: 'International Personnel Service Agreement',
+    shortName: 'IPSA',
+    color: '#06B6D4',
+    description: 'International specialist, up to 12 months renewable (max 4 years)',
+    isInternational: true,
+    maxDuration: '4 years',
+  },
+  PSA: {
+    name: 'Personnel Service Agreement',
+    shortName: 'PSA',
+    color: '#14B8A6',
+    description: 'General service agreement',
+    isInternational: false,
+    maxDuration: 'Project duration',
+  },
+};
 
 /**
  * Get tier color by name
@@ -469,6 +532,7 @@ export function getConsolidatedTier(tier: GradeTier): string {
   }
   return tier;
 }
+
 
 
 

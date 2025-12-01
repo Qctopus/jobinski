@@ -71,7 +71,9 @@ const VALID_GRADE_PATTERNS = [
   /^NO-?[A-E]$/i,
   /^SB-?[1-5]$/i,
   /^LICA-?\d+$/i,
-  /^IPSA-?\d+$/i,
+  /^IPSA-?\d+$/i,     // International Personnel Service Agreement
+  /^NPSA-?\d+$/i,     // National Personnel Service Agreement
+  /^PSA-?\d*$/i,      // Personnel Service Agreement
   /^SC-?\d+$/i,
   /^UNV/i,
   /^Consultant/i,
@@ -1328,5 +1330,6 @@ export class DataQualityService {
 // Export singleton
 export const dataQualityService = new DataQualityService();
 export default dataQualityService;
+
 
 

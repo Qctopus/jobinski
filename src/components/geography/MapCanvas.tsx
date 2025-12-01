@@ -41,6 +41,8 @@ interface MapCanvasProps {
   onCountryHover?: (countryCode: string | null) => void;
   selectedAgencyName?: string;
   comparisonAgencies?: string[];
+  externalPosition?: { center: [number, number]; zoom: number };
+  homeBasedStats?: { count: number; marketCount: number };
 }
 
 // Agency colors for peer comparison
@@ -101,10 +103,22 @@ const MapCanvas: React.FC<MapCanvasProps> = memo(({
   onCountryHover,
   selectedAgencyName,
   comparisonAgencies = [],
+  externalPosition,
+  homeBasedStats,
 }) => {
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [position, setPosition] = useState({ coordinates: [0, 20] as [number, number], zoom: 1 });
+
+  // Sync with external position when it changes
+  React.useEffect(() => {
+    if (externalPosition) {
+      setPosition({
+        coordinates: externalPosition.center,
+        zoom: externalPosition.zoom,
+      });
+    }
+  }, [externalPosition]);
 
   // Create country lookup map for choropleth
   const countryLookup = useMemo(() => {
@@ -727,36 +741,60 @@ const MapCanvas: React.FC<MapCanvasProps> = memo(({
         />
       )}
 
-      {/* Choropleth Legend */}
-      {viewState.visualizationMode === 'choropleth' && (
-        <div className="absolute bottom-16 left-4 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg p-3 shadow-sm">
-          <div className="text-xs font-medium text-gray-700 mb-2">Job Count</div>
-          <div className="flex flex-col gap-1">
-            {CHOROPLETH_SCALE.colors.map((color, idx) => (
-              <div key={idx} className="flex items-center gap-2">
+      {/* Legend Stack - bottom left */}
+      <div className="absolute bottom-4 left-4 flex flex-col gap-2">
+        {/* Choropleth Legend */}
+        {viewState.visualizationMode === 'choropleth' && (
+          <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg p-2 shadow-sm">
+            <div className="text-[10px] font-medium text-gray-700 mb-1.5">Job Count</div>
+            <div className="flex flex-col gap-0.5">
+              {CHOROPLETH_SCALE.colors.map((color, idx) => (
+                <div key={idx} className="flex items-center gap-1.5">
+                  <div 
+                    className="w-3 h-2 rounded-sm" 
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-[9px] text-gray-600">
+                    {idx === 0 && '1-4'}
+                    {idx === 1 && '5-14'}
+                    {idx === 2 && '15-49'}
+                    {idx === 3 && '50-99'}
+                    {idx === 4 && '100+'}
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1.5 mt-0.5 pt-0.5 border-t border-gray-100">
                 <div 
-                  className="w-4 h-3 rounded-sm" 
-                  style={{ backgroundColor: color }}
+                  className="w-3 h-2 rounded-sm" 
+                  style={{ backgroundColor: CHOROPLETH_SCALE.noData }}
                 />
-                <span className="text-[10px] text-gray-600">
-                  {idx === 0 && '1-4'}
-                  {idx === 1 && '5-14'}
-                  {idx === 2 && '15-49'}
-                  {idx === 3 && '50-99'}
-                  {idx === 4 && '100+'}
-                </span>
+                <span className="text-[9px] text-gray-400">No data</span>
               </div>
-            ))}
-            <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-100">
-              <div 
-                className="w-4 h-3 rounded-sm" 
-                style={{ backgroundColor: CHOROPLETH_SCALE.noData }}
-              />
-              <span className="text-[10px] text-gray-400">No data</span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Home-based/Remote positions panel - below legend on left */}
+        {homeBasedStats && (homeBasedStats.count > 0 || homeBasedStats.marketCount > 0) && (
+          <div className="bg-white/95 backdrop-blur-sm border border-purple-200 rounded-lg p-2 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              <span className="text-[9px] font-medium text-gray-700">Remote/Home-based</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm font-bold text-purple-600">
+                {viewState.viewMode === 'market' ? homeBasedStats.marketCount : homeBasedStats.count}
+              </span>
+              <span className="text-[9px] text-gray-500">positions</span>
+            </div>
+            {viewState.viewMode !== 'market' && homeBasedStats.marketCount > 0 && (
+              <div className="text-[8px] text-gray-400">
+                {homeBasedStats.marketCount} in market
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-1">
@@ -872,31 +910,32 @@ const LocationTooltip: React.FC<LocationTooltipProps> = ({
         {viewMode === 'your-agency' && (
           <>
             <div>
-              <span className="text-gray-400">Your Jobs:</span>
+              <span className="text-gray-400">Jobs:</span>
               <span className="text-gray-800 font-medium ml-1">{location.yourJobCount}</span>
             </div>
             <div>
-              <span className="text-gray-400">Market:</span>
-              <span className="text-gray-800 font-medium ml-1">{location.totalMarketJobs}</span>
+              <span className="text-gray-400">Hardship:</span>
+              <span className="text-gray-800 font-medium ml-1">{location.hardshipClass}</span>
             </div>
           </>
         )}
         
         {viewMode === 'market' && (
-          <div className="col-span-2">
-            <span className="text-gray-400">Total Jobs:</span>
-            <span className="text-gray-800 font-medium ml-1">{location.totalMarketJobs}</span>
-          </div>
+          <>
+            <div>
+              <span className="text-gray-400">Total Jobs:</span>
+              <span className="text-gray-800 font-medium ml-1">{location.totalMarketJobs}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Hardship:</span>
+              <span className="text-gray-800 font-medium ml-1">{location.hardshipClass}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Agencies:</span>
+              <span className="text-gray-800 font-medium ml-1">{location.agencyCount}</span>
+            </div>
+          </>
         )}
-        
-        <div>
-          <span className="text-gray-400">Hardship:</span>
-          <span className="text-gray-800 font-medium ml-1">{location.hardshipClass}</span>
-        </div>
-        <div>
-          <span className="text-gray-400">Agencies:</span>
-          <span className="text-gray-800 font-medium ml-1">{location.agencyCount}</span>
-        </div>
       </div>
       
       {location.yourTrend.direction !== 'stable' && viewMode === 'your-agency' && (

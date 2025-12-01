@@ -23,10 +23,12 @@ import { useTimeframe } from '../contexts/TimeframeContext';
 
 // Components
 import MandateAlignmentSummary from './categories/MandateAlignmentSummary';
-import HiringSurgeAlerts from './categories/HiringSurgeAlerts';
 import CategoryCompositionPanel from './categories/CategoryCompositionPanel';
 import CategoryDrillDown from './CategoryDrillDown';
 import CategoryEvolutionChart from './categories/CategoryEvolutionChart';
+import AgencyCategoryDominance from './categories/AgencyCategoryDominance';
+import AgencyCategoryProfile from './categories/AgencyCategoryProfile';
+import CategoryActivityInsights from './categories/CategoryActivityInsights';
 
 // Helper to get beautiful category name and color from dictionary
 const getCategoryInfo = (categoryIdOrName: string) => {
@@ -507,16 +509,13 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
         </div>
       </div>
 
-      {/* Hiring Surge Alerts */}
-      {surgeAnalysis.surges.length > 0 && (
-        <HiringSurgeAlerts
-          surges={surgeAnalysis.surges}
-          categorySurges={surgeAnalysis.byCategorysuges}
-          timeframe={surgeAnalysis.timeframe}
-          isAgencyView={isAgencyView}
-          yourAgency={agencyName || undefined}
-        />
-      )}
+      {/* Category Activity & Insights - Replaces Hiring Surge Alerts + Category Details */}
+      <CategoryActivityInsights
+        data={data}
+        isAgencyView={isAgencyView}
+        agencyName={agencyName || undefined}
+        onCategoryClick={handleCategoryClick}
+      />
 
       {/* Category Composition Panel */}
       <CategoryCompositionPanel
@@ -529,6 +528,24 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
         peerGroupName={peerGroupInfo?.name}
         onCategoryClick={handleCategoryClick}
       />
+
+      {/* Agency Category Dominance - Only shown in market view */}
+      {!isAgencyView && (
+        <AgencyCategoryDominance
+          data={data}
+          isAgencyView={isAgencyView}
+          selectedAgency={agencyName || undefined}
+        />
+      )}
+
+      {/* Agency Category Profile - Only shown in agency view */}
+      {isAgencyView && agencyName && (
+        <AgencyCategoryProfile
+          agencyData={data.filter(j => (j.short_agency || j.long_agency) === agencyName)}
+          marketData={data}
+          agencyName={agencyName}
+        />
+      )}
 
       {/* Category Shift Narrative - Harmonized */}
       {shiftAnalysis.narrativeInsight && (
@@ -587,162 +604,6 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
         chartType="line"
         agency={agencyName}
       />
-
-      {/* Category Deep Dive Cards - With Clear Time Context */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-indigo-500" />
-              <h3 className="text-base font-semibold text-gray-900">Category Details</h3>
-            </div>
-            <span className="text-xs text-gray-500">
-              {filteredCategories.length} categories
-            </span>
-          </div>
-          {/* Time context banner */}
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Calendar className="h-3.5 w-3.5" />
-              <span>Data from: <span className="font-medium text-gray-700">{periodBoundaries.currentLabel}</span></span>
-            </div>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <TrendingUp className="h-3.5 w-3.5" />
-              <span>Trends vs: <span className="font-medium text-gray-700">{periodBoundaries.previousLabel}</span></span>
-            </div>
-          </div>
-        </div>
-
-        {/* Metrics Legend */}
-        <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-          <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-gray-400" />
-              <span><strong>Count</strong> = positions in period</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-              <span><strong>+%</strong> = growth vs prior period</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
-              <span><strong>Surge</strong> = &gt;2× normal hiring rate</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-red-400" />
-              <span><strong>&gt;60d</strong> = slow-to-fill positions</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredCategories.slice(0, 12).map(cat => {
-            const catInfo = getCategoryInfo(cat.category);
-            return (
-              <div
-                key={cat.category}
-                className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer group"
-                onClick={() => handleCategoryClick(cat.category)}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div 
-                      className="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm" 
-                      style={{ backgroundColor: catInfo.color }}
-                    />
-                    <span className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                      {catInfo.name}
-                    </span>
-                  </div>
-                  {cat.trend && cat.trend.trend !== 'stable' && (
-                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      cat.trend.trend === 'up' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {cat.trend.trend === 'up' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                      {Math.abs(cat.trend.growth).toFixed(0)}%
-                    </div>
-                  )}
-                </div>
-
-                {/* Main metric */}
-                <div className="flex items-baseline gap-2 mb-3">
-                  <span className="text-3xl font-bold text-gray-900">{cat.count}</span>
-                  <span className="text-sm text-gray-500">
-                    positions ({cat.percentage.toFixed(1)}%)
-                  </span>
-                </div>
-
-                {/* Grade and location - improved layout */}
-                <div className="space-y-2 mb-3">
-                  {cat.gradeDistribution.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs text-gray-400 w-14 flex-shrink-0">Grades</span>
-                      <div className="flex flex-wrap gap-1">
-                        {cat.gradeDistribution.slice(0, 3).map((g) => (
-                          <span 
-                            key={g.grade} 
-                            className="text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded"
-                          >
-                            {g.grade} <span className="text-gray-400">{g.percentage.toFixed(0)}%</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {cat.topLocations.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-14 flex-shrink-0">Location</span>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-600 truncate">
-                          {cat.topLocations[0].location}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Attention flags - improved styling */}
-                {(cat.longOpenCount > 0 || cat.relatedSurge) && (
-                  <div className="pt-3 border-t border-gray-100 space-y-2">
-                    {cat.longOpenCount > 0 && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-red-100">
-                          <Clock className="h-3 w-3 text-red-500" />
-                        </div>
-                        <span className="text-gray-700">
-                          <strong className="text-red-600">{cat.longOpenCount}</strong> positions open &gt;60 days
-                        </span>
-                      </div>
-                    )}
-                    {cat.relatedSurge && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100">
-                          <Zap className="h-3 w-3 text-amber-500" />
-                        </div>
-                        <span className="text-gray-700">
-                          <strong className="text-amber-600">{cat.relatedSurge.agency}</strong> hiring surge ({cat.relatedSurge.surgeMultiplier.toFixed(1)}× normal)
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {filteredCategories.length > 12 && (
-          <div className="px-5 py-4 border-t border-gray-100 text-center">
-            <span className="text-sm text-gray-500">
-              +{filteredCategories.length - 12} more categories
-            </span>
-          </div>
-        )}
-      </div>
 
       {/* Category Drill-Down Modal */}
       <CategoryDrillDown

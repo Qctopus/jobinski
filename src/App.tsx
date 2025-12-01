@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import { LearningDashboard } from './components/LearningDashboard';
-import { ReportGenerator } from './components/reports/ReportGenerator';
+import { ReportGenerator, MonthlyReport } from './components/reports';
 import { DataQualityMonitor } from './components/admin/DataQualityMonitor';
 import { ProcessedJobData } from './types';
 import { LoadingState, AppError, createAppError } from './types/common';
@@ -18,201 +18,211 @@ function App() {
   const [loadingState, setLoadingState] = useState<LoadingState>({ status: 'idle' });
   const [error, setError] = useState<AppError | null>(null);
   const [progress, setProgress] = useState<number>(0);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'learning' | 'reports' | 'admin'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'learning' | 'reports' | 'admin' | 'monthly-report'>('dashboard');
+  const [reportAgency, setReportAgency] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<any>(null);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<{ type: 'info' | 'success' | 'error'; message: string } | null>(null);
 
-  // Load data on component mount
-  useEffect(() => {
-    const loadData = async () => {
+  // Shared function to load all data (used on mount and after sync)
+  const loadAllData = async (isRefresh: boolean = false) => {
+    if (!isRefresh) {
       setLoadingState({ status: 'loading', progress: 0 });
       setError(null);
       setProgress(0);
+    }
 
+    try {
+      console.log(isRefresh ? '🔄 Refreshing data after sync...' : '🚀 Loading data from backend...');
+      
+      // Step 1: Check sync status
+      if (!isRefresh) setProgress(10);
+      console.log('📊 Checking sync status...');
+      
+      let statusResponse;
       try {
-        console.log('🚀 Loading data from backend...');
+        statusResponse = await dashboardApi.getSyncStatus();
+      } catch (err) {
+        // If sync status fails, the backend might not be running
+        throw createAppError(
+          'Cannot connect to backend. Make sure the server is running on port 5000.',
+          'CONNECTION_ERROR',
+          true,
+          { error: err }
+        );
+      }
+
+      setSyncStatus(statusResponse.data);
+
+      if (!statusResponse.data?.hasData) {
+        throw createAppError(
+          'No data available. Please run sync first: cd backend && npm run sync:dev',
+          'NO_DATA',
+          true,
+          { syncStatus: statusResponse.data }
+        );
+      }
+
+      console.log(`✅ Backend has ${statusResponse.data.total_jobs} jobs available`);
+
+      // Step 2: Load pre-computed dashboard data
+      if (!isRefresh) setProgress(30);
+      console.log('📊 Loading pre-computed analytics...');
+      
+      const allDataResponse = await dashboardApi.getAllDashboardData();
+      
+      if (!allDataResponse.success) {
+        throw createAppError(
+          'Failed to load dashboard data',
+          'API_ERROR',
+          true,
+          { response: allDataResponse }
+        );
+      }
+
+      setDashboardData(allDataResponse.data);
+      console.log('✅ Dashboard analytics loaded');
+
+      // Step 3: Load ALL jobs for Job Browser
+      if (!isRefresh) setProgress(60);
+      console.log('📋 Loading all jobs...');
+      
+      // Load all jobs - backend SQLite makes this fast now
+      const jobsResponse = await dashboardApi.getJobs({
+        page: 1,
+        limit: 50000, // Load all jobs - SQLite cache makes this fast
+        sort_by: 'posting_date',
+        sort_order: 'desc'
+      });
+
+      if (!jobsResponse.success) {
+        throw createAppError(
+          'Failed to load jobs',
+          'API_ERROR',
+          true,
+          { response: jobsResponse }
+        );
+      }
+
+      // Transform jobs - backend data already has most fields processed
+      // Use 'as any' to avoid strict type checking since backend provides all needed fields
+      const transformedJobs = jobsResponse.data.map((job: any) => ({
+        // Core fields
+        id: String(job.id),
+        url: job.url || '',
+        title: job.title || '',
+        description: job.description || '',
+        duty_station: job.duty_station || '',
+        duty_country: job.duty_country || '',
+        duty_continent: job.duty_continent || '',
+        country_code: job.country_code || '',
+        eligible_nationality: job.eligible_nationality || '',
+        hs_min_exp: job.hs_min_exp || null,
+        bachelor_min_exp: job.bachelor_min_exp || null,
+        master_min_exp: job.master_min_exp || null,
+        up_grade: job.up_grade || '',
+        pipeline: job.pipeline || '',
+        department: job.department || '',
+        long_agency: job.long_agency || '',
+        short_agency: job.short_agency || '',
+        posting_date: job.posting_date || '',
+        apply_until: job.apply_until || '',
+        languages: job.languages || '',
+        uniquecode: job.uniquecode || '',
+        ideal_candidate: job.ideal_candidate || '',
+        job_labels: job.job_labels || '',
+        job_labels_vectorized: job.job_labels_vectorized || '',
+        job_candidate_vectorized: job.job_candidate_vectorized || '',
+        created_at: job.created_at || '',
+        updated_at: job.updated_at || '',
+        archived: Boolean(job.archived),
+        sectoral_category: job.sectoral_category || '',
         
-        // Step 1: Check sync status
-        setProgress(10);
-        console.log('📊 Checking sync status...');
+        // Processed fields from backend
+        primary_category: job.primary_category || 'operations-administration',
+        secondary_categories: job.secondary_categories || [],
+        classification_confidence: job.classification_confidence || 50,
+        classification_reasoning: job.classification_reasoning || [],
+        is_ambiguous_category: false,
+        emerging_terms_found: [],
         
-        let statusResponse;
-        try {
-          statusResponse = await dashboardApi.getSyncStatus();
-        } catch (err) {
-          // If sync status fails, the backend might not be running
-          throw createAppError(
-            'Cannot connect to backend. Make sure the server is running on port 5000.',
-            'CONNECTION_ERROR',
-            true,
-            { error: err }
-          );
-        }
-
-        setSyncStatus(statusResponse.data);
-
-        if (!statusResponse.data?.hasData) {
-          throw createAppError(
-            'No data available. Please run sync first: cd backend && npm run sync:dev',
-            'NO_DATA',
-            true,
-            { syncStatus: statusResponse.data }
-          );
-        }
-
-        console.log(`✅ Backend has ${statusResponse.data.total_jobs} jobs available`);
-
-        // Step 2: Load pre-computed dashboard data
-        setProgress(30);
-        console.log('📊 Loading pre-computed analytics...');
+        // Status fields
+        status: job.status || 'active',
+        is_active: Boolean(job.is_active),
+        is_expired: Boolean(job.is_expired),
+        days_remaining: job.days_remaining || 0,
+        urgency: job.urgency || 'normal',
+        application_window_days: job.application_window_days || 30,
+        formatted_posting_date: job.formatted_posting_date || '',
+        formatted_apply_until: job.formatted_apply_until || '',
         
-        const allDataResponse = await dashboardApi.getAllDashboardData();
-        
-        if (!allDataResponse.success) {
-          throw createAppError(
-            'Failed to load dashboard data',
-            'API_ERROR',
-            true,
-            { response: allDataResponse }
-          );
-        }
+        // Analytics fields with defaults
+        seniority_level: job.seniority_level || 'Mid',
+        location_type: job.location_type || 'Field',
+        skill_domain: 'Mixed',
+        posting_month: job.posting_date ? new Date(job.posting_date).toLocaleString('default', { month: 'short' }) : '',
+        posting_year: job.posting_date ? new Date(job.posting_date).getFullYear() : new Date().getFullYear(),
+        posting_quarter: 'Q1',
+        grade_level: 'Mid',
+        grade_numeric: 3,
+        is_consultant: false,
+        geographic_region: 'Global',
+        geographic_subregion: '',
+        is_conflict_zone: false,
+        is_developing_country: false,
+        relevant_experience: 0,
+        language_count: (job.languages || '').split(',').filter((l: string) => l.trim()).length,
+        is_home_based: (job.duty_station || '').toLowerCase().includes('home')
+      })) as ProcessedJobData[];
 
-        setDashboardData(allDataResponse.data);
-        console.log('✅ Dashboard analytics loaded');
+      setProcessedData(transformedJobs);
+      console.log(`✅ Loaded ${transformedJobs.length} jobs for Job Browser`);
 
-        // Step 3: Load ALL jobs for Job Browser
-        setProgress(60);
-        console.log('📋 Loading all jobs...');
-        
-        // Load all jobs - backend SQLite makes this fast now
-        const jobsResponse = await dashboardApi.getJobs({
-          page: 1,
-          limit: 50000, // Load all jobs - SQLite cache makes this fast
-          sort_by: 'posting_date',
-          sort_order: 'desc'
-        });
-
-        if (!jobsResponse.success) {
-          throw createAppError(
-            'Failed to load jobs',
-            'API_ERROR',
-            true,
-            { response: jobsResponse }
-          );
-        }
-
-        // Transform jobs - backend data already has most fields processed
-        // Use 'as any' to avoid strict type checking since backend provides all needed fields
-        const transformedJobs = jobsResponse.data.map((job: any) => ({
-          // Core fields
-          id: String(job.id),
-          url: job.url || '',
-          title: job.title || '',
-          description: job.description || '',
-          duty_station: job.duty_station || '',
-          duty_country: job.duty_country || '',
-          duty_continent: job.duty_continent || '',
-          country_code: job.country_code || '',
-          eligible_nationality: job.eligible_nationality || '',
-          hs_min_exp: job.hs_min_exp || null,
-          bachelor_min_exp: job.bachelor_min_exp || null,
-          master_min_exp: job.master_min_exp || null,
-          up_grade: job.up_grade || '',
-          pipeline: job.pipeline || '',
-          department: job.department || '',
-          long_agency: job.long_agency || '',
-          short_agency: job.short_agency || '',
-          posting_date: job.posting_date || '',
-          apply_until: job.apply_until || '',
-          languages: job.languages || '',
-          uniquecode: job.uniquecode || '',
-          ideal_candidate: job.ideal_candidate || '',
-          job_labels: job.job_labels || '',
-          job_labels_vectorized: job.job_labels_vectorized || '',
-          job_candidate_vectorized: job.job_candidate_vectorized || '',
-          created_at: job.created_at || '',
-          updated_at: job.updated_at || '',
-          archived: Boolean(job.archived),
-          sectoral_category: job.sectoral_category || '',
-          
-          // Processed fields from backend
-          primary_category: job.primary_category || 'operations-administration',
-          secondary_categories: job.secondary_categories || [],
-          classification_confidence: job.classification_confidence || 50,
-          classification_reasoning: job.classification_reasoning || [],
-          is_ambiguous_category: false,
-          emerging_terms_found: [],
-          
-          // Status fields
-          status: job.status || 'active',
-          is_active: Boolean(job.is_active),
-          is_expired: Boolean(job.is_expired),
-          days_remaining: job.days_remaining || 0,
-          urgency: job.urgency || 'normal',
-          application_window_days: job.application_window_days || 30,
-          formatted_posting_date: job.formatted_posting_date || '',
-          formatted_apply_until: job.formatted_apply_until || '',
-          
-          // Analytics fields with defaults
-          seniority_level: job.seniority_level || 'Mid',
-          location_type: job.location_type || 'Field',
-          skill_domain: 'Mixed',
-          posting_month: job.posting_date ? new Date(job.posting_date).toLocaleString('default', { month: 'short' }) : '',
-          posting_year: job.posting_date ? new Date(job.posting_date).getFullYear() : new Date().getFullYear(),
-          posting_quarter: 'Q1',
-          grade_level: 'Mid',
-          grade_numeric: 3,
-          is_consultant: false,
-          geographic_region: 'Global',
-          geographic_subregion: '',
-          is_conflict_zone: false,
-          is_developing_country: false,
-          relevant_experience: 0,
-          language_count: (job.languages || '').split(',').filter((l: string) => l.trim()).length,
-          is_home_based: (job.duty_station || '').toLowerCase().includes('home')
-        })) as ProcessedJobData[];
-
-        setProcessedData(transformedJobs);
-        console.log(`✅ Loaded ${transformedJobs.length} jobs for Job Browser`);
-
-        // Complete!
+      // Complete!
+      if (!isRefresh) {
         setProgress(100);
         setLoadingState({ status: 'success' });
+      }
 
-        console.log('🎉 All data loaded successfully!');
+      console.log(isRefresh ? '🎉 Data refreshed successfully!' : '🎉 All data loaded successfully!');
+      return true;
 
-      } catch (err) {
-        console.error('❌ Loading failed:', err);
+    } catch (err) {
+      console.error('❌ Loading failed:', err);
+      if (!isRefresh) {
         handleLoadingError(err);
       }
-    };
+      return false;
+    }
+  };
 
-    const handleLoadingError = (err: any) => {
-      let appError: AppError;
-      if (err instanceof Error && 'code' in err) {
-        appError = err as AppError;
-      } else if (err instanceof Error) {
-        appError = createAppError(
-          err.message || 'Failed to load data',
-          'UNKNOWN_ERROR',
-          true,
-          { originalError: err.name }
-        );
-      } else {
-        appError = createAppError(
-          'An unexpected error occurred',
-          'UNKNOWN_ERROR',
-          true,
-          { error: String(err) }
-        );
-      }
+  const handleLoadingError = (err: any) => {
+    let appError: AppError;
+    if (err instanceof Error && 'code' in err) {
+      appError = err as AppError;
+    } else if (err instanceof Error) {
+      appError = createAppError(
+        err.message || 'Failed to load data',
+        'UNKNOWN_ERROR',
+        true,
+        { originalError: err.name }
+      );
+    } else {
+      appError = createAppError(
+        'An unexpected error occurred',
+        'UNKNOWN_ERROR',
+        true,
+        { error: String(err) }
+      );
+    }
 
-      setError(appError);
-      setLoadingState({ status: 'error', error: appError });
-    };
+    setError(appError);
+    setLoadingState({ status: 'error', error: appError });
+  };
 
-    loadData();
+  // Load data on component mount
+  useEffect(() => {
+    loadAllData(false);
   }, []);
 
   const handleRetry = async () => {
@@ -245,9 +255,18 @@ function App() {
             
             if (statusData.success && statusData.data.status === 'completed') {
               clearInterval(pollInterval);
-              setSyncing(false);
               setSyncStatus(statusData.data);
-              setSyncNotification({ type: 'success', message: `Sync complete! ${statusData.data.total_jobs.toLocaleString()} jobs loaded.` });
+              setSyncNotification({ type: 'info', message: 'Sync complete! Loading new data...' });
+              
+              // Reload all data to incorporate new jobs
+              const refreshSuccess = await loadAllData(true);
+              setSyncing(false);
+              
+              if (refreshSuccess) {
+                setSyncNotification({ type: 'success', message: `Data refreshed! ${statusData.data.total_jobs.toLocaleString()} jobs now available.` });
+              } else {
+                setSyncNotification({ type: 'error', message: 'Sync complete but failed to refresh data. Please reload the page.' });
+              }
               // Auto-dismiss notification after 3 seconds
               setTimeout(() => setSyncNotification(null), 3000);
             } else if (statusData.data.status === 'failed') {
@@ -469,8 +488,22 @@ function App() {
               <LearningDashboard />
             ) : currentView === 'admin' ? (
               <DataQualityMonitor data={processedData} />
+            ) : currentView === 'monthly-report' && reportAgency ? (
+              <MonthlyReport 
+                agency={reportAgency}
+                allJobs={processedData}
+                onBack={() => {
+                  setCurrentView('reports');
+                  setReportAgency(null);
+                }}
+              />
             ) : (
-              <ReportGenerator />
+              <ReportGenerator 
+                onViewReport={(agency: string) => {
+                  setReportAgency(agency);
+                  setCurrentView('monthly-report');
+                }}
+              />
             )}
           </DataErrorBoundary>
         </DataProcessingProvider>

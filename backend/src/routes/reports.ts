@@ -6,9 +6,13 @@
 import express, { Request, Response } from 'express';
 import { ReportGeneratorService } from '../services/reports/ReportGeneratorService';
 import { GenerateReportRequest } from '../types/reports';
+import { MonthlyReportDataAggregator } from '../services/reports/MonthlyReportDataAggregator';
+import { HTMLReportGenerator } from '../services/reports/HTMLReportGenerator';
 
 const router = express.Router();
 const reportService = new ReportGeneratorService();
+const monthlyReportAggregator = new MonthlyReportDataAggregator();
+const htmlReportGenerator = new HTMLReportGenerator();
 
 /**
  * POST /api/reports/generate
@@ -250,6 +254,313 @@ router.delete('/:reportId', async (req: Request, res: Response): Promise<void> =
     res.status(500).json({
       success: false,
       error: 'Failed to delete report',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * POST /api/reports/generate-html
+ * Generate an executive-grade HTML report with interactive visualizations
+ */
+router.post('/generate-html', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const agency = req.body.agency;
+    const startDate = req.body.reportPeriod?.startDate || '2025-10-01';
+    const endDate = req.body.reportPeriod?.endDate || '2025-11-30';
+    
+    if (!agency) {
+      res.status(400).json({
+        success: false,
+        error: 'Agency name is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    console.log(`[Reports API] Generating HTML report for ${agency}`);
+    const startTime = Date.now();
+    
+    // Step 1: Generate standard report data using existing service
+    const request: GenerateReportRequest = {
+      agency,
+      reportPeriod: { startDate, endDate },
+      sections: ['all'],
+      format: 'html',
+      includeRawData: false
+    };
+    
+    const result = await reportService.generateReport(request);
+    
+    if (!result.success || !result.reportId) {
+      res.status(400).json({
+        success: false,
+        error: result.error || 'Failed to generate report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Step 2: Get the report data
+    const reportData = await reportService.getReportData(result.reportId);
+    if (!reportData) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Step 3: Transform to MonthlyReportData format
+    const monthlyData = await monthlyReportAggregator.transformToMonthlyReport(
+      reportData,
+      startDate,
+      endDate
+    );
+    
+    // Step 4: Generate HTML
+    const htmlContent = htmlReportGenerator.generateHTMLReport(monthlyData);
+    
+    const processingTime = Date.now() - startTime;
+    console.log(`[Reports API] HTML report generated in ${processingTime}ms`);
+    
+    // Return HTML directly
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `inline; filename="${agency}-monthly-report-${new Date().toISOString().split('T')[0]}.html"`);
+    res.send(htmlContent);
+    
+  } catch (error) {
+    console.error('[Reports API] Error generating HTML report:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate HTML report',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/reports/html/:agency
+ * Quick endpoint to generate HTML report for an agency
+ */
+router.get('/html/:agency', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const agency = req.params.agency as string;
+    const startDate = (req.query.startDate as string) || '2025-10-01';
+    const endDate = (req.query.endDate as string) || '2025-11-30';
+    
+    if (!agency) {
+      res.status(400).json({
+        success: false,
+        error: 'Agency name is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    console.log(`[Reports API] Quick HTML report for ${agency}`);
+    const startTime = Date.now();
+    
+    // Generate standard report data
+    const request: GenerateReportRequest = {
+      agency,
+      reportPeriod: { startDate, endDate },
+      sections: ['all'],
+      format: 'html',
+      includeRawData: false
+    };
+    
+    const result = await reportService.generateReport(request);
+    
+    if (!result.success || !result.reportId) {
+      res.status(400).json({
+        success: false,
+        error: result.error || 'Failed to generate report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    const reportData = await reportService.getReportData(result.reportId);
+    if (!reportData) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Transform and generate HTML
+    const monthlyData = await monthlyReportAggregator.transformToMonthlyReport(
+      reportData,
+      startDate,
+      endDate
+    );
+    
+    const htmlContent = htmlReportGenerator.generateHTMLReport(monthlyData);
+    
+    const processingTime = Date.now() - startTime;
+    console.log(`[Reports API] Quick HTML report generated in ${processingTime}ms`);
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `inline; filename="${agency}-monthly-report.html"`);
+    res.send(htmlContent);
+    
+  } catch (error) {
+    console.error('[Reports API] Error generating HTML report:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate HTML report',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/reports/html-download/:agency
+ * Download HTML report as a file
+ */
+router.get('/html-download/:agency', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const agency = req.params.agency as string;
+    const startDate = (req.query.startDate as string) || '2025-10-01';
+    const endDate = (req.query.endDate as string) || '2025-11-30';
+    
+    if (!agency) {
+      res.status(400).json({
+        success: false,
+        error: 'Agency name is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    console.log(`[Reports API] HTML download for ${agency}`);
+    
+    // Generate report data
+    const request: GenerateReportRequest = {
+      agency,
+      reportPeriod: { startDate, endDate },
+      sections: ['all'],
+      format: 'html',
+      includeRawData: false
+    };
+    
+    const result = await reportService.generateReport(request);
+    
+    if (!result.success || !result.reportId) {
+      res.status(400).json({
+        success: false,
+        error: result.error || 'Failed to generate report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    const reportData = await reportService.getReportData(result.reportId);
+    if (!reportData) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Transform and generate HTML
+    const monthlyData = await monthlyReportAggregator.transformToMonthlyReport(
+      reportData,
+      startDate,
+      endDate
+    );
+    
+    const htmlContent = htmlReportGenerator.generateHTMLReport(monthlyData);
+    
+    // Set download headers
+    const filename = `${agency}-HR-Intelligence-Report-${new Date().toISOString().split('T')[0]}.html`;
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(htmlContent);
+    
+  } catch (error) {
+    console.error('[Reports API] Error downloading HTML report:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to download HTML report',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/reports/monthly-data/:agency
+ * Get the enhanced MonthlyReportData JSON (for debugging or custom frontends)
+ */
+router.get('/monthly-data/:agency', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const agency = req.params.agency as string;
+    const startDate = (req.query.startDate as string) || '2025-10-01';
+    const endDate = (req.query.endDate as string) || '2025-11-30';
+    
+    if (!agency) {
+      res.status(400).json({
+        success: false,
+        error: 'Agency name is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Generate report data
+    const request: GenerateReportRequest = {
+      agency,
+      reportPeriod: { startDate, endDate },
+      sections: ['all'],
+      format: 'html',
+      includeRawData: false
+    };
+    
+    const result = await reportService.generateReport(request);
+    
+    if (!result.success || !result.reportId) {
+      res.status(400).json({
+        success: false,
+        error: result.error || 'Failed to generate report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    const reportData = await reportService.getReportData(result.reportId);
+    if (!reportData) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve report data',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Transform to enhanced format
+    const monthlyData = await monthlyReportAggregator.transformToMonthlyReport(
+      reportData,
+      startDate,
+      endDate
+    );
+    
+    res.json({
+      success: true,
+      data: monthlyData,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('[Reports API] Error getting monthly data:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get monthly data',
       timestamp: new Date().toISOString()
     });
   }

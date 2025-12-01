@@ -20,12 +20,12 @@ const WorkforceInsightsPanel: React.FC<WorkforceInsightsPanelProps> = ({
   isAgencyView,
   agencyName
 }) => {
-  // Icon mapping by type
+  // Icon mapping by type (compact)
   const typeIcons: Record<WorkforceInsight['type'], React.ReactNode> = {
-    trend: <TrendingUp className="h-5 w-5" />,
-    comparison: <Scale className="h-5 w-5" />,
-    anomaly: <AlertTriangle className="h-5 w-5" />,
-    opportunity: <Sparkles className="h-5 w-5" />
+    trend: <TrendingUp className="h-3 w-3" />,
+    comparison: <Scale className="h-3 w-3" />,
+    anomaly: <AlertTriangle className="h-3 w-3" />,
+    opportunity: <Sparkles className="h-3 w-3" />
   };
 
   // Color mapping by type - more subdued
@@ -69,97 +69,51 @@ const WorkforceInsightsPanel: React.FC<WorkforceInsightsPanelProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Lightbulb className="h-4 w-4 text-gray-500" />
-          <div>
-            <h3 className="text-sm font-semibold text-gray-800">
-              Strategic Workforce Insights
-            </h3>
-            <p className="text-xs text-gray-500">
-              {isAgencyView 
-                ? `Analysis for ${agencyName}` 
-                : 'UN System-wide workforce intelligence'
-              }
-            </p>
-          </div>
+      {/* Compact Header */}
+      <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+          <span className="text-xs font-medium text-gray-700">
+            Strategic Insights {isAgencyView && agencyName ? `• ${agencyName}` : ''}
+          </span>
         </div>
-      </div>
-
-      {/* Insights Grid */}
-      <div className="p-4 space-y-4">
-        {/* All insights in a list */}
-        <div className="space-y-3">
-          {insights.map((insight, idx) => (
-            <div
-              key={idx}
-              className={`rounded-lg border p-4 ${typeColors[insight.type]}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  {typeIcons[insight.type]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-gray-900">{insight.title}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${impactColors[insight.impact]}`}>
-                      {insight.impact} impact
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700">{insight.description}</p>
-                  {insight.metric && (
-                    <div className="mt-2 inline-flex items-center gap-1 bg-white/50 rounded px-2 py-1">
-                      <span className="text-xs text-gray-500">Key metric:</span>
-                      <span className="text-sm font-semibold text-gray-900">{insight.metric}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Summary by Type */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-indigo-200">
+        <div className="flex items-center gap-2">
           {Object.entries(typeLabels).map(([type, label]) => {
             const count = groupedInsights[type as WorkforceInsight['type']]?.length || 0;
+            if (count === 0) return null;
             return (
-              <div key={type} className="text-center">
-                <div className="flex justify-center mb-1 text-gray-500">
-                  {typeIcons[type as WorkforceInsight['type']]}
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{count}</div>
-                <div className="text-xs text-gray-600">{label}</div>
-              </div>
+              <span key={type} className="text-[9px] bg-gray-100 rounded px-1.5 py-0.5 text-gray-600">
+                {count} {label}
+              </span>
             );
           })}
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="bg-white/50 border-t border-indigo-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            {insights.filter(i => i.impact === 'high').length > 0 && (
-              <span className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                {insights.filter(i => i.impact === 'high').length} high-impact finding{insights.filter(i => i.impact === 'high').length > 1 ? 's' : ''} requiring attention
-              </span>
-            )}
-            {insights.filter(i => i.impact === 'high').length === 0 && (
-              <span className="text-green-600 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Workforce structure appears healthy
-              </span>
+      {/* Compact Insights List */}
+      <div className="p-2 space-y-1.5">
+        {insights.slice(0, 4).map((insight, idx) => (
+          <div
+            key={idx}
+            className="flex items-start gap-2 rounded p-2 bg-gray-50 border border-gray-100"
+          >
+            <span className={`text-[9px] px-1 py-0.5 rounded font-medium flex-shrink-0 ${impactColors[insight.impact]}`}>
+              {insight.impact}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-medium text-gray-800 truncate">{insight.title}</div>
+              <div className="text-[9px] text-gray-500 truncate">{insight.description}</div>
+            </div>
+            {insight.metric && (
+              <span className="text-[10px] font-bold text-gray-700 flex-shrink-0">{insight.metric}</span>
             )}
           </div>
-          
-          <div className="flex items-center gap-2 text-sm text-indigo-600">
-            <span>Explore data in sections above</span>
-            <ArrowRight className="h-4 w-4" />
+        ))}
+        {insights.length > 4 && (
+          <div className="text-center text-[9px] text-gray-400 py-1">
+            +{insights.length - 4} more insights
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

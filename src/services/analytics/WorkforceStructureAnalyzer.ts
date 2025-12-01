@@ -226,16 +226,16 @@ export class WorkforceStructureAnalyzer {
       ? jobs.filter(j => (j.short_agency || j.long_agency) === filterAgency)
       : jobs;
     
-    // Get unique categories, limiting to top 10 for better visualization
+    // Get unique categories - show all categories that have data
     const categoryCount: Record<string, number> = {};
     filteredJobs.forEach(j => {
       const cat = j.sectoral_category || j.primary_category || 'Other';
       categoryCount[cat] = (categoryCount[cat] || 0) + 1;
     });
     
+    // Sort by count but don't limit - show all categories
     const categories = Object.entries(categoryCount)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 10)
       .map(([cat]) => cat);
     
     // Define grade tiers for matrix rows
@@ -450,16 +450,17 @@ export class WorkforceStructureAnalyzer {
     
     let staffCount = 0;
     let nonStaffCount = 0;
+    
     const contractTypeCounts: Record<string, number> = {};
     const categoryAnalysis: Record<string, { staff: number; nonStaff: number }> = {};
     const agencyAnalysis: Record<string, { staff: number; nonStaff: number }> = {};
     
-    // Contract type colors
+    // Contract type colors - Service Agreements shown in contract breakdown
     const contractColors: Record<string, string> = {
       'International Staff': '#3B82F6',
       'National Staff': '#10B981',
-      'Service Agreement': '#F59E0B',
-      'Consultant': '#EF4444',
+      'Service Agreement': '#0EA5E9', // NPSA/IPSA - counts as Non-Staff but distinct contract type
+      'Consultant': '#F59E0B',
       'Trainee': '#8B5CF6',
       'Other': '#6B7280'
     };
@@ -469,13 +470,14 @@ export class WorkforceStructureAnalyzer {
       const category = job.sectoral_category || job.primary_category || 'Other';
       const agency = job.short_agency || job.long_agency || 'Unknown';
       
+      // Binary classification: Staff vs Non-Staff (Service Agreements count as Non-Staff)
       if (analysis.staffCategory === 'Staff') {
         staffCount++;
       } else {
         nonStaffCount++;
       }
       
-      // Contract type
+      // Contract type (for detailed breakdown)
       contractTypeCounts[analysis.contractType] = (contractTypeCounts[analysis.contractType] || 0) + 1;
       
       // By category
@@ -523,7 +525,7 @@ export class WorkforceStructureAnalyzer {
         }))
         .sort((a, b) => b.nonStaffRatio - a.nonStaffRatio),
       byAgency: Object.entries(agencyAnalysis)
-        .filter(([_, data]) => (data.staff + data.nonStaff) >= 1) // Include all agencies with any positions
+        .filter(([_, data]) => (data.staff + data.nonStaff) >= 1)
         .map(([agency, data]) => ({
           agency,
           staffCount: data.staff,
@@ -533,7 +535,7 @@ export class WorkforceStructureAnalyzer {
             : 0,
           total: data.staff + data.nonStaff
         }))
-        .sort((a, b) => b.nonStaffRatio - a.nonStaffRatio)
+        .sort((a, b) => b.total - a.total)
     };
   }
   

@@ -13,7 +13,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Globe, MapPin, Building2, Users, TrendingUp, 
-  ChevronDown, ChevronUp, AlertTriangle, CheckCircle,
+  AlertTriangle, CheckCircle,
   Info, Flag, Briefcase, BarChart3, ArrowUpRight, ArrowDownRight,
   Map
 } from 'lucide-react';
@@ -31,6 +31,8 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { GeographicMap } from './geography';
+import AgencyLocationDominance from './geography/AgencyLocationDominance';
+import AgencyGeographicProfile from './geography/AgencyGeographicProfile';
 // TimeComparisonSelector removed - now using global time filter
 
 // ============ TYPES ============
@@ -45,7 +47,6 @@ interface GeographyIntelligenceProps {
 // filterByAnalysisPeriod removed - data is now pre-filtered by global timeframe
 
 const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, filters }) => {
-  const [expandedSection, setExpandedSection] = useState<string | null>('map');
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   
   const {
@@ -96,9 +97,19 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
     [analyzer, analysisData, isAgencyView, selectedAgencyName]
   );
   
+  const marketFootprint = useMemo(() => 
+    isAgencyView ? analyzer.calculateOperationalFootprint(marketData) : null,
+    [analyzer, marketData, isAgencyView]
+  );
+  
   const regionalCoverage = useMemo(() => 
     analyzer.calculateRegionalCoverage(analysisData, isAgencyView ? selectedAgencyName : undefined),
     [analyzer, analysisData, isAgencyView, selectedAgencyName]
+  );
+  
+  const marketRegionalCoverage = useMemo(() => 
+    isAgencyView ? analyzer.calculateRegionalCoverage(marketData) : null,
+    [analyzer, marketData, isAgencyView]
   );
   
   const noAnalysis = useMemo(() => 
@@ -125,10 +136,6 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
     analyzer.generateInsights(analysisData, isAgencyView ? selectedAgencyName : undefined, isAgencyView ? marketData : undefined),
     [analyzer, analysisData, isAgencyView, selectedAgencyName, marketData]
   );
-  
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
 
   return (
     <div className="space-y-4">
@@ -157,12 +164,10 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
       </div>
 
       {/* Interactive Geographic Map */}
-      <CollapsibleSection
+      <Section
         title="Interactive Map"
         subtitle="Explore your recruitment footprint with agency comparison"
         icon={<Map className="h-4 w-4" />}
-        isExpanded={expandedSection === 'map'}
-        onToggle={() => toggleSection('map')}
         accentColor="emerald"
       >
         <GeographicMap
@@ -173,7 +178,7 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
           isAgencyView={isAgencyView}
           timeRange={filters.timeRange}
         />
-      </CollapsibleSection>
+      </Section>
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -210,53 +215,71 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
         />
       </div>
       
+      {/* Agency Location Dominance - Only shown in market view */}
+      {!isAgencyView && (
+        <AgencyLocationDominance
+          data={periodFilteredMarketData}
+          isAgencyView={isAgencyView}
+          selectedAgency={undefined}
+        />
+      )}
+
+      {/* Agency Geographic Profile - Only shown in agency view */}
+      {isAgencyView && selectedAgencyName && (
+        <AgencyGeographicProfile
+          agencyData={periodFilteredData}
+          marketData={periodFilteredMarketData}
+          agencyName={selectedAgencyName}
+        />
+      )}
+      
       {/* Section 1: Hardship Profile */}
-      <CollapsibleSection
+      <Section
         title="Hardship Profile"
         subtitle="ICSC duty station classifications from A (minimal) to E (extreme)"
         icon={<AlertTriangle className="h-4 w-4" />}
-        isExpanded={expandedSection === 'hardship'}
-        onToggle={() => toggleSection('hardship')}
         accentColor="orange"
       >
         <HardshipProfileSection 
-          profile={hardshipProfile}
+          profile={hardshipProfile} 
           marketProfile={marketHardshipProfile}
           isAgencyView={isAgencyView}
         />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 2: Operational Footprint */}
-      <CollapsibleSection
+      <Section
         title="Operational Footprint"
         subtitle="HQ vs Regional vs Field distribution"
         icon={<Building2 className="h-4 w-4" />}
-        isExpanded={expandedSection === 'footprint'}
-        onToggle={() => toggleSection('footprint')}
         accentColor="blue"
       >
-        <OperationalFootprintSection footprint={footprint} />
-      </CollapsibleSection>
+        <OperationalFootprintSection 
+          footprint={footprint} 
+          marketFootprint={marketFootprint}
+          isAgencyView={isAgencyView}
+        />
+      </Section>
       
       {/* Section 3: Regional Coverage */}
-      <CollapsibleSection
+      <Section
         title="Regional Programme Coverage"
         subtitle="Positions by UN region with hardship breakdown"
         icon={<Globe className="h-4 w-4" />}
-        isExpanded={expandedSection === 'regional'}
-        onToggle={() => toggleSection('regional')}
         accentColor="emerald"
       >
-        <RegionalCoverageSection coverage={regionalCoverage} />
-      </CollapsibleSection>
+        <RegionalCoverageSection 
+          coverage={regionalCoverage} 
+          marketCoverage={marketRegionalCoverage}
+          isAgencyView={isAgencyView}
+        />
+      </Section>
       
       {/* Section 4: Country Deep-Dive */}
-      <CollapsibleSection
+      <Section
         title="Country Analysis"
         subtitle="Detailed breakdown by country and duty station"
         icon={<Flag className="h-4 w-4" />}
-        isExpanded={expandedSection === 'country'}
-        onToggle={() => toggleSection('country')}
         accentColor="teal"
       >
         <CountryAnalysisSection 
@@ -265,32 +288,28 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
           onSelectCountry={setSelectedCountry}
           countryAnalysis={countryAnalysis}
         />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 5: Localization */}
-      <CollapsibleSection
+      <Section
         title="Localization & National Staffing"
         subtitle="National Officer positions and localization progress"
         icon={<Users className="h-4 w-4" />}
-        isExpanded={expandedSection === 'localization'}
-        onToggle={() => toggleSection('localization')}
         accentColor="purple"
       >
         <LocalizationSection analysis={noAnalysis} />
-      </CollapsibleSection>
+      </Section>
       
       {/* Section 6: Geographic Trends */}
       {trends.length > 0 && (
-        <CollapsibleSection
+        <Section
           title="Geographic Evolution"
           subtitle="Changes over the past 4 weeks"
           icon={<TrendingUp className="h-4 w-4" />}
-          isExpanded={expandedSection === 'trends'}
-          onToggle={() => toggleSection('trends')}
           accentColor="indigo"
         >
           <GeographicTrendsSection trends={trends} />
-        </CollapsibleSection>
+        </Section>
       )}
       
       {/* Insights Panel */}
@@ -348,20 +367,28 @@ const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, icon, color, t
   );
 };
 
-interface CollapsibleSectionProps {
+// Section component - always expanded (no accordion)
+interface SectionProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  isExpanded: boolean;
-  onToggle: () => void;
   children: React.ReactNode;
   accentColor: 'orange' | 'blue' | 'emerald' | 'teal' | 'purple' | 'indigo';
 }
 
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  title, subtitle, icon, isExpanded, onToggle, children, accentColor
+const Section: React.FC<SectionProps> = ({
+  title, subtitle, icon, children, accentColor
 }) => {
   const accentClasses = {
+    orange: 'text-orange-500 bg-orange-50 border-orange-200',
+    blue: 'text-blue-500 bg-blue-50 border-blue-200',
+    emerald: 'text-emerald-500 bg-emerald-50 border-emerald-200',
+    teal: 'text-teal-500 bg-teal-50 border-teal-200',
+    purple: 'text-purple-500 bg-purple-50 border-purple-200',
+    indigo: 'text-indigo-500 bg-indigo-50 border-indigo-200'
+  };
+  
+  const iconColorClasses = {
     orange: 'text-orange-500',
     blue: 'text-blue-500',
     emerald: 'text-emerald-500',
@@ -372,30 +399,34 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className={accentClasses[accentColor]}>{icon}</span>
-          <div className="text-left">
-            <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-            <p className="text-xs text-gray-500">{subtitle}</p>
-          </div>
+      <div className={`px-4 py-2.5 flex items-center gap-3 border-b ${accentClasses[accentColor]}`}>
+        <span className={iconColorClasses[accentColor]}>{icon}</span>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+          <p className="text-xs text-gray-500">{subtitle}</p>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-400" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        )}
-      </button>
-      {isExpanded && (
-        <div className="p-4 border-t border-gray-100">
-          {children}
-        </div>
-      )}
+      </div>
+      <div className="p-4">
+        {children}
+      </div>
     </div>
   );
+};
+
+// Keep CollapsibleSection for backwards compatibility but it now always shows content
+interface CollapsibleSectionProps {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  isExpanded?: boolean;
+  onToggle?: () => void;
+  children: React.ReactNode;
+  accentColor: 'orange' | 'blue' | 'emerald' | 'teal' | 'purple' | 'indigo';
+}
+
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = (props) => {
+  // Just use the Section component - no collapsing
+  return <Section {...props} />;
 };
 
 // ============ SECTION COMPONENTS ============
@@ -519,29 +550,37 @@ const HardshipProfileSection: React.FC<HardshipProfileSectionProps> = ({ profile
 
 interface OperationalFootprintSectionProps {
   footprint: ReturnType<GeographyIntelligenceAnalyzer['calculateOperationalFootprint']>;
+  marketFootprint?: ReturnType<GeographyIntelligenceAnalyzer['calculateOperationalFootprint']> | null;
+  isAgencyView: boolean;
 }
 
-const OperationalFootprintSection: React.FC<OperationalFootprintSectionProps> = ({ footprint }) => {
-  const pieData = footprint.categories.map(cat => ({
+const OperationalFootprintSection: React.FC<OperationalFootprintSectionProps> = ({ footprint, marketFootprint, isAgencyView }) => {
+  const pieData = footprint.categories.filter(c => c.count > 0).map(cat => ({
     name: cat.category,
     value: cat.count,
     color: cat.color
   }));
   
+  // Get market percentage for comparison
+  const getMarketPercentage = (category: string) => {
+    if (!marketFootprint) return null;
+    const mktCat = marketFootprint.categories.find(c => c.category === category);
+    return mktCat?.percentage ?? null;
+  };
+  
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* Pie Chart */}
-      <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Location Type Distribution</h4>
-        <div className="h-64">
+    <div className="flex gap-4">
+      {/* Pie Chart - Compact */}
+      <div className="w-40 flex-shrink-0">
+        <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                innerRadius={35}
+                outerRadius={55}
                 paddingAngle={2}
                 dataKey="value"
               >
@@ -550,51 +589,52 @@ const OperationalFootprintSection: React.FC<OperationalFootprintSectionProps> = 
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value: number) => [`${value} positions`, '']}
+                formatter={(value: number) => [`${value}`, '']}
                 contentStyle={{
                   backgroundColor: '#F9FAFB',
                   border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
-                  fontSize: '12px'
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  padding: '4px 8px'
                 }}
-              />
-              <Legend 
-                formatter={(value) => <span className="text-xs text-gray-600">{value}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
       
-      {/* Details */}
-      <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Breakdown by Location Type</h4>
-        <div className="space-y-3">
-          {footprint.categories.map(cat => (
-            <div key={cat.category} className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span 
-                    className="w-3 h-3 rounded"
-                    style={{ backgroundColor: cat.color }}
-                  />
-                  <span className="text-sm font-medium text-gray-700">{cat.category}</span>
-                </div>
-                <span className="text-sm font-bold text-gray-900">
-                  {cat.percentage.toFixed(0)}%
-                </span>
+      {/* Details - Grid of cards */}
+      <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-2">
+        {footprint.categories.map(cat => {
+          const mktPct = getMarketPercentage(cat.category);
+          const diff = mktPct !== null ? cat.percentage - mktPct : null;
+          
+          return (
+            <div key={cat.category} className="p-2 bg-gray-50 rounded-lg border-l-2" style={{ borderLeftColor: cat.color }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold text-gray-700">{cat.category}</span>
+                <span className="text-sm font-bold text-gray-900">{cat.percentage.toFixed(0)}%</span>
               </div>
-              <p className="text-[10px] text-gray-500 mb-2">{cat.description}</p>
-              <div className="flex flex-wrap gap-1">
-                {cat.topLocations.slice(0, 3).map((loc, idx) => (
-                  <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-white rounded border border-gray-200">
+              {isAgencyView && mktPct !== null && (
+                <div className="text-[9px] text-gray-500 mb-1">
+                  vs {mktPct.toFixed(0)}% mkt
+                  {diff !== null && diff !== 0 && (
+                    <span className={diff > 0 ? 'text-green-600 ml-1' : 'text-red-600 ml-1'}>
+                      ({diff > 0 ? '+' : ''}{diff.toFixed(0)}pp)
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-0.5">
+                {cat.topLocations.slice(0, 2).map((loc, idx) => (
+                  <span key={idx} className="text-[9px] px-1 py-0.5 bg-white rounded border border-gray-200 truncate max-w-[80px]">
                     {loc.location} ({loc.count})
                   </span>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -602,53 +642,78 @@ const OperationalFootprintSection: React.FC<OperationalFootprintSectionProps> = 
 
 interface RegionalCoverageSectionProps {
   coverage: ReturnType<GeographyIntelligenceAnalyzer['calculateRegionalCoverage']>;
+  marketCoverage?: ReturnType<GeographyIntelligenceAnalyzer['calculateRegionalCoverage']> | null;
+  isAgencyView: boolean;
 }
 
-const RegionalCoverageSection: React.FC<RegionalCoverageSectionProps> = ({ coverage }) => {
+const RegionalCoverageSection: React.FC<RegionalCoverageSectionProps> = ({ coverage, marketCoverage, isAgencyView }) => {
+  // Get market percentage for comparison
+  const getMarketData = (regionName: string) => {
+    if (!marketCoverage) return null;
+    return marketCoverage.find(r => r.region === regionName) ?? null;
+  };
+  
   return (
-    <div className="space-y-3">
-      {coverage.map(region => (
-        <div key={region.region} className="bg-gray-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-emerald-500" />
-              <span className="text-sm font-medium text-gray-700">{region.region}</span>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+      {coverage.map(region => {
+        const mktRegion = getMarketData(region.region);
+        const diff = mktRegion ? region.percentage - mktRegion.percentage : null;
+        
+        return (
+          <div key={region.region} className="bg-gray-50 rounded-lg p-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-xs font-medium text-gray-700">{region.region}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-gray-900">
+                  {region.percentage.toFixed(0)}%
+                </span>
+                <span className="text-[10px] text-gray-400 ml-1">
+                  ({region.totalCount})
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-gray-900">
-                {region.percentage.toFixed(0)}%
-              </span>
-              <span className="text-xs text-gray-400">
-                ({region.totalCount} positions)
-              </span>
+            
+            {/* Market comparison */}
+            {isAgencyView && mktRegion && (
+              <div className="text-[9px] text-gray-500 mb-1.5">
+                vs {mktRegion.percentage.toFixed(0)}% mkt
+                {diff !== null && diff !== 0 && (
+                  <span className={diff > 0 ? 'text-green-600 ml-1' : 'text-amber-600 ml-1'}>
+                    ({diff > 0 ? '+' : ''}{diff.toFixed(0)}pp)
+                  </span>
+                )}
+              </div>
+            )}
+            
+            {/* Hardship breakdown bar */}
+            <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex mb-1.5">
+              {region.hardshipBreakdown.map((hb, idx) => (
+                <div
+                  key={idx}
+                  className="h-full"
+                  style={{ 
+                    width: `${hb.percentage}%`,
+                    backgroundColor: hb.color
+                  }}
+                  title={`${hb.hardshipClass}: ${hb.count} (${hb.percentage.toFixed(0)}%)`}
+                />
+              ))}
+            </div>
+            
+            {/* Top countries - compact */}
+            <div className="flex flex-wrap gap-0.5">
+              {region.topCountries.slice(0, 3).map((country, idx) => (
+                <span key={idx} className="text-[9px] px-1 py-0.5 bg-white rounded border border-gray-200">
+                  {country.country} ({country.count})
+                </span>
+              ))}
             </div>
           </div>
-          
-          {/* Hardship breakdown bar */}
-          <div className="h-4 bg-gray-200 rounded-full overflow-hidden flex mb-2">
-            {region.hardshipBreakdown.map((hb, idx) => (
-              <div
-                key={idx}
-                className="h-full"
-                style={{ 
-                  width: `${hb.percentage}%`,
-                  backgroundColor: hb.color
-                }}
-                title={`${hb.hardshipClass}: ${hb.count} (${hb.percentage.toFixed(0)}%)`}
-              />
-            ))}
-          </div>
-          
-          {/* Top countries */}
-          <div className="flex flex-wrap gap-1">
-            {region.topCountries.map((country, idx) => (
-              <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-white rounded border border-gray-200">
-                {country.country} ({country.count})
-              </span>
-            ))}
-          </div>
-        </div>
-      ))}
+        );
+      })}
       
       {/* Legend */}
       <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
@@ -866,48 +931,47 @@ interface GeographicTrendsSectionProps {
 }
 
 const GeographicTrendsSection: React.FC<GeographicTrendsSectionProps> = ({ trends }) => {
+  // Limit to top 8 trends and organize by type
+  const limitedTrends = trends.slice(0, 8);
+  
   return (
-    <div className="space-y-3">
-      {trends.map((trend, idx) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      {limitedTrends.map((trend, idx) => (
         <div 
           key={idx} 
-          className={`flex items-center gap-3 p-3 rounded-lg ${
-            trend.type === 'new' ? 'bg-green-50 border border-green-200' :
-            trend.type === 'growth' ? 'bg-blue-50 border border-blue-200' :
-            'bg-red-50 border border-red-200'
+          className={`flex items-center gap-2 p-2 rounded-lg border-l-2 ${
+            trend.type === 'new' ? 'bg-green-50 border-l-green-500' :
+            trend.type === 'growth' ? 'bg-blue-50 border-l-blue-500' :
+            'bg-red-50 border-l-red-500'
           }`}
         >
-          <div className={`p-2 rounded-full ${
+          <div className={`p-1 rounded-full flex-shrink-0 ${
             trend.type === 'new' ? 'bg-green-100' :
             trend.type === 'growth' ? 'bg-blue-100' :
             'bg-red-100'
           }`}>
             {trend.type === 'new' ? (
-              <CheckCircle className={`h-4 w-4 text-green-600`} />
+              <CheckCircle className="h-3 w-3 text-green-600" />
             ) : trend.type === 'growth' ? (
-              <ArrowUpRight className={`h-4 w-4 text-blue-600`} />
+              <ArrowUpRight className="h-3 w-3 text-blue-600" />
             ) : (
-              <ArrowDownRight className={`h-4 w-4 text-red-600`} />
+              <ArrowDownRight className="h-3 w-3 text-red-600" />
             )}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">{trend.location}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                trend.type === 'new' ? 'bg-green-200 text-green-700' :
-                trend.type === 'growth' ? 'bg-blue-200 text-blue-700' :
-                'bg-red-200 text-red-700'
-              }`}>
-                {trend.type === 'new' ? 'NEW' : 
-                 trend.type === 'growth' ? `+${trend.change.toFixed(0)}%` : 
-                 `${trend.change.toFixed(0)}%`}
-              </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-xs font-medium text-gray-700 truncate">{trend.location}</span>
+              <span className="text-xs font-bold text-gray-900 flex-shrink-0">{trend.count}</span>
             </div>
-            <p className="text-xs text-gray-500">{trend.context}</p>
-          </div>
-          <div className="text-right">
-            <span className="text-sm font-bold text-gray-700">{trend.count}</span>
-            <p className="text-[10px] text-gray-400">positions</p>
+            <span className={`text-[10px] ${
+              trend.type === 'new' ? 'text-green-600' :
+              trend.type === 'growth' ? 'text-blue-600' :
+              'text-red-600'
+            }`}>
+              {trend.type === 'new' ? 'New' : 
+               trend.type === 'growth' ? `+${trend.change.toFixed(0)}%` : 
+               `${trend.change.toFixed(0)}%`}
+            </span>
           </div>
         </div>
       ))}

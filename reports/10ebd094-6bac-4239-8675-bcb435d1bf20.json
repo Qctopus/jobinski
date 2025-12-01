@@ -1,0 +1,2948 @@
+{
+  "metadata": {
+    "reportId": "10ebd094-6bac-4239-8675-bcb435d1bf20",
+    "agency": "UNICEF",
+    "agencyLongName": "United Nations Children's Fund",
+    "reportTitle": "UNICEF Monthly HR Intelligence Report",
+    "reportPeriod": {
+      "startDate": "2025-10-01",
+      "endDate": "2025-11-30",
+      "displayPeriod": "October - November 2025"
+    },
+    "generatedAt": "2025-11-30T11:04:43.840Z",
+    "generatedBy": "UN Jobs Analytics Platform",
+    "version": "1.0.0",
+    "pageCount": 15,
+    "dataPoints": 927
+  },
+  "agencyMetrics": {
+    "agencyInfo": {
+      "shortName": "UNICEF",
+      "longName": "United Nations Children's Fund",
+      "logoPath": "/logo/logo/UNICEF.png",
+      "peerGroup": "Large Operational Agencies",
+      "tier": 1
+    },
+    "volumeMetrics": {
+      "totalPostings": 927,
+      "activePostings": 162,
+      "closingSoonPostings": 153,
+      "expiredPostings": 765,
+      "newPostingsThisMonth": 927,
+      "previousMonthPostings": 149,
+      "monthOverMonthChange": 522.1476510067114
+    },
+    "applicationMetrics": {
+      "avgApplicationWindow": 11.6,
+      "medianApplicationWindow": 11,
+      "minApplicationWindow": 3,
+      "maxApplicationWindow": 42,
+      "urgentPositionsCount": 142,
+      "urgentPositionsPercentage": 15.318230852211434
+    },
+    "workforceComposition": {
+      "gradeDistribution": [
+        {
+          "grade": "Consultant",
+          "count": 603,
+          "percentage": 65.0485436893204
+        },
+        {
+          "grade": "NOB",
+          "count": 71,
+          "percentage": 7.659115426105717
+        },
+        {
+          "grade": "NOC",
+          "count": 55,
+          "percentage": 5.93311758360302
+        },
+        {
+          "grade": "Intern",
+          "count": 34,
+          "percentage": 3.6677454153182305
+        },
+        {
+          "grade": "G6",
+          "count": 34,
+          "percentage": 3.6677454153182305
+        },
+        {
+          "grade": "NOA",
+          "count": 30,
+          "percentage": 3.2362459546925564
+        },
+        {
+          "grade": "P3",
+          "count": 26,
+          "percentage": 2.8047464940668827
+        },
+        {
+          "grade": "G5",
+          "count": 16,
+          "percentage": 1.7259978425026967
+        },
+        {
+          "grade": "P4",
+          "count": 16,
+          "percentage": 1.7259978425026967
+        },
+        {
+          "grade": "G2",
+          "count": 15,
+          "percentage": 1.6181229773462782
+        },
+        {
+          "grade": "P2",
+          "count": 7,
+          "percentage": 0.7551240560949299
+        },
+        {
+          "grade": "G7",
+          "count": 7,
+          "percentage": 0.7551240560949299
+        },
+        {
+          "grade": "NOD",
+          "count": 4,
+          "percentage": 0.4314994606256742
+        },
+        {
+          "grade": "G3",
+          "count": 4,
+          "percentage": 0.4314994606256742
+        },
+        {
+          "grade": "P5",
+          "count": 2,
+          "percentage": 0.2157497303128371
+        },
+        {
+          "grade": "D2",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        },
+        {
+          "grade": "Other",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        },
+        {
+          "grade": "G4",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        }
+      ],
+      "seniorityDistribution": [
+        {
+          "level": "Consultant",
+          "count": 603,
+          "percentage": 65.0485436893204
+        },
+        {
+          "level": "Entry",
+          "count": 127,
+          "percentage": 13.700107874865155
+        },
+        {
+          "level": "Mid-Level",
+          "count": 114,
+          "percentage": 12.297734627831716
+        },
+        {
+          "level": "Senior",
+          "count": 47,
+          "percentage": 5.070118662351672
+        },
+        {
+          "level": "Intern",
+          "count": 34,
+          "percentage": 3.6677454153182305
+        },
+        {
+          "level": "Executive",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        },
+        {
+          "level": "Unknown",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        }
+      ],
+      "staffTypeBreakdown": {
+        "international": {
+          "count": 0,
+          "percentage": 0
+        },
+        "national": {
+          "count": 0,
+          "percentage": 0
+        },
+        "consultant": {
+          "count": 517,
+          "percentage": 55.77130528586839
+        },
+        "intern": {
+          "count": 151,
+          "percentage": 16.2891046386192
+        },
+        "other": {
+          "count": 259,
+          "percentage": 27.939590075512406
+        }
+      },
+      "locationDistribution": [
+        {
+          "station": "New York",
+          "count": 111,
+          "percentage": 11.974110032362459
+        },
+        {
+          "station": "Geneva",
+          "count": 63,
+          "percentage": 6.796116504854369
+        },
+        {
+          "station": "Antananarivo",
+          "count": 25,
+          "percentage": 2.696871628910464
+        },
+        {
+          "station": "Tashkent",
+          "count": 17,
+          "percentage": 1.8338727076591153
+        },
+        {
+          "station": "Abuja",
+          "count": 15,
+          "percentage": 1.6181229773462782
+        },
+        {
+          "station": "Florence",
+          "count": 13,
+          "percentage": 1.4023732470334414
+        },
+        {
+          "station": "Kathmandu",
+          "count": 11,
+          "percentage": 1.186623516720604
+        },
+        {
+          "station": "Freetown",
+          "count": 11,
+          "percentage": 1.186623516720604
+        },
+        {
+          "station": "Cotonou",
+          "count": 10,
+          "percentage": 1.0787486515641855
+        },
+        {
+          "station": "Nairobi",
+          "count": 10,
+          "percentage": 1.0787486515641855
+        },
+        {
+          "station": "Santiago",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Accra",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Lome",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Harare",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Lusaka",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        }
+      ],
+      "languageRequirements": {
+        "languageBreakdown": [
+          {
+            "language": "English",
+            "count": 729,
+            "percentage": 78.64077669902912
+          },
+          {
+            "language": "French",
+            "count": 154,
+            "percentage": 16.61272923408846
+          },
+          {
+            "language": "Spanish",
+            "count": 59,
+            "percentage": 6.3646170442286945
+          },
+          {
+            "language": "Arabic",
+            "count": 54,
+            "percentage": 5.825242718446602
+          },
+          {
+            "language": "Portuguese",
+            "count": 25,
+            "percentage": 2.696871628910464
+          },
+          {
+            "language": "Russian",
+            "count": 17,
+            "percentage": 1.8338727076591153
+          },
+          {
+            "language": "Nepali",
+            "count": 13,
+            "percentage": 1.4023732470334414
+          },
+          {
+            "language": "Romanian",
+            "count": 6,
+            "percentage": 0.6472491909385114
+          },
+          {
+            "language": "Tajik",
+            "count": 6,
+            "percentage": 0.6472491909385114
+          },
+          {
+            "language": "Ukrainian",
+            "count": 6,
+            "percentage": 0.6472491909385114
+          },
+          {
+            "language": "Albanian",
+            "count": 6,
+            "percentage": 0.6472491909385114
+          },
+          {
+            "language": "Serbian",
+            "count": 5,
+            "percentage": 0.5393743257820928
+          },
+          {
+            "language": "Kazakh",
+            "count": 5,
+            "percentage": 0.5393743257820928
+          },
+          {
+            "language": "Macedonian",
+            "count": 5,
+            "percentage": 0.5393743257820928
+          },
+          {
+            "language": "Filipino",
+            "count": 4,
+            "percentage": 0.4314994606256742
+          },
+          {
+            "language": "Malagasy",
+            "count": 4,
+            "percentage": 0.4314994606256742
+          },
+          {
+            "language": "Khmer",
+            "count": 4,
+            "percentage": 0.4314994606256742
+          },
+          {
+            "language": "Bangla",
+            "count": 4,
+            "percentage": 0.4314994606256742
+          },
+          {
+            "language": "Kyrgyz",
+            "count": 4,
+            "percentage": 0.4314994606256742
+          },
+          {
+            "language": "Uzbek",
+            "count": 3,
+            "percentage": 0.3236245954692557
+          },
+          {
+            "language": "Turkish",
+            "count": 3,
+            "percentage": 0.3236245954692557
+          },
+          {
+            "language": "Persian",
+            "count": 3,
+            "percentage": 0.3236245954692557
+          },
+          {
+            "language": "Urdu",
+            "count": 3,
+            "percentage": 0.3236245954692557
+          },
+          {
+            "language": "Indonesian",
+            "count": 3,
+            "percentage": 0.3236245954692557
+          },
+          {
+            "language": "Chinese",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Italian",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Japanese",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Georgian",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Mongolian",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Thai",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Bosnian",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "Croatian",
+            "count": 2,
+            "percentage": 0.2157497303128371
+          },
+          {
+            "language": "German",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Armenian",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Bengali",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Chichewa",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Swedish",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Swahili",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Polish",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Hausa",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Hindi",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Tamil",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          },
+          {
+            "language": "Sinhala",
+            "count": 1,
+            "percentage": 0.10787486515641855
+          }
+        ],
+        "multilingualPercentage": 27.72384034519957
+      }
+    },
+    "categoryAnalysis": {
+      "distribution": [
+        {
+          "category": "policy-strategic-planning",
+          "count": 258,
+          "percentage": 27.831715210355988
+        },
+        {
+          "category": "communications-partnerships",
+          "count": 183,
+          "percentage": 19.741100323624593
+        },
+        {
+          "category": "digital-technology",
+          "count": 89,
+          "percentage": 9.60086299892125
+        },
+        {
+          "category": "health-medical",
+          "count": 84,
+          "percentage": 9.06148867313916
+        },
+        {
+          "category": "operations-administration",
+          "count": 71,
+          "percentage": 7.659115426105717
+        },
+        {
+          "category": "education-development",
+          "count": 59,
+          "percentage": 6.3646170442286945
+        },
+        {
+          "category": "social-affairs-human-rights",
+          "count": 45,
+          "percentage": 4.854368932038835
+        },
+        {
+          "category": "economic-affairs-trade",
+          "count": 31,
+          "percentage": 3.344120819848975
+        },
+        {
+          "category": "humanitarian-emergency",
+          "count": 30,
+          "percentage": 3.2362459546925564
+        },
+        {
+          "category": "supply-chain-logistics",
+          "count": 25,
+          "percentage": 2.696871628910464
+        },
+        {
+          "category": "legal-compliance",
+          "count": 20,
+          "percentage": 2.157497303128371
+        },
+        {
+          "category": "climate-environment",
+          "count": 15,
+          "percentage": 1.6181229773462782
+        },
+        {
+          "category": "leadership-executive",
+          "count": 8,
+          "percentage": 0.8629989212513484
+        },
+        {
+          "category": "peace-security",
+          "count": 5,
+          "percentage": 0.5393743257820928
+        },
+        {
+          "category": "governance-rule-of-law",
+          "count": 2,
+          "percentage": 0.2157497303128371
+        },
+        {
+          "category": "translation-interpretation",
+          "count": 2,
+          "percentage": 0.2157497303128371
+        }
+      ],
+      "trendingCategories": [
+        "policy-strategic-planning",
+        "communications-partnerships",
+        "digital-technology"
+      ],
+      "emergingCategories": [],
+      "categoryDiversity": 79.52981875912397
+    },
+    "geographicAnalysis": {
+      "regionDistribution": [
+        {
+          "region": "Africa",
+          "count": 328,
+          "percentage": 35.382955771305284
+        },
+        {
+          "region": "Asia",
+          "count": 207,
+          "percentage": 22.330097087378643
+        },
+        {
+          "region": "Europe",
+          "count": 171,
+          "percentage": 18.446601941747574
+        },
+        {
+          "region": "Northern America",
+          "count": 115,
+          "percentage": 12.405609492988134
+        },
+        {
+          "region": "Latin America and the Caribbean",
+          "count": 91,
+          "percentage": 9.816612729234087
+        },
+        {
+          "region": "Oceania",
+          "count": 14,
+          "percentage": 1.5102481121898599
+        },
+        {
+          "region": "Home-based",
+          "count": 1,
+          "percentage": 0.10787486515641855
+        }
+      ],
+      "topDutyStations": [
+        {
+          "station": "New York",
+          "count": 111,
+          "percentage": 11.974110032362459
+        },
+        {
+          "station": "Geneva",
+          "count": 63,
+          "percentage": 6.796116504854369
+        },
+        {
+          "station": "Antananarivo",
+          "count": 25,
+          "percentage": 2.696871628910464
+        },
+        {
+          "station": "Tashkent",
+          "count": 17,
+          "percentage": 1.8338727076591153
+        },
+        {
+          "station": "Abuja",
+          "count": 15,
+          "percentage": 1.6181229773462782
+        },
+        {
+          "station": "Florence",
+          "count": 13,
+          "percentage": 1.4023732470334414
+        },
+        {
+          "station": "Kathmandu",
+          "count": 11,
+          "percentage": 1.186623516720604
+        },
+        {
+          "station": "Freetown",
+          "count": 11,
+          "percentage": 1.186623516720604
+        },
+        {
+          "station": "Cotonou",
+          "count": 10,
+          "percentage": 1.0787486515641855
+        },
+        {
+          "station": "Nairobi",
+          "count": 10,
+          "percentage": 1.0787486515641855
+        },
+        {
+          "station": "Santiago",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Accra",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Lome",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Harare",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        },
+        {
+          "station": "Lusaka",
+          "count": 9,
+          "percentage": 0.9708737864077669
+        }
+      ],
+      "hqVsFieldRatio": {
+        "hq": {
+          "count": 205,
+          "percentage": 22.114347357065803
+        },
+        "field": {
+          "count": 721,
+          "percentage": 77.77777777777779
+        },
+        "remote": {
+          "count": 1,
+          "percentage": 0.10787486515641855
+        }
+      }
+    },
+    "temporalAnalysis": {
+      "postingsByMonth": [
+        {
+          "month": "2025-10",
+          "count": 461
+        },
+        {
+          "month": "2025-11",
+          "count": 466
+        }
+      ],
+      "weekdayDistribution": [
+        {
+          "weekday": "Wednesday",
+          "count": 207
+        },
+        {
+          "weekday": "Thursday",
+          "count": 177
+        },
+        {
+          "weekday": "Friday",
+          "count": 153
+        },
+        {
+          "weekday": "Sunday",
+          "count": 25
+        },
+        {
+          "weekday": "Monday",
+          "count": 204
+        },
+        {
+          "weekday": "Tuesday",
+          "count": 150
+        },
+        {
+          "weekday": "Saturday",
+          "count": 11
+        }
+      ],
+      "peakPostingDay": "Wednesday"
+    }
+  },
+  "benchmarks": {
+    "marketAverages": {
+      "avgPostingsPerAgency": 128,
+      "avgApplicationWindow": 13,
+      "avgActivePositions": 0,
+      "marketTotalVolume": 3718
+    },
+    "peerAverages": {
+      "avgPostingsPerPeer": 284,
+      "totalPeersActive": 3,
+      "peerGroupVolume": 853
+    },
+    "industryStandards": {
+      "targetApplicationWindow": 45,
+      "targetActivePositionRatio": 0.7,
+      "targetCategoryDiversity": 0.6
+    }
+  },
+  "competitiveIntelligence": {
+    "marketPosition": {
+      "marketRank": 1,
+      "totalAgenciesInMarket": 29,
+      "marketShare": 24.932759548144162,
+      "volumeVsMarketAverage": 623.0500268961807
+    },
+    "peerGroupComparison": {
+      "peerGroupName": "Large Operational Agencies",
+      "peerGroupTier": 1,
+      "peerAgencies": [
+        "UNDP",
+        "WFP",
+        "UNHCR"
+      ],
+      "yourRankInGroup": 1,
+      "avgPostingsInGroup": 284.3333333333333,
+      "yourPostings": 927,
+      "performanceVsPeers": "above"
+    },
+    "competitorAnalysis": [
+      {
+        "agency": "UN Secretariat",
+        "volume": 702,
+        "categoryOverlap": 15,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "WFP",
+        "volume": 379,
+        "categoryOverlap": 13,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "FAO",
+        "volume": 364,
+        "categoryOverlap": 12,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UNDP",
+        "volume": 345,
+        "categoryOverlap": 15,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UNEP",
+        "volume": 245,
+        "categoryOverlap": 13,
+        "competitionLevel": "high"
+      }
+    ],
+    "categoryCompetition": [
+      {
+        "category": "policy-strategic-planning",
+        "agencyShare": 26.515930113052416,
+        "totalMarketVolume": 973,
+        "competitorsCount": 24,
+        "agencyRank": 1
+      },
+      {
+        "category": "communications-partnerships",
+        "agencyShare": 32.5044404973357,
+        "totalMarketVolume": 563,
+        "competitorsCount": 23,
+        "agencyRank": 1
+      },
+      {
+        "category": "digital-technology",
+        "agencyShare": 26.253687315634217,
+        "totalMarketVolume": 339,
+        "competitorsCount": 19,
+        "agencyRank": 1
+      },
+      {
+        "category": "health-medical",
+        "agencyShare": 67.2,
+        "totalMarketVolume": 125,
+        "competitorsCount": 8,
+        "agencyRank": 1
+      },
+      {
+        "category": "operations-administration",
+        "agencyShare": 10.186513629842182,
+        "totalMarketVolume": 697,
+        "competitorsCount": 23,
+        "agencyRank": 1
+      }
+    ]
+  },
+  "insights": {
+    "volumeInsights": [
+      {
+        "type": "positive",
+        "title": "Significant Hiring Increase",
+        "description": "522% increase in postings compared to the previous period.",
+        "metric": "522%",
+        "value": 522.1476510067114
+      },
+      {
+        "type": "neutral",
+        "title": "Active Positions",
+        "description": "17% of positions still accepting applications.",
+        "metric": "162 active",
+        "value": 17.475728155339805
+      },
+      {
+        "type": "neutral",
+        "title": "Total Postings",
+        "description": "927 total job postings in this period.",
+        "metric": "927 jobs",
+        "value": 927
+      }
+    ],
+    "competitiveInsights": [
+      {
+        "type": "positive",
+        "title": "Market Presence",
+        "description": "24.9% of total UN system job postings.",
+        "metric": "24.9%",
+        "value": 24.932759548144162
+      },
+      {
+        "type": "positive",
+        "title": "Market Ranking",
+        "description": "Ranked #1 out of 29 agencies by hiring volume.",
+        "metric": "#1",
+        "value": 1
+      },
+      {
+        "type": "positive",
+        "title": "Above Peer Average",
+        "description": "Hiring volume exceeds peer group (Large Operational Agencies) average.",
+        "metric": "927 vs 284 avg",
+        "value": 927
+      }
+    ],
+    "strategicInsights": [
+      {
+        "type": "neutral",
+        "title": "Top Location",
+        "description": "New York is the primary duty station with 12% of positions.",
+        "metric": "111 jobs",
+        "value": 111
+      },
+      {
+        "type": "neutral",
+        "title": "Primary Focus Area",
+        "description": "policy-strategic-planning represents 28% of all positions.",
+        "metric": "258 jobs",
+        "value": 258
+      }
+    ]
+  },
+  "recommendations": [
+    {
+      "priority": "medium",
+      "area": "Workforce Planning",
+      "recommendation": "Review Consultant-to-Staff Ratio",
+      "rationale": "56% of positions are consultants, which may impact institutional knowledge.",
+      "impact": "Better knowledge retention and reduced turnover"
+    },
+    {
+      "priority": "medium",
+      "area": "Leadership Pipeline",
+      "recommendation": "Strengthen Senior Talent Pipeline",
+      "rationale": "Only 5% of positions are at senior level.",
+      "impact": "Stronger succession planning and organizational capability"
+    }
+  ],
+  "rawJobsData": [
+    {
+      "id": 66042,
+      "title": "Construction Specialist, P3, Goma, DRC #128072 (Temporary Appointment), 6 mois",
+      "grade": "P3",
+      "location": "Goma",
+      "postingDate": "2025-11-28T15:40:00",
+      "deadline": "2025-12-05T22:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66043,
+      "title": "Chief Field Office, (NO-3), Tuxtla, Chiapas, Mexico, #134919, [Temp Appointment: until Oct 2026]",
+      "grade": "NOC",
+      "location": "Mexico",
+      "postingDate": "2025-11-28T15:00:00",
+      "deadline": "2025-12-06T05:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 66044,
+      "title": "National Organizational Development Consultant – Entrepreneurship & Financial Wellbeing, 7 working Days, Abuja Nigeria",
+      "grade": "Consultant",
+      "location": "Abuja",
+      "postingDate": "2025-11-28T11:30:00",
+      "deadline": "2025-12-04T22:55:00",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 66047,
+      "title": "New consultancy: Analysis and prototyping of AI use-cases, Operational Analysis & Technology Centre, UNICEF Supply Division Copenhagen, Remote, 1 year  - PageUp",
+      "grade": "Consultant",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-28T08:00:00",
+      "deadline": "2025-12-05T08:00:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66046,
+      "title": "New Consultancy: Solution Architect & Delivery Lead, Operational Analysis & Technology Centre, UNICEF Supply Division Copenhagen, Remote/on site, 1 year",
+      "grade": "Consultant",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-28T08:00:00",
+      "deadline": "2025-12-05T08:00:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66045,
+      "title": "New Consultancy: Vaccine Centre Mpox Knowledge Management & Process Optimization Consultant, Vaccine Centre, UNICEF Supply Division Copenhagen, On site, 6 months",
+      "grade": "Consultant",
+      "location": "Copenhagen",
+      "postingDate": "2025-11-28T08:00:00",
+      "deadline": "2025-12-05T08:00:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 66048,
+      "title": "Child Protection Officer, Fixed Term, NO-2, Kharkiv, Ukraine, #120448",
+      "grade": "NOB",
+      "location": "Kharkiv",
+      "postingDate": "2025-11-28T07:00:00",
+      "deadline": "2025-12-08T21:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 66050,
+      "title": "International - Innovation Consultant, Addis Ababa, Ethiopia, 6 months (For Non Ethiopian Nationals)",
+      "grade": "Consultant",
+      "location": "Addis Ababa",
+      "postingDate": "2025-11-28T06:00:00",
+      "deadline": "2025-12-08T20:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66049,
+      "title": "National/International WASH Consultant - System strengthening support (Three Months)-61 days",
+      "grade": "Consultant",
+      "location": "Dodoma",
+      "postingDate": "2025-11-28T06:00:00",
+      "deadline": "2025-12-05T20:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 66051,
+      "title": "National consultant to improve the implementation of Baby Friendly Hospital Initiative, 53 w/ds, Dushanbe, Tajikistan (open to Tajik nationals only)",
+      "grade": "Consultant",
+      "location": "Dushanbe",
+      "postingDate": "2025-11-28T04:00:00",
+      "deadline": "2025-12-08T18:55:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 66052,
+      "title": "Communication Specialist (NOC) Temporary Appointment (9 months). Bishkek, Kyrgyzstan #134651",
+      "grade": "NOC",
+      "location": "Bishkek",
+      "postingDate": "2025-11-28T03:00:00",
+      "deadline": "2025-12-14T17:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 66054,
+      "title": "National Digital Health Consultant, Phnom Penh, Cambodia (Open for Cambodian nationals only)",
+      "grade": "Consultant",
+      "location": "Phnom-Penh",
+      "postingDate": "2025-11-28T02:00:00",
+      "deadline": "2025-12-11T16:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66053,
+      "title": "(Re-advertisement) Consultant - Digital Data Analytics Consultant, UNICEF Thailand Country Office, Bangkok, Thailand, Job#584287",
+      "grade": "Consultant",
+      "location": "Bangkok",
+      "postingDate": "2025-11-28T02:00:00",
+      "deadline": "2025-12-11T16:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 66055,
+      "title": "Private Sector Fundraising Officer (Engagement), NO-1, Temporary Appointment, 1 year, Ulaanbaatar, Mongolia #135226",
+      "grade": "NOA",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-28T01:00:00",
+      "deadline": "2025-12-04T15:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 66056,
+      "title": ":  Social and Environmental Safeguards Consultant, RMPIS Unit/PET/DAPM, NYHQ, remote. Req# 588432",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-27T16:10:00",
+      "deadline": "2025-12-06T04:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65954,
+      "title": "National Legal Consultant to support UNICEF Albania office with the development of sub legal acts of the Law on Alternative Care Law",
+      "grade": "Consultant",
+      "location": "Tirana",
+      "postingDate": "2025-11-27T16:00:00",
+      "deadline": "2025-12-01T22:55:00",
+      "status": "closing_soon",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65955,
+      "title": "Vacancy Announcement - Human Resources Associate (Data and System Support), G6, FT, Abuja, Nigeria #43612",
+      "grade": "G6",
+      "location": "Abuja",
+      "postingDate": "2025-11-27T15:10:00",
+      "deadline": "2025-12-11T22:55:00",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 66057,
+      "title": "Communication Officer (Marketing), (NO-1), Mexico City, Mexico, #134885, [Temp Appointment: 6 months]",
+      "grade": "NOA",
+      "location": "Mexico City",
+      "postingDate": "2025-11-27T15:00:00",
+      "deadline": "2025-12-08T05:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65956,
+      "title": "Home-based consultant: Regional WASH Expert (60 working days) - Europe and Central Asia Regional Office (ECARO)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-27T15:00:00",
+      "deadline": "2025-12-04T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65957,
+      "title": "Long Term Agreement - Consultoría especializada en diseño gráfico y audiovisual de contenidos digitales. CLE 240-2025",
+      "grade": "Consultant",
+      "location": "Santiago",
+      "postingDate": "2025-11-27T12:00:00",
+      "deadline": "2025-12-12T02:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65958,
+      "title": "Long Term Agreement (LTA) for an individual consultant for services relating to qualitative research - Innocenti-Global Off Research & Foresight - remote/work from home",
+      "grade": "Consultant",
+      "location": "Florence",
+      "postingDate": "2025-11-27T09:00:00",
+      "deadline": "2025-12-19T23:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65962,
+      "title": "Consultancy for the development of fact sheet of climate funding opportunities for Angolan public-private companies, start-ups and CSOs",
+      "grade": "Consultant",
+      "location": "Luanda",
+      "postingDate": "2025-11-27T08:00:00",
+      "deadline": "2025-12-04T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65961,
+      "title": "Temporary Appointment: Knowledge Management Officer, NO-B, Business Innovation and Support Section, Global Shared Services Centre, Budapest, Hungary (Only for Hungarian Nationals)",
+      "grade": "NOB",
+      "location": "Budapest",
+      "postingDate": "2025-11-27T08:00:00",
+      "deadline": "2025-12-10T22:55:00",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 65960,
+      "title": "Consultant (12 months, home-based, remotely) Corporate Partnerships Specialist, Corporate Partnerships , PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-27T08:00:00",
+      "deadline": "2025-12-05T22:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65959,
+      "title": "Consultant (12 months, Home-based): Results Consultant, BRIDGE, Division of Private Fundraising and Partnerships (PFP)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-27T08:00:00",
+      "deadline": "2025-12-04T22:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 66058,
+      "title": "UNICEF Mozambique seeks Individual Consultants for the development of the WASH Emergency Response Roster (Open to Mozambican nationals only)",
+      "grade": "Consultant",
+      "location": "Maputo",
+      "postingDate": "2025-11-27T07:00:00",
+      "deadline": "2025-12-11T21:55:00",
+      "status": "active",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65963,
+      "title": "Consultant to Roll out the Child Safeguarding Policy, 20 days (within a period of 6.5 months), Home Based, Lebanon",
+      "grade": "Consultant",
+      "location": "Beirut",
+      "postingDate": "2025-11-27T07:00:00",
+      "deadline": "2025-12-07T21:55:00",
+      "status": "active",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65965,
+      "title": "International Consultancy - SBC Social and Community Listening (SCL) – I Hear U - Consultant, HQ Office in Nairobi.",
+      "grade": "Consultant",
+      "location": "Nairobi",
+      "postingDate": "2025-11-27T06:00:00",
+      "deadline": "2025-12-03T20:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65964,
+      "title": "Batch recrutement de Chauffeurs, GS-2/FT, pour Manakara & Ambovombe, Madagascar",
+      "grade": "G2",
+      "location": "Madagascar",
+      "postingDate": "2025-11-27T06:00:00",
+      "deadline": "2025-12-10T20:55:00",
+      "status": "active",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65966,
+      "title": "Consultant – Development of a Child Rights-Based Public PFM Strategy, UNICEF East Asia and Pacific Regional Office (EAPRO), Bangkok, Thailand",
+      "grade": "Consultant",
+      "location": "Bangkok",
+      "postingDate": "2025-11-27T02:00:00",
+      "deadline": "2025-12-04T16:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65967,
+      "title": "National Consultancy on Gender Responsive Social Protection Review and Social Protection Systems Strengthening, 5 months, Ulaanbaatar, Mongolia",
+      "grade": "Consultant",
+      "location": "Ulan Bator",
+      "postingDate": "2025-11-27T01:00:00",
+      "deadline": "2025-12-04T15:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65145,
+      "title": "Programme Associate, GS6, Lome -Togo #86356",
+      "grade": "G6",
+      "location": "Lome",
+      "postingDate": "2025-11-26T16:45:00",
+      "deadline": "2025-12-11T23:55:00",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65968,
+      "title": "Consultancy Knowledge Management, Polio Eradication Programme, New York (Home-Based), USA [12 months]",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-26T14:00:00",
+      "deadline": "2025-12-03T04:55:00",
+      "status": "closing_soon",
+      "category": "education-development"
+    },
+    {
+      "id": 65148,
+      "title": "Apoyo en generación de contenido y gestión de canales de comunicación digital / Panama City, Panama / 12 Meses",
+      "grade": "Consultant",
+      "location": "Panama",
+      "postingDate": "2025-11-26T14:00:00",
+      "deadline": "2025-12-12T04:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65147,
+      "title": "Consultor/a de Digital Fundraising y Comunicación (Orgánica) / Panama City, Panama / 12 Meses",
+      "grade": "Consultant",
+      "location": "Panama",
+      "postingDate": "2025-11-26T14:00:00",
+      "deadline": "2025-12-12T04:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65146,
+      "title": "Project Advisor Consultant  - Programme Group (Remote)",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-26T14:00:00",
+      "deadline": "2025-12-05T04:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65149,
+      "title": "Consultant International en renforcement du système de santé mentale et soutien psychosocial (SMSPS), Lomé-Togo, 6 mois",
+      "grade": "Consultant",
+      "location": "Lome",
+      "postingDate": "2025-11-26T13:45:00",
+      "deadline": "2025-12-05T23:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65150,
+      "title": "Consultoria Individual \"Creación y desarrollo de un sistema de inteligencia de datos para prevenir las uniones tempranas\", Santo Domingo, Republica Dominicana, 6 meses (remoto)",
+      "grade": "Consultant",
+      "location": "Santo Domingo",
+      "postingDate": "2025-11-26T13:00:00",
+      "deadline": "2025-12-08T03:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65151,
+      "title": "Education Specialist, (P3) Port Moresby, Papua New Guinea #135155 (Temporary Appointment)",
+      "grade": "P3",
+      "location": "Port Moresby",
+      "postingDate": "2025-11-26T11:00:00",
+      "deadline": "2025-12-10T13:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65152,
+      "title": "COSULTANCY: Resilience programme Coordinator, WCARO Dakar, Senegal, 18 months",
+      "grade": "Consultant",
+      "location": "Dakar",
+      "postingDate": "2025-11-26T09:00:00",
+      "deadline": "2025-12-07T23:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65158,
+      "title": "National Consultant to support State Statistical Office in preparation and implementation of MICS7 in North Macedonia",
+      "grade": "Consultant",
+      "location": "Skopje",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-12-07T22:55:00",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65157,
+      "title": "Consultancy: Global Impact Investing Strategic Engagement and Market Intelligence Consultant, Office of Innovation, Stockholm, Sweden - 5 months (Stockholm/virtual)",
+      "grade": "Consultant",
+      "location": "Stockholm",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-12-10T22:55:00",
+      "status": "active",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65156,
+      "title": "Consultancy: Global Technology Philanthropy Strategic Engagement and Market Intelligence Consultant, Office of Innovation, Stockholm, Sweden, 5 months (Stockholm/virtual)",
+      "grade": "Consultant",
+      "location": "Stockholm",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-12-10T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65155,
+      "title": "Individual Consultant for Master Data Management, Strategic Business Modernization, Global Shared Services Centre (GSSC), Budapest, Hungary",
+      "grade": "Consultant",
+      "location": "Budapest",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-12-03T22:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65154,
+      "title": "Education Specialist, (NOC), Yaoundé, Cameroon #0912345 (Temporary Appointment) 364days",
+      "grade": "NOC",
+      "location": "Yaounde",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-12-07T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65153,
+      "title": "SPECIALISTE EN PROTECTION DE L’ENFANT POUR L’APPUI AU SYSTEME D’ETAT CIVIL POUR L’AMELIORATION DE L’ENREGISTREMENT DES NAISSANCES",
+      "grade": "P3",
+      "location": "Bangui",
+      "postingDate": "2025-11-26T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65159,
+      "title": "Programme Officer (Social & Behavior Change), NO-1, Temporary Appointment, # 00134838, Colombo - Sri Lanka, SAR (Sri Lankan nationals only)",
+      "grade": "NOA",
+      "location": "Colombo",
+      "postingDate": "2025-11-26T07:30:00",
+      "deadline": "2025-12-02T18:25:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65161,
+      "title": "Senior National Education Consultant for Harmonization and standardization of Arabic, Math, and English curriculum for Non-Formal Education centers (NFE), UNICEF Libya Education Section, 12 Months ( Work from home)",
+      "grade": "Consultant",
+      "location": "Tripoli",
+      "postingDate": "2025-11-26T07:00:00",
+      "deadline": "2025-12-10T21:55:00",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 65160,
+      "title": "Learning and Development Needs Assessment Consultant, home based, 3 months",
+      "grade": "Consultant",
+      "location": "Beirut",
+      "postingDate": "2025-11-26T07:00:00",
+      "deadline": "2025-12-07T21:55:00",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 65164,
+      "title": "National Internship - Nutrition Officer, Asmara, Eritrea (Eritrean Nationals only) (Two)",
+      "grade": "Intern",
+      "location": "Asmara",
+      "postingDate": "2025-11-26T06:00:00",
+      "deadline": "2025-12-03T20:55:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 65163,
+      "title": "Education Digital Learning Consultant, Juba, South Sudan (2 months and 11 days, Home based) (Open to National & Internationals)",
+      "grade": "Consultant",
+      "location": "Juba",
+      "postingDate": "2025-11-26T06:00:00",
+      "deadline": "2025-12-09T20:55:00",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 65162,
+      "title": "Nutrition Specialist, P3, Dar es Salaam, Tanzania # 135088, Temporary Appointment (364 days)",
+      "grade": "P3",
+      "location": "Dar es Salaam",
+      "postingDate": "2025-11-26T06:00:00",
+      "deadline": "2025-12-03T20:55:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 65165,
+      "title": "National Consultant for the Development of Modules at national level for hazard mapping and action planning process and conduct master training for all districts, Colombo, Sri Lanka (Sri Lankan nationals only)- Home based",
+      "grade": "Consultant",
+      "location": "Colombo",
+      "postingDate": "2025-11-26T05:00:00",
+      "deadline": "2025-12-09T18:25:00",
+      "status": "active",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65173,
+      "title": "Generic Vacancy Announcement: Roster of Child Protection Consultant, Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65172,
+      "title": "Generic Vacancy Announcement: Consultant’s Roster for Videographer, Photographer, Illustrator & Translator, Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65171,
+      "title": "Generic Vacancy Announcement: Roster of Information Management/ Monitoring and Reporting Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65170,
+      "title": "Generic Vacancy Announcement: Roster of Education Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65169,
+      "title": "Generic Vacancy Announcement: Roster of Nutrition Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 65168,
+      "title": "Generic Vacancy Announcement: Roster of Social & Behavior Change Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65167,
+      "title": "Generic Vacancy Announcement: Roster of WASH Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65166,
+      "title": "Generic Vacancy Announcement: Roster of Health Consultant for Nepal Country Office: Call for Expression of Interest",
+      "grade": "Consultant",
+      "location": "Nepal",
+      "postingDate": "2025-11-26T03:15:00",
+      "deadline": "2025-12-16T18:10:00",
+      "status": "active",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65175,
+      "title": "National Consultant: Consultancy for Environmental Health Assessment/Survey",
+      "grade": "Consultant",
+      "location": "Dhaka",
+      "postingDate": "2025-11-26T03:00:00",
+      "deadline": "2025-12-03T17:55:00",
+      "status": "active",
+      "category": "health-medical"
+    },
+    {
+      "id": 65174,
+      "title": "Re-advertisement: National expert to support ECD programmes with UNICEF in Kazakhstan",
+      "grade": "Consultant",
+      "location": "Astana",
+      "postingDate": "2025-11-26T03:00:00",
+      "deadline": "2025-12-10T17:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65176,
+      "title": "Consultancy to support the development of the Nutrition Action Plan for the Southern Border Provinces, UNICEF Thailand Country Office, Bangkok, Job No. 588324",
+      "grade": "Consultant",
+      "location": "Bangkok",
+      "postingDate": "2025-11-26T00:00:00",
+      "deadline": "2025-12-09T16:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65177,
+      "title": "Consultant(e) international(e) pour la formation sur la mobilisation des ressources et le développement de partenariats UNICEF Niger – 2025",
+      "grade": "Consultant",
+      "location": "Niamey",
+      "postingDate": "2025-11-25T21:30:00",
+      "deadline": "2025-12-01T22:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65178,
+      "title": "Recrutement de Consultant International pour réaliser l’audit institutionnel du MASEF1- Renforcement de la capacite du Ministère à atteindre les résultats pour les enfants en Mauritanie",
+      "grade": "Consultant",
+      "location": "Nouakchott",
+      "postingDate": "2025-11-25T19:00:00",
+      "deadline": "2025-12-10T09:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65179,
+      "title": "Advocacy and Communications Officer- NO-3 / San Jose, Costa Rica",
+      "grade": "NOC",
+      "location": "San Jose",
+      "postingDate": "2025-11-25T15:00:00",
+      "deadline": "2025-12-10T05:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65180,
+      "title": "Readvertisement - Cold Chain Officer, (NO-A), Conakry, Guinea # 133369 (Open to Guinean Nationals only)",
+      "grade": "NOA",
+      "location": "Conakry",
+      "postingDate": "2025-11-25T09:00:00",
+      "deadline": "2025-12-01T23:55:00",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65184,
+      "title": "Batch recruitment - Internships M&E - Education Cannot Wait (ECW), Hosted Fund, GENEVA-NY, Remote, 6 months, REQ:588321",
+      "grade": "Intern",
+      "location": "Geneva",
+      "postingDate": "2025-11-25T08:00:00",
+      "deadline": "2025-12-19T22:55:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65183,
+      "title": "Qualitative Research Specialist (Education), P-3, Temporary Position, #00135104, 364 days, Florence, Italy or Remote/Home-based",
+      "grade": "P3",
+      "location": "Florence",
+      "postingDate": "2025-11-25T08:00:00",
+      "deadline": "2025-12-09T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65182,
+      "title": "Quantitative Research Specialist (Education), P-3, Temporary Position, # 00135105, 364 days, Florence, Italy or Remote/Home-based",
+      "grade": "P3",
+      "location": "Florence",
+      "postingDate": "2025-11-25T08:00:00",
+      "deadline": "2025-12-09T22:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65181,
+      "title": "Readvertisement - Deputy Representative Operations, P4, Temporary Appointment, (6 months), Yaounde, Cameroon",
+      "grade": "P4",
+      "location": "Yaounde",
+      "postingDate": "2025-11-25T08:00:00",
+      "deadline": "2025-12-04T22:55:00",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65186,
+      "title": "National Consultant: Expert on Strengthening Alternative Care for Children in Need, Kyiv, Ukraine, 12 months (Office Based)",
+      "grade": "Consultant",
+      "location": "Kyiv",
+      "postingDate": "2025-11-25T07:00:00",
+      "deadline": "2025-11-30T21:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65185,
+      "title": "Internal & External VA: Adolescent Development Officer (TVET), NOB, Temporary Appointment, Beirut, Lebanon, PN# 134900",
+      "grade": "NOB",
+      "location": "Beirut",
+      "postingDate": "2025-11-25T07:00:00",
+      "deadline": "2025-12-01T21:55:00",
+      "status": "closing_soon",
+      "category": "education-development"
+    },
+    {
+      "id": 65189,
+      "title": "Re-advertisement: International evaluation expert for (Kangaroo Mother Care) KMC evaluation _ International Consultant",
+      "grade": "Consultant",
+      "location": "Baghdad",
+      "postingDate": "2025-11-25T06:00:00",
+      "deadline": "2025-12-08T20:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65188,
+      "title": "Supply & Logistics Associate, G-6, Temporary Appointment (364 days) Khartoum, Sudan #134465 (For Sudanese nationals only)",
+      "grade": "G6",
+      "location": "Khartoum",
+      "postingDate": "2025-11-25T06:00:00",
+      "deadline": "2025-12-01T20:55:00",
+      "status": "closing_soon",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65187,
+      "title": "Health Officer, NO-2, Temporary Appointment (364 days),   West Area - Nyala-Sudan #0134918",
+      "grade": "NOB",
+      "location": "Nyala",
+      "postingDate": "2025-11-25T06:00:00",
+      "deadline": "2025-12-02T20:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65190,
+      "title": "External Vacancy Announcement: People & Culture (Human Resources) Officer (NO-2), FT, #71907, Port-au-Prince, Haiti LACRO",
+      "grade": "NOB",
+      "location": "Port-au-Prince",
+      "postingDate": "2025-11-25T05:00:00",
+      "deadline": "2025-12-06T04:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65191,
+      "title": "National Consultant to provide technical support for coordination of Immunisation Programme and Field Epidemiology Training Programme",
+      "grade": "Consultant",
+      "location": "Tashkent",
+      "postingDate": "2025-11-25T04:00:00",
+      "deadline": "2025-12-09T18:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65193,
+      "title": "Economic Specialist (Consultant), 4 months, UNICEF Regional Office for South Asia",
+      "grade": "Consultant",
+      "location": "Kathmandu",
+      "postingDate": "2025-11-25T03:15:00",
+      "deadline": "2025-12-02T18:10:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65192,
+      "title": "Human Resources Associate, G-6, Temporary Appointment (3 months), UNICEF Regional Office for South Asia",
+      "grade": "G6",
+      "location": "Kathmandu",
+      "postingDate": "2025-11-25T03:15:00",
+      "deadline": "2025-12-02T18:10:00",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65194,
+      "title": "Internship for Child Protection Programme, UNICEF Bhutan, 4 months (Open for current final year students of JSWLS)",
+      "grade": "Intern",
+      "location": "Thimphu",
+      "postingDate": "2025-11-25T03:00:00",
+      "deadline": "2025-11-30T17:55:00",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65197,
+      "title": "Long-Term Agreement (LTA) for Individual Translators and Interpreters, UNICEF Myanmar (Open to Myanmar National Only)",
+      "grade": "Consultant",
+      "location": "Yangon",
+      "postingDate": "2025-11-25T02:30:00",
+      "deadline": "2025-12-09T17:25:00",
+      "status": "active",
+      "category": "translation-interpretation"
+    },
+    {
+      "id": 65196,
+      "title": "National Consultant for Youth Engagement, UNICEF Myanmar (Open to Myanmar Nationals Only)",
+      "grade": "Consultant",
+      "location": "Yangon",
+      "postingDate": "2025-11-25T02:30:00",
+      "deadline": "2025-12-09T17:25:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65195,
+      "title": "National Consultant for Social Media, UNICEF Myanmar (Open to Myanmar Nationals Only)",
+      "grade": "Consultant",
+      "location": "Yangon",
+      "postingDate": "2025-11-25T02:30:00",
+      "deadline": "2025-12-09T17:25:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65198,
+      "title": "ESRMP enhancement Consultant, DAPM/PET/RMPIS, NYHQ, remote. Req# 588291",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T23:25:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65199,
+      "title": "International Consultancy for Papua New Guinea Supply Chain System Design and Distribution Mapping Analysis",
+      "grade": "Consultant",
+      "location": "Port Moresby",
+      "postingDate": "2025-11-24T23:00:00",
+      "deadline": "2025-12-01T13:55:00",
+      "status": "closing_soon",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65200,
+      "title": "SES Consultant, RMPS Unit/PET/DAPM, NYHQ, remote. Req# 588290",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T22:55:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65201,
+      "title": "PROSPECTS Communications & Advocacy Consultancy, GPD/CP/Migration and Displacement Hub, NYHQ, remote. Req# 588289",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T22:05:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65202,
+      "title": "UNICEF Pacific Consultancy: Young Pasifika Wayfinders Coordinator, Suva, Fiji, 360 Days",
+      "grade": "Consultant",
+      "location": "Suva",
+      "postingDate": "2025-11-24T21:00:00",
+      "deadline": "2025-12-09T11:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65203,
+      "title": "National Consultant to support UNICEF Albania office and the Ministry of Tourism, Culture and Sports (MoTCS) to develop the management plan of the National Centre of Culture for Children (NCCC)",
+      "grade": "Consultant",
+      "location": "Tirana",
+      "postingDate": "2025-11-24T20:35:00",
+      "deadline": "2025-11-27T22:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65204,
+      "title": "Consultant, Ethics Office, NYHQ, remote. Req# 588287",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T20:30:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "legal-compliance"
+    },
+    {
+      "id": 65205,
+      "title": "PROSPECTS Policy Advisory Consultancy, Programme Group, CP&M, MDH, NYHQ, remote. Req# 588286",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T20:20:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65206,
+      "title": "Partherships and reporting Consultant, Programme Group, Education Section, NYHQ, remote. Req# 588285",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T19:50:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65207,
+      "title": "Safe to Learn - Programme Consultant, Programme Division, Education Section, NYHQ, remote. Req#588284",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-24T18:40:00",
+      "deadline": "2025-12-02T04:55:00",
+      "status": "closing_soon",
+      "category": "education-development"
+    },
+    {
+      "id": 65208,
+      "title": "Consultoría para desarrollo de mensajes clave y briefings - UNICEF Costa Rica 1.5 Meses",
+      "grade": "Consultant",
+      "location": "San Jose",
+      "postingDate": "2025-11-24T15:00:00",
+      "deadline": "2025-12-01T05:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65210,
+      "title": "Consultancy - IFIs Operational Support - Public Partnerships Division - Washington DC or Remote",
+      "grade": "Consultant",
+      "location": "Washington",
+      "postingDate": "2025-11-24T14:00:00",
+      "deadline": "2025-12-01T04:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65209,
+      "title": "Consultancy - Events and Engagement - Public Partnerships Division - Washington DC or Remote",
+      "grade": "Consultant",
+      "location": "Washington",
+      "postingDate": "2025-11-24T14:00:00",
+      "deadline": "2025-12-01T04:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65211,
+      "title": "Re-advertisement Education Specialist Cluster Coordinator, (NO-3), Temporary Appointment (182 days), El Geneina, Sudan# 134323(Open to Sudanese nationals)",
+      "grade": "NOC",
+      "location": "Geneina",
+      "postingDate": "2025-11-24T12:30:00",
+      "deadline": "2025-11-30T20:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65212,
+      "title": "Consultor/a individual para el apoyo a la creación e implementación de unidades de enlace y navegación nacionales para embarazadas, recién nacidos, niños, niñas y adolescentes con enfoque de riesgo",
+      "grade": "Consultant",
+      "location": "Montevideo",
+      "postingDate": "2025-11-24T12:00:00",
+      "deadline": "2025-12-15T02:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65214,
+      "title": "Stretch Assignment: Chief Field Office (CFO), NOC/P3, Bassikounou, Mauritania (3 months): Open exclusively to UNICEF staff",
+      "grade": "NOC",
+      "location": "Bassikounou",
+      "postingDate": "2025-11-24T09:00:00",
+      "deadline": "2025-12-05T23:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65213,
+      "title": "Stretch Assignment: Deputy Representative (Programme), P4, Nouakchott, Mauritania (3 months): Open exclusively to UNICEF staff",
+      "grade": "P4",
+      "location": "Nouakchott",
+      "postingDate": "2025-11-24T09:00:00",
+      "deadline": "2025-12-05T23:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65215,
+      "title": "Consultant to support the development of the ECEC Quality Monitoring and Evaluation Framework, Prishtina, Kosovo, Pilar I, 2 months",
+      "grade": "Consultant",
+      "location": "Pristina",
+      "postingDate": "2025-11-24T07:00:00",
+      "deadline": "2025-12-03T21:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65216,
+      "title": "(Re-Advertised) Consultancy Title: Consultant to Conduct Situation Analysis (SitAn) of Children, Adolescents and Young People in Jordan (Two Consultants)",
+      "grade": "Consultant",
+      "location": "Amman",
+      "postingDate": "2025-11-24T06:00:00",
+      "deadline": "2025-12-01T20:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65217,
+      "title": "Individual Consultant:   Consultant to support the Passport to Earning (P2E) Skilling Programme- (Open to National Consultants only)",
+      "grade": "Consultant",
+      "location": "New Delhi",
+      "postingDate": "2025-11-24T03:30:00",
+      "deadline": "2025-12-09T18:25:00",
+      "status": "active",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65218,
+      "title": "International Consultant – Primero Rollout and Systems Integration",
+      "grade": "Consultant",
+      "location": "Dhaka",
+      "postingDate": "2025-11-24T03:00:00",
+      "deadline": "2025-11-30T17:55:00",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65219,
+      "title": "Social & Behavior Change Specialist#135103 (TA-6 Months), Moroni Comoros",
+      "grade": "P3",
+      "location": "Moroni",
+      "postingDate": "2025-11-24T02:30:00",
+      "deadline": "2025-12-02T20:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65220,
+      "title": "Communications and Advocacy Consultant, Public Partnership Division (PPD) UNICEF Asia-Pacific Pillar Office, Tokyo, Japan, 7 months",
+      "grade": "Consultant",
+      "location": "Tokyo",
+      "postingDate": "2025-11-24T00:00:00",
+      "deadline": "2025-11-30T14:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65222,
+      "title": "Consultancy Recruitment: Evaluation Expert for Multi-country Evaluation of Life Skills and Citizenship Education Initiative in MENA: covering Syria and Iraq for 5 months Remote and travel to countries",
+      "grade": "Consultant",
+      "location": "Amman",
+      "postingDate": "2025-11-23T06:00:00",
+      "deadline": "2025-11-30T20:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65221,
+      "title": "Health Officer, NO-2, Temporary Appointment (364 days), Center Area, Khartoum#00134459",
+      "grade": "NOB",
+      "location": "Khartoum",
+      "postingDate": "2025-11-23T06:00:00",
+      "deadline": "2025-11-30T20:55:00",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65223,
+      "title": "Child Survival & Development Manager (NO-4) Banjul, The Gambia #133331 (Open to Gambian Nationals)",
+      "grade": "NOD",
+      "location": "Banjul",
+      "postingDate": "2025-11-22T19:00:00",
+      "deadline": "2025-12-04T23:55:00",
+      "status": "active",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65225,
+      "title": "Child Protection Specialist Sector Coordinator, P-3, TA#00126345 (6-month), Farchana, Chad",
+      "grade": "P3",
+      "location": "Farchana",
+      "postingDate": "2025-11-22T08:00:00",
+      "deadline": "2025-11-28T22:55:00",
+      "status": "expired",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65224,
+      "title": "Consultancy: AI Platform Technical Lead, ICTD Digital Core (12 months, remote)",
+      "grade": "Consultant",
+      "location": "Valencia",
+      "postingDate": "2025-11-22T08:00:00",
+      "deadline": "2025-12-01T22:55:00",
+      "status": "closing_soon",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65226,
+      "title": "Monitoring and Evaluation Officer (ADAP), NOB, position# 134482, Cairo-Egypt (Temporary Appointment – 364 days)- Internal & External",
+      "grade": "NOB",
+      "location": "Cairo",
+      "postingDate": "2025-11-22T07:00:00",
+      "deadline": "2025-12-06T21:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65227,
+      "title": "Tracking Resilience in Education for Environment (TREE) Consultant, Programme Group, Education, NYHQ, remote. Req# 587250",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-21T16:05:00",
+      "deadline": "2025-11-29T04:55:00",
+      "status": "expired",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65228,
+      "title": "Consultant National Spécialiste en Sauvegarde Environnementale et sociales, Goma-DRC, 12 mois",
+      "grade": "Consultant",
+      "location": "Goma",
+      "postingDate": "2025-11-21T15:00:00",
+      "deadline": "2025-12-05T22:55:00",
+      "status": "active",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65230,
+      "title": "Consultoria Individual: \"Análisis y diseño preliminar de un mecanismo de financiamiento innovador para la prevención de uniones tempranas y embarazos adolescentes\", Santo Domingo, Republica Dominicana, 2.5 meses (remoto)",
+      "grade": "Consultant",
+      "location": "Santo Domingo",
+      "postingDate": "2025-11-21T13:00:00",
+      "deadline": "2025-12-01T03:55:00",
+      "status": "closing_soon",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65229,
+      "title": "Nutrition Officer, (NO-2), FT, Caracas, Venezuela # 912347",
+      "grade": "NOB",
+      "location": "Caracas",
+      "postingDate": "2025-11-21T13:00:00",
+      "deadline": "2025-12-01T03:55:00",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65231,
+      "title": "Advocacy Strategy Consultant (Child Rights Advocacy Strategy Implementation & Adaptation), Advocacy Section, Division of Global Communication and Advocacy (GCA), NYHQ, hybrid Req# 587247",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-21T12:00:00",
+      "deadline": "2025-11-29T04:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65232,
+      "title": "UNICEF Mauritanie: Recrute un/une WASH Manager, NOD, Nouakchott, Mauritanie, Poste#00133626, Fixed Term ( Interne & Externe)",
+      "grade": "NOD",
+      "location": "Nouakchott",
+      "postingDate": "2025-11-21T09:00:00",
+      "deadline": "2025-11-30T23:55:00",
+      "status": "closing_soon",
+      "category": "leadership-executive"
+    },
+    {
+      "id": 65235,
+      "title": "National consultant to review, edit and finalise the Situation Analysis for the introduction of the European Child Guarantee in North Macedonia (ECG deep-dive)",
+      "grade": "Consultant",
+      "location": "Skopje",
+      "postingDate": "2025-11-21T08:00:00",
+      "deadline": "2025-11-27T22:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65234,
+      "title": "Resource Mobilization Officer, Temporary Appointment, NO2, Yaounde, Cameroon (5 months)",
+      "grade": "NOB",
+      "location": "Yaounde",
+      "postingDate": "2025-11-21T08:00:00",
+      "deadline": "2025-11-27T22:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65233,
+      "title": "Digital Communications Consultant, UNICEF Brussels Office, Belgium [Home-based]",
+      "grade": "Consultant",
+      "location": "Brussels",
+      "postingDate": "2025-11-21T08:00:00",
+      "deadline": "2025-11-27T22:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65236,
+      "title": "WASH Officer, NO-B, Gaza, State of Palestine, Temporary Appointment (364 days) (post no.00135086)",
+      "grade": "NOB",
+      "location": "Gaza",
+      "postingDate": "2025-11-21T07:00:00",
+      "deadline": "2025-12-05T21:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65238,
+      "title": "International Consultancy: Digital Learning Specialist, ESARO, Nairobi, Kenya ( Remote)",
+      "grade": "Consultant",
+      "location": "Nairobi",
+      "postingDate": "2025-11-21T06:00:00",
+      "deadline": "2025-12-05T20:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65237,
+      "title": "Supply & Logistics Associate, G-6, Temporary Appointment (364 days), South, Kassala, Sudan #134701 (For Sudanese nationals only)",
+      "grade": "G6",
+      "location": "Kassala",
+      "postingDate": "2025-11-21T06:00:00",
+      "deadline": "2025-11-30T20:55:00",
+      "status": "closing_soon",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 65241,
+      "title": "Fund Raising Officer (Data and Insights), NO-1, New Delhi, India #131756 (Internal/External)",
+      "grade": "NOA",
+      "location": "New Delhi",
+      "postingDate": "2025-11-21T03:30:00",
+      "deadline": "2025-12-05T18:25:00",
+      "status": "active",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65240,
+      "title": "Programme Specialist (Economic Opportunities), NO-3, Fixed Term, New Delhi, India, SAR #131758 (Internal/External)",
+      "grade": "NOC",
+      "location": "New Delhi",
+      "postingDate": "2025-11-21T03:30:00",
+      "deadline": "2025-12-05T18:25:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65239,
+      "title": "Fundraising Specialist (Digital), NO-3, Fixed Term, New Delhi, India #112052 (Internal/External)",
+      "grade": "NOC",
+      "location": "New Delhi",
+      "postingDate": "2025-11-21T03:30:00",
+      "deadline": "2025-12-05T18:25:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65242,
+      "title": "UNICEF Pacific Consultancy: National Assistive Technology (AT) Coordinator, Pohnpei, FSM, 24 Months",
+      "grade": "Consultant",
+      "location": "Fiji",
+      "postingDate": "2025-11-20T21:00:00",
+      "deadline": "2025-12-07T11:55:00",
+      "status": "active",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65244,
+      "title": "Consultancy (12 months): Senior Gender Mainstreaming consultant, Polio Eradication Programme (home based)",
+      "grade": "Consultant",
+      "location": "New York",
+      "postingDate": "2025-11-20T14:00:00",
+      "deadline": "2025-11-27T04:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65243,
+      "title": "Partnerships Officer, P-2, Junior Professional Officer (JPO) Position- Public Partnerships Division (PPD), Washington DC, post #134781- (Open to Canadian nationals only)",
+      "grade": "P2",
+      "location": "Washington",
+      "postingDate": "2025-11-20T14:00:00",
+      "deadline": "2025-12-21T04:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65245,
+      "title": "Costing and Impact Estimation Consultant, Bujumbura, Burundi, 1 month (Home based)",
+      "grade": "Consultant",
+      "location": "Bujumbura",
+      "postingDate": "2025-11-20T13:00:00",
+      "deadline": "2025-11-26T21:55:00",
+      "status": "expired",
+      "category": "health-medical"
+    },
+    {
+      "id": 65246,
+      "title": "Communication Assistant (GS4), Asuncion, Paraguay #133769",
+      "grade": "G4",
+      "location": "Asuncion",
+      "postingDate": "2025-11-20T12:00:00",
+      "deadline": "2025-11-28T02:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65247,
+      "title": "UNICEF Mauritanie: Recrutement  d'un (e) Spécialiste Chargé(e) de programme protection de l’enfant, NOC, Nouakchott, Mauritanie, Post# 20075, Fixed Term. (Interne et Externe)",
+      "grade": "NOC",
+      "location": "Nouakchott",
+      "postingDate": "2025-11-20T09:00:00",
+      "deadline": "2025-11-27T23:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65252,
+      "title": "Consultant (12 months, home-based, remotely) Product Owner - Project Manager, Global Philanthropy, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-20T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65251,
+      "title": "Consultant (12 months, home-based, remotely) CRM Journeys Specialist (Virtual Hub), Individual Giving, PFP",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-20T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65250,
+      "title": "Consultant (12 months, home-based, remotely) Digital Paid Media (EAP and LAC) - 2 roles, Individual Giving, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-20T08:00:00",
+      "deadline": "2025-12-03T22:55:00",
+      "status": "active",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65249,
+      "title": "Consultant (12 months, home-based, remotely) Website, Platforms and UX/UI, Individual Giving, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-20T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65248,
+      "title": "Consultant (12 months, home-based, remotely) Planning and Analytics, Individual Giving, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-20T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65253,
+      "title": "Consultant - Senior Human Resources Policy Consultant , 12 months, Division of People and Culture,  Remote",
+      "grade": "Consultant",
+      "location": "Istanbul",
+      "postingDate": "2025-11-20T07:00:00",
+      "deadline": "2025-12-04T21:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65257,
+      "title": "Consultancy Recruitment: Team Leader for Multi-country Evaluation of Life Skills and Citizenship Education Initiative in MENA – covering Algeria, Egypt, Tunisia, Iraq and Syria for 5 months (Remote)",
+      "grade": "Consultant",
+      "location": "Amman",
+      "postingDate": "2025-11-20T06:00:00",
+      "deadline": "2025-11-27T20:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65256,
+      "title": "Consultancy Recruitment: Evaluation Expert for Multi-country Evaluation of Life Skills and Citizenship Education Initiative in MENA:  covering Algeria, Egypt and Tunisia for 5 months (Remote and travel to the countries)",
+      "grade": "Consultant",
+      "location": "Amman",
+      "postingDate": "2025-11-20T06:00:00",
+      "deadline": "2025-11-27T20:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65255,
+      "title": "Consultancy for End-of-Year Annual Report (COAR), supporting the UNICEF Uganda Country Office for six months, Home-based, Remotely (open to International Consultants only)",
+      "grade": "Consultant",
+      "location": "Kampala",
+      "postingDate": "2025-11-20T06:00:00",
+      "deadline": "2025-11-27T13:00:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65254,
+      "title": "Programme Officer ( Makani), NOB, Amman-Jordan, #134908 ( Temporary Appointment 364 days) ( Open for Jordanians only)",
+      "grade": "NOB",
+      "location": "Amman",
+      "postingDate": "2025-11-20T06:00:00",
+      "deadline": "2025-11-29T20:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65258,
+      "title": "International Consultant - Comprehensive Strategy and Framework Development for Adolescent Girl Programming",
+      "grade": "Consultant",
+      "location": "Dhaka",
+      "postingDate": "2025-11-20T03:00:00",
+      "deadline": "2025-11-27T17:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65259,
+      "title": "UNICEF Mauritanie: Recrute un/une Chef(fe) de bureau de zone, NOC, Bassikounou, Mauritanie, Post2# 00133625, Fixed Term ( Interne & Externe)",
+      "grade": "NOC",
+      "location": "Bassikounou",
+      "postingDate": "2025-11-20T00:00:00",
+      "deadline": "2025-12-05T23:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63881,
+      "title": "International consultant to support nutrition data systems",
+      "grade": "Consultant",
+      "location": "Dili",
+      "postingDate": "2025-11-20T00:00:00",
+      "deadline": "2025-11-26T14:55:00",
+      "status": "archived",
+      "category": "health-medical"
+    },
+    {
+      "id": 63882,
+      "title": "Education Officer, NOB, FT, Maradi, Niger #15653",
+      "grade": "NOB",
+      "location": "Maradi",
+      "postingDate": "2025-11-19T15:50:00",
+      "deadline": "2025-11-25T22:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65261,
+      "title": "WASH Officer, NOB, Fixed-Term, Lomé-Togo #72372",
+      "grade": "NOB",
+      "location": "Lome",
+      "postingDate": "2025-11-19T15:00:00",
+      "deadline": "2025-11-28T23:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65260,
+      "title": "Child Protection Consultant, Belize City, Belize Country Office – Jan–Nov 2026 (Belizean National)",
+      "grade": "Consultant",
+      "location": "Belize",
+      "postingDate": "2025-11-19T15:00:00",
+      "deadline": "2025-11-29T05:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65262,
+      "title": "Human Resources Associate (GS-6), Fixed-Term Appointment, #111139",
+      "grade": "G6",
+      "location": "Lima",
+      "postingDate": "2025-11-19T14:00:00",
+      "deadline": "2025-12-03T04:55:00",
+      "status": "closing_soon",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65263,
+      "title": "Communication Officer (Digital), P2, Temporary Appointment, LACRO, Panama (364 days)",
+      "grade": "P2",
+      "location": "Panama",
+      "postingDate": "2025-11-19T13:00:00",
+      "deadline": "2025-11-27T04:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65264,
+      "title": "WASH (Water, Sanitation and Hygiene) - CEED (Climate, Enviroment, Energy, and Disaster Risk Reduction) Consultant, Manaus (home-based), Brazil, 4 months.",
+      "grade": "Consultant",
+      "location": "Manaus",
+      "postingDate": "2025-11-19T12:00:00",
+      "deadline": "2025-11-27T02:55:00",
+      "status": "expired",
+      "category": "humanitarian-emergency"
+    },
+    {
+      "id": 65265,
+      "title": "National Enumerator Consultant for Data Collection for Tracer Study on Girls Education and Skills Partnership, 12 Months, Lagos and Kano Nigeria.",
+      "grade": "Consultant",
+      "location": "Lagos",
+      "postingDate": "2025-11-19T10:10:00",
+      "deadline": "2025-11-28T22:55:00",
+      "status": "expired",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65266,
+      "title": "National Consultant: Data Collection for Tracer Study on Girls Education and Skills Partnership, 12 Months , Lagos and Kano, Nigeria.",
+      "grade": "Consultant",
+      "location": "Lagos",
+      "postingDate": "2025-11-19T10:00:00",
+      "deadline": "2025-11-28T22:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65267,
+      "title": "Long Term Agreement: Copy Editors, 2 Years on need basis",
+      "grade": "Consultant",
+      "location": "Lusaka",
+      "postingDate": "2025-11-19T09:25:00",
+      "deadline": "2025-11-26T21:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65268,
+      "title": "National Consultant: Conduct a Detailed Analysis of the Impact of Debt on Children in Ghana. (65 working days spread over 4 months)",
+      "grade": "Consultant",
+      "location": "Accra",
+      "postingDate": "2025-11-19T09:00:00",
+      "deadline": "2025-11-26T23:55:00",
+      "status": "expired",
+      "category": "economic-affairs-trade"
+    },
+    {
+      "id": 65274,
+      "title": "Senior ICT Associate (Messaging and Collaboration), G-7, ICTD Digital Core - Digital Foundations - Technology, #00134878, Temporary Position for 364 days (For EU nationals and residents only)",
+      "grade": "G7",
+      "location": "Valencia",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65273,
+      "title": "National Consultancy–Support to the Ministry of Communications and Transport for schools’ connectivity activities, Based in the in the Ministry of Communications and Transport of BIH, 65 working days",
+      "grade": "Consultant",
+      "location": "Sarajevo",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-26T22:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65272,
+      "title": "Administrateur National, Chargé-e de l'éducation de qualité et des enfants hors de l’école Grade NOA - # 132875 -  Cotonou, Benin",
+      "grade": "NOA",
+      "location": "Cotonou",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "education-development"
+    },
+    {
+      "id": 65271,
+      "title": "Administrateur National Chargé-e de Santé et de Nutrition  - Grade NOB, # 126597 - Fixed Term basé à  Natitingou, Benin WCAR",
+      "grade": "NOB",
+      "location": "Natitingou",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "health-medical"
+    },
+    {
+      "id": 65270,
+      "title": "Partnerships Officer, (NO-2), Fixe Term, Brazzaville-Congo, # 00133087.",
+      "grade": "NOB",
+      "location": "Brazzaville",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-29T22:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65269,
+      "title": "Logistics Assistant, GS-5, Yaoundé, Cameroun, #133038",
+      "grade": "G5",
+      "location": "Yaounde",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "supply-chain-logistics"
+    },
+    {
+      "id": 63897,
+      "title": "Global Gaming Industry Strategic Engagement and Market Intelligence Consultant, Office of Innovation, 4 months (virtual)",
+      "grade": "Consultant",
+      "location": "Stockholm",
+      "postingDate": "2025-11-19T08:00:00",
+      "deadline": "2025-11-25T22:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65277,
+      "title": "Individual National Consultant to Develop a National Peer Model Framework to Standardize Implementation of the Peer Mentor Program & Establish the Cost of Scaling; Pretoria, South Africa, 6.5 months (Remote)",
+      "grade": "Consultant",
+      "location": "Pretoria",
+      "postingDate": "2025-11-19T07:00:00",
+      "deadline": "2025-11-27T21:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65276,
+      "title": "Consultancy: Accessible Digital Textbooks (ADT) Coordinator, Office of Innovation, Learning Hub, 6 months (remote)",
+      "grade": "Consultant",
+      "location": "Helsinki",
+      "postingDate": "2025-11-19T07:00:00",
+      "deadline": "2025-12-02T21:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65275,
+      "title": "Senior consultant to improve the Disability Management Information System, Kigali Rwanda, 12 months based in MINALOC - For Rwandan Nationals ONLY",
+      "grade": "Consultant",
+      "location": "Kigali",
+      "postingDate": "2025-11-19T07:00:00",
+      "deadline": "2025-11-26T21:55:00",
+      "status": "expired",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65278,
+      "title": "Establishment of a Roster of National Consultants in the Field of Social Policy and Social Protection, Tbilisi, Georgia.",
+      "grade": "Consultant",
+      "location": "Tbilisi",
+      "postingDate": "2025-11-19T05:00:00",
+      "deadline": "2025-12-25T19:55:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65280,
+      "title": "Programme Specialist (Polio Team Lead), P-4, Karachi, Pakistan #134912, Temporary Appointment (364 days).",
+      "grade": "P4",
+      "location": "Pakistan",
+      "postingDate": "2025-11-19T04:00:00",
+      "deadline": "2025-11-26T18:55:00",
+      "status": "expired",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65279,
+      "title": "Programme Assistant - Polio, GS-5, Islamabad, Pakistan #134910, Temporary Appointment (364 days)",
+      "grade": "G5",
+      "location": "Pakistan",
+      "postingDate": "2025-11-19T04:00:00",
+      "deadline": "2025-11-26T18:55:00",
+      "status": "expired",
+      "category": "operations-administration"
+    },
+    {
+      "id": 63905,
+      "title": "Individual Consultant for ESG, CSR, Corporate Collective - Public Private Sector Engagement (open to National Consultants only)",
+      "grade": "Consultant",
+      "location": "New Delhi",
+      "postingDate": "2025-11-19T03:30:00",
+      "deadline": "2025-11-26T18:25:00",
+      "status": "archived",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65282,
+      "title": "International Consultant - WASH in Health Care costed action plan and TAPP on WASH in HCF",
+      "grade": "Consultant",
+      "location": "Dhaka",
+      "postingDate": "2025-11-19T03:00:00",
+      "deadline": "2025-12-02T17:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65281,
+      "title": "Education/Adolescent Development Officer, NOB. Temporary Appointment (12 months), Bishkek, Kyrgyzstan #00134712.",
+      "grade": "NOB",
+      "location": "Bishkek",
+      "postingDate": "2025-11-19T03:00:00",
+      "deadline": "2025-12-03T17:55:00",
+      "status": "active",
+      "category": "education-development"
+    },
+    {
+      "id": 63907,
+      "title": "WASH Officer, NO-B, Temporary Appointment (TA-364 Days), #134787, Khulna, Bangladesh #  (For Bangladeshi Nationals only)",
+      "grade": "NOB",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-19T03:00:00",
+      "deadline": "2025-11-26T17:55:00",
+      "status": "archived",
+      "category": "climate-environment"
+    },
+    {
+      "id": 65283,
+      "title": "National Consultant to conduct impact assessment on UNICEF MHPSS program interventions (Open to Myanmar Nationals Only))",
+      "grade": "Consultant",
+      "location": "Yangon",
+      "postingDate": "2025-11-19T02:30:00",
+      "deadline": "2025-12-03T17:25:00",
+      "status": "active",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65284,
+      "title": "Data Scientist Consultant – Emergency Response and Frontier Data Support, UNICEF East Asia and Pacific Regional Office (EAPRO), Bangkok, Thailand",
+      "grade": "Consultant",
+      "location": "Bangkok",
+      "postingDate": "2025-11-19T02:00:00",
+      "deadline": "2025-12-02T16:55:00",
+      "status": "closing_soon",
+      "category": "digital-technology"
+    },
+    {
+      "id": 65285,
+      "title": "External&Internal VA, Operations Associate, GS-6, FT #103362 Rabat, Morocco - MENA",
+      "grade": "G6",
+      "location": "Rabat",
+      "postingDate": "2025-11-19T01:00:00",
+      "deadline": "2025-11-30T23:55:00",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 63912,
+      "title": "Partnerships Officer, NO-2, Caracas, Venezuela, Temporary Appointment (6 months)",
+      "grade": "NOB",
+      "location": "Caracas",
+      "postingDate": "2025-11-18T18:00:00",
+      "deadline": "2025-11-25T03:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65286,
+      "title": "WASH Specialist (Cluster Coordinator), NO-3, Caracas, Venezuela #125605, FT",
+      "grade": "NOC",
+      "location": "Caracas",
+      "postingDate": "2025-11-18T15:30:00",
+      "deadline": "2025-12-02T03:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63913,
+      "title": "Communication Assistant (Digital), GS5, FT, Tirana Albania post # 132863",
+      "grade": "G5",
+      "location": "Tirana",
+      "postingDate": "2025-11-18T15:30:00",
+      "deadline": "2025-11-25T22:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63915,
+      "title": "Technical support to UAPI (Unidade Amiga da Primeira Infância) Consultant, Manaus (home-based), Brazil, 6 months.",
+      "grade": "Consultant",
+      "location": "Manaus",
+      "postingDate": "2025-11-18T12:00:00",
+      "deadline": "2025-11-26T02:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65287,
+      "title": "WASH Officer, (NO-2), Buea, Cameron, #126065 [Temp Appointment], 9 months",
+      "grade": "NOB",
+      "location": "Buea",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63922,
+      "title": "Consultant (5 months, home-based): Analyst for child-focused ODA, Division of Private Fundraising and Partnerships (PFP)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63921,
+      "title": "Consultant (12 months, home-based): Consultant for Baby-friendly Hospital Initiative, Division of Private Fundraising and Partnerships (PFP)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63920,
+      "title": "Consultant (7 months, home-based): Policy-Writing Consultant (Cybersecurity), Governance, Division of Private Fundraising and Partnerships (PFP)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "digital-technology"
+    },
+    {
+      "id": 63919,
+      "title": "Consultant (12 months, home-based): Community Engagement and Communications Consultant, Division of Private Fundraising and Partnerships (PFP)",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63918,
+      "title": "Consultant (7 months, home-based, remotely) Policy-Writing (Anti-fraud, and Anti-money Laundering), Governance, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63917,
+      "title": "Consultant (12 months, home-based) Volunteer Mapping, Governance, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63916,
+      "title": "Consultant (7 months, home-based, remotely) Policy Writing (Audit and Risk Management), Governance, PFP, Geneva",
+      "grade": "Consultant",
+      "location": "Geneva",
+      "postingDate": "2025-11-18T08:00:00",
+      "deadline": "2025-11-24T22:55:00",
+      "status": "archived",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 65288,
+      "title": "National Consultant to support Data Visualization, Harare, Zimbabwe, 80 days (Open to Zimbabwe Nationals Only)",
+      "grade": "Consultant",
+      "location": "Harare",
+      "postingDate": "2025-11-18T07:00:00",
+      "deadline": "2025-11-27T21:55:00",
+      "status": "expired",
+      "category": "health-medical"
+    },
+    {
+      "id": 63924,
+      "title": "Re-advertisement: Child Protection Officer NO-2, Temporary Appointment (6 months), Quelimane, Mozambique #134571  - Open to Mozambican nationals only",
+      "grade": "NOB",
+      "location": "Mozambique",
+      "postingDate": "2025-11-18T07:00:00",
+      "deadline": "2025-11-25T21:55:00",
+      "status": "archived",
+      "category": "social-affairs-human-rights"
+    },
+    {
+      "id": 65289,
+      "title": "International Consultant on Impact Documentation with UNICEF in Uzbekistan",
+      "grade": "Consultant",
+      "location": "Tashkent",
+      "postingDate": "2025-11-18T04:00:00",
+      "deadline": "2025-11-28T18:55:00",
+      "status": "expired",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 63927,
+      "title": "National Consultant:  Construction Officer",
+      "grade": "Consultant",
+      "location": "Bangladesh",
+      "postingDate": "2025-11-18T03:00:00",
+      "deadline": "2025-11-25T17:55:00",
+      "status": "archived",
+      "category": "operations-administration"
+    },
+    {
+      "id": 65290,
+      "title": "National Consultancy: Costing of National Disability Identification Mechanism",
+      "grade": "Consultant",
+      "location": "Phnom-Penh",
+      "postingDate": "2025-11-18T02:00:00",
+      "deadline": "2025-12-02T16:55:00",
+      "status": "closing_soon",
+      "category": "policy-strategic-planning"
+    },
+    {
+      "id": 63929,
+      "title": "National consultant to strengthen multisectoral nutrition coordination and advocacy for implementation and scaling-up evidence-based nutrition interventions",
+      "grade": "Consultant",
+      "location": "Dili",
+      "postingDate": "2025-11-18T00:00:00",
+      "deadline": "2025-11-24T14:55:00",
+      "status": "archived",
+      "category": "health-medical"
+    },
+    {
+      "id": 65291,
+      "title": "Consultant(e) international(e) - Conduite d'une analyse des risques et conflits incluant les effets du changement climatique en Côte d’Ivoire, Abidjan (105 jours)",
+      "grade": "Consultant",
+      "location": "Abidjan",
+      "postingDate": "2025-11-17T17:00:00",
+      "deadline": "2025-12-01T23:55:00",
+      "status": "closing_soon",
+      "category": "climate-environment"
+    },
+    {
+      "id": 63931,
+      "title": "Pasantía Administrativa para Tumbes",
+      "grade": "Intern",
+      "location": "Peru",
+      "postingDate": "2025-11-17T14:00:00",
+      "deadline": "2025-11-25T04:55:00",
+      "status": "archived",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65294,
+      "title": "Partnership Specialist Consultant, Stockholm, Sweden, Office of Innovation, 6 months - Remote",
+      "grade": "Consultant",
+      "location": "Stockholm",
+      "postingDate": "2025-11-17T08:00:00",
+      "deadline": "2025-12-01T22:55:00",
+      "status": "closing_soon",
+      "category": "communications-partnerships"
+    },
+    {
+      "id": 65293,
+      "title": "Education Specialist (Gender and Inclusion), P-3, TA, Post#00134873, Req.586079",
+      "grade": "P3",
+      "location": "Bangui",
+      "postingDate": "2025-11-17T08:00:00",
+      "deadline": "2025-11-30T22:55:00",
+      "status": "closing_soon",
+      "category": "social-affairs-human-rights"
+    }
+  ]
+}

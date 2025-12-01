@@ -110,6 +110,10 @@ export function useMapData({ jobs, selectedAgency, isAgencyView }: UseMapDataPro
     // Store raw jobs by location ID for detail view
     const jobsByLocation = new Map<string, ProcessedJobData[]>();
 
+    // Track home-based/remote jobs separately (not shown on map)
+    let homeBasedYourJobs = 0;
+    let homeBasedMarketJobs = 0;
+
     locationGroups.forEach((group, key) => {
       const { dutyStation, country, yourJobs, marketJobs } = group;
       
@@ -118,6 +122,15 @@ export function useMapData({ jobs, selectedAgency, isAgencyView }: UseMapDataPro
       const { hardshipClass } = getHardshipClassification(dutyStation, country);
       const region = getUNRegion(country);
       uniqueRegions.add(region);
+      
+      // Skip home-based/remote positions from map display (they don't have meaningful coordinates)
+      // These would otherwise be mapped to capitals/HQ which distorts the visualization
+      if (locationType === 'Home-based') {
+        // Still track them for analytics
+        homeBasedYourJobs += yourJobs.length;
+        homeBasedMarketJobs += marketJobs.length;
+        return; // Don't add to map
+      }
       
       // Skip if coordinates couldn't be determined
       if (coordinates[0] === 0 && coordinates[1] === 0 && dutyStation !== 'Home-based') {
@@ -327,6 +340,10 @@ export function useMapData({ jobs, selectedAgency, isAgencyView }: UseMapDataPro
       
       gapLocations: gapLocations.map(l => l.dutyStation),
       gapCount: gapLocations.length,
+      
+      // Home-based positions (tracked separately from map)
+      homeBasedCount: homeBasedYourJobs,
+      homeBasedMarketCount: homeBasedMarketJobs,
     };
 
     // Aggregate data by country for choropleth
@@ -437,7 +454,13 @@ export function useMapData({ jobs, selectedAgency, isAgencyView }: UseMapDataPro
 
       // Get raw jobs for this location and convert to LocationJobData
       const rawJobs = jobsByLocation.get(locationId) || [];
-      const locationJobs: LocationJobData[] = rawJobs
+      
+      // When in agency view, filter to only show the selected agency's jobs
+      const filteredRawJobs = isAgencyView && selectedAgency
+        ? rawJobs.filter(job => job.short_agency === selectedAgency || job.long_agency === selectedAgency)
+        : rawJobs;
+      
+      const locationJobs: LocationJobData[] = filteredRawJobs
         .map(job => {
           const catDef = JOB_CLASSIFICATION_DICTIONARY.find(c => c.id === job.primary_category);
           const isYourAgency = isAgencyView && (job.short_agency === selectedAgency || job.long_agency === selectedAgency);
@@ -460,14 +483,11 @@ export function useMapData({ jobs, selectedAgency, isAgencyView }: UseMapDataPro
             url: job.url || '',
           };
         })
-        // Sort: active jobs first, then your agency, then by posting date (newest first)
+        // Sort: active jobs first, then by posting date (newest first)
         .sort((a, b) => {
           // Active jobs first
           if (a.isActive && !b.isActive) return -1;
           if (!a.isActive && b.isActive) return 1;
-          // Then your agency jobs
-          if (a.isYourAgency && !b.isYourAgency) return -1;
-          if (!a.isYourAgency && b.isYourAgency) return 1;
           // Then by posting date (newest first)
           return new Date(b.postingDate).getTime() - new Date(a.postingDate).getTime();
         });

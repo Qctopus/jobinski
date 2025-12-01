@@ -64,6 +64,7 @@ const GeographicMap: React.FC<GeographicMapProps> = ({
     viewMode: isAgencyView ? 'your-agency' : 'market',
   }));
   const [showDetailPanel, setShowDetailPanel] = useState(false);
+  const [mapPosition, setMapPosition] = useState<{ center: [number, number]; zoom: number } | undefined>(undefined);
   
   // Update view mode when agency selection changes
   React.useEffect(() => {
@@ -72,26 +73,41 @@ const GeographicMap: React.FC<GeographicMapProps> = ({
     }
   }, [isAgencyView, viewState.viewMode]);
 
-  // Use market data for the map to show full market context
-  const mapData = marketData || data;
+  // When in agency view, only show the selected agency's jobs on the map
+  // When in market view, show all jobs
+  // For peer comparison, we need market data to see all agencies' positions
+  const mapData = useMemo(() => {
+    // Peer comparison needs market data to show other agencies
+    if (viewState.viewMode === 'peer-comparison') {
+      return marketData || data;
+    }
+    return isAgencyView ? data : (marketData || data);
+  }, [isAgencyView, data, marketData, viewState.viewMode]);
   
   // Process data for the map
   const { locations, ghostLocations, countryData, summaryStats, regions, getLocationDetail } = useMapData({
     jobs: mapData,
     selectedAgency,
-    isAgencyView,
+    isAgencyView: viewState.viewMode !== 'peer-comparison' && isAgencyView,
   });
 
-  // Use provided agencies list or compute from data
+  // Use provided agencies list or compute from data, sorted by job count
   const agencies = useMemo(() => {
-    if (allAgencies.length > 0) return allAgencies;
-    const agencySet = new Set<string>();
-    mapData.forEach(job => {
+    // Count jobs per agency from market data (to get accurate counts for all agencies)
+    const sourceData = marketData || mapData;
+    const agencyCounts = new Map<string, number>();
+    sourceData.forEach(job => {
       const agency = job.short_agency || job.long_agency;
-      if (agency) agencySet.add(agency);
+      if (agency) {
+        agencyCounts.set(agency, (agencyCounts.get(agency) || 0) + 1);
+      }
     });
-    return Array.from(agencySet).sort();
-  }, [mapData, allAgencies]);
+    
+    // Sort by job count descending
+    return Array.from(agencyCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([agency]) => agency);
+  }, [mapData, marketData]);
 
   // Top locations for summary bar
   const topLocations = useMemo(() => {
@@ -132,11 +148,17 @@ const GeographicMap: React.FC<GeographicMapProps> = ({
     setViewState(prev => ({ ...prev, comparisonAgencies: agencies }));
   }, []);
 
+  const handleZoomToRegion = useCallback((center: [number, number], zoom: number) => {
+    setMapPosition({ center, zoom });
+  }, []);
+
   const handleReset = useCallback(() => {
     setViewState(prev => ({
       ...getDefaultViewState(),
       viewMode: isAgencyView ? 'your-agency' : 'market',
     }));
+    // Reset map position to world view
+    setMapPosition({ center: [0, 20], zoom: 1 });
   }, [isAgencyView]);
 
   const handleLocationClick = useCallback((locationId: string) => {
@@ -325,6 +347,11 @@ const GeographicMap: React.FC<GeographicMapProps> = ({
               onCountryHover={handleCountryHover}
               selectedAgencyName={selectedAgency}
               comparisonAgencies={viewState.comparisonAgencies}
+              externalPosition={mapPosition}
+              homeBasedStats={{
+                count: summaryStats.homeBasedCount,
+                marketCount: summaryStats.homeBasedMarketCount,
+              }}
             />
           </div>
         </div>
@@ -337,6 +364,7 @@ const GeographicMap: React.FC<GeographicMapProps> = ({
             onVisualizationModeChange={handleVisualizationModeChange}
             onColorByChange={handleColorByChange}
             onFiltersChange={handleFiltersChange}
+            onZoomToRegion={handleZoomToRegion}
             onReset={handleReset}
             agencies={agencies}
             selectedAgencyName={selectedAgency}

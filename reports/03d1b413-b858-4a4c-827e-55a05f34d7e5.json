@@ -1,0 +1,1008 @@
+{
+  "metadata": {
+    "reportId": "03d1b413-b858-4a4c-827e-55a05f34d7e5",
+    "agency": "UNDP",
+    "agencyLongName": "United Nations Development Programme",
+    "reportTitle": "UNDP Monthly HR Intelligence Report",
+    "reportPeriod": {
+      "startDate": "2025-10-01",
+      "endDate": "2025-11-30",
+      "displayPeriod": "October - November 2025"
+    },
+    "generatedAt": "2025-11-30T11:07:42.409Z",
+    "generatedBy": "UN Jobs Analytics Platform",
+    "version": "1.0.0",
+    "pageCount": 12,
+    "dataPoints": 345
+  },
+  "agencyMetrics": {
+    "agencyInfo": {
+      "shortName": "UNDP",
+      "longName": "United Nations Development Programme",
+      "logoPath": "/logo/logo/UNDP.png",
+      "peerGroup": "Large Operational Agencies",
+      "tier": 1
+    },
+    "volumeMetrics": {
+      "totalPostings": 345,
+      "activePostings": 72,
+      "closingSoonPostings": 74,
+      "expiredPostings": 273,
+      "newPostingsThisMonth": 345,
+      "previousMonthPostings": 68,
+      "monthOverMonthChange": 407.35294117647055
+    },
+    "applicationMetrics": {
+      "avgApplicationWindow": 6.4,
+      "medianApplicationWindow": 6,
+      "minApplicationWindow": 1,
+      "maxApplicationWindow": 21,
+      "urgentPositionsCount": 70,
+      "urgentPositionsPercentage": 20.28985507246377
+    },
+    "workforceComposition": {
+      "gradeDistribution": [
+        {
+          "grade": "NPSA-9",
+          "count": 44,
+          "percentage": 12.753623188405797
+        },
+        {
+          "grade": "Intern",
+          "count": 38,
+          "percentage": 11.014492753623188
+        },
+        {
+          "grade": "NPSA-8",
+          "count": 35,
+          "percentage": 10.144927536231885
+        },
+        {
+          "grade": "NPSA-6",
+          "count": 35,
+          "percentage": 10.144927536231885
+        },
+        {
+          "grade": "Other",
+          "count": 34,
+          "percentage": 9.855072463768117
+        },
+        {
+          "grade": "NPSA-5",
+          "count": 28,
+          "percentage": 8.115942028985506
+        },
+        {
+          "grade": "NPSA-7",
+          "count": 24,
+          "percentage": 6.956521739130435
+        },
+        {
+          "grade": "NPSA-10",
+          "count": 22,
+          "percentage": 6.3768115942028984
+        },
+        {
+          "grade": "NPSA-4",
+          "count": 15,
+          "percentage": 4.3478260869565215
+        },
+        {
+          "grade": "NPSA-3",
+          "count": 12,
+          "percentage": 3.4782608695652173
+        },
+        {
+          "grade": "NOC",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "grade": "NPSA-2",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        },
+        {
+          "grade": "IPSA-10",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        },
+        {
+          "grade": "IPSA-8",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        },
+        {
+          "grade": "IPSA-11",
+          "count": 4,
+          "percentage": 1.1594202898550725
+        },
+        {
+          "grade": "P4",
+          "count": 4,
+          "percentage": 1.1594202898550725
+        },
+        {
+          "grade": "G6",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "grade": "NOA",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "grade": "IPSA-9",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "grade": "NOB",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "grade": "NPSA-11",
+          "count": 2,
+          "percentage": 0.5797101449275363
+        },
+        {
+          "grade": "G2",
+          "count": 2,
+          "percentage": 0.5797101449275363
+        },
+        {
+          "grade": "G7",
+          "count": 2,
+          "percentage": 0.5797101449275363
+        },
+        {
+          "grade": "G4",
+          "count": 2,
+          "percentage": 0.5797101449275363
+        },
+        {
+          "grade": "Consultant",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "P3",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "NB5",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "G5",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "NB2",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "NOD",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "NPSA-1",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "P2",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        {
+          "grade": "IPSA-13",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        }
+      ],
+      "seniorityDistribution": [
+        {
+          "level": "Unknown",
+          "count": 277,
+          "percentage": 80.28985507246377
+        },
+        {
+          "level": "Intern",
+          "count": 38,
+          "percentage": 11.014492753623188
+        },
+        {
+          "level": "Mid-Level",
+          "count": 14,
+          "percentage": 4.057971014492753
+        },
+        {
+          "level": "Entry",
+          "count": 9,
+          "percentage": 2.608695652173913
+        },
+        {
+          "level": "Senior",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "level": "Consultant",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        }
+      ],
+      "staffTypeBreakdown": {
+        "international": {
+          "count": 18,
+          "percentage": 5.217391304347826
+        },
+        "national": {
+          "count": 221,
+          "percentage": 64.05797101449275
+        },
+        "consultant": {
+          "count": 1,
+          "percentage": 0.2898550724637681
+        },
+        "intern": {
+          "count": 40,
+          "percentage": 11.594202898550725
+        },
+        "other": {
+          "count": 65,
+          "percentage": 18.84057971014493
+        }
+      },
+      "locationDistribution": [
+        {
+          "station": "Unspecified",
+          "count": 33,
+          "percentage": 9.565217391304348
+        },
+        {
+          "station": "Mexico",
+          "count": 25,
+          "percentage": 7.246376811594203
+        },
+        {
+          "station": "Bangladesh",
+          "count": 20,
+          "percentage": 5.797101449275362
+        },
+        {
+          "station": "Panama",
+          "count": 14,
+          "percentage": 4.057971014492753
+        },
+        {
+          "station": "Baghdad",
+          "count": 11,
+          "percentage": 3.1884057971014492
+        },
+        {
+          "station": "Ukraine",
+          "count": 10,
+          "percentage": 2.898550724637681
+        },
+        {
+          "station": "New York",
+          "count": 8,
+          "percentage": 2.318840579710145
+        },
+        {
+          "station": "Copenhagen",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Erbil",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Mozambique",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Chisinau",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Addis Ababa",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "station": "Ha Noi",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "station": "Beijing",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        },
+        {
+          "station": "Guatemala City",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        }
+      ],
+      "languageRequirements": {
+        "languageBreakdown": [
+          {
+            "language": "English",
+            "count": 254,
+            "percentage": 73.62318840579711
+          },
+          {
+            "language": "Spanish",
+            "count": 65,
+            "percentage": 18.84057971014493
+          },
+          {
+            "language": "Arabic",
+            "count": 42,
+            "percentage": 12.173913043478262
+          },
+          {
+            "language": "French",
+            "count": 26,
+            "percentage": 7.536231884057972
+          },
+          {
+            "language": "Bangla",
+            "count": 19,
+            "percentage": 5.507246376811594
+          },
+          {
+            "language": "Portuguese",
+            "count": 14,
+            "percentage": 4.057971014492753
+          },
+          {
+            "language": "Russian",
+            "count": 11,
+            "percentage": 3.1884057971014492
+          },
+          {
+            "language": "Ukrainian",
+            "count": 10,
+            "percentage": 2.898550724637681
+          },
+          {
+            "language": "Kurdish",
+            "count": 7,
+            "percentage": 2.0289855072463765
+          },
+          {
+            "language": "Vietnamese",
+            "count": 7,
+            "percentage": 2.0289855072463765
+          },
+          {
+            "language": "Romanian",
+            "count": 7,
+            "percentage": 2.0289855072463765
+          },
+          {
+            "language": "Chinese",
+            "count": 5,
+            "percentage": 1.4492753623188406
+          },
+          {
+            "language": "Mongolian",
+            "count": 5,
+            "percentage": 1.4492753623188406
+          },
+          {
+            "language": "Hindi",
+            "count": 5,
+            "percentage": 1.4492753623188406
+          },
+          {
+            "language": "Dutch",
+            "count": 4,
+            "percentage": 1.1594202898550725
+          },
+          {
+            "language": "Armenian",
+            "count": 4,
+            "percentage": 1.1594202898550725
+          },
+          {
+            "language": "Uzbek",
+            "count": 3,
+            "percentage": 0.8695652173913043
+          },
+          {
+            "language": "Korean",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Malay",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Filipino",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Nepali",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Amharic",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Urdu",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Serbian",
+            "count": 2,
+            "percentage": 0.5797101449275363
+          },
+          {
+            "language": "Lao",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Tajik",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Kyrgyz",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Georgian",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Japanese",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Burmese",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Swahili",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Chichewa",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Bengali",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Tok Pisin",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Finnish",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Dari",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Bosnian",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Croatian",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          },
+          {
+            "language": "Tongan",
+            "count": 1,
+            "percentage": 0.2898550724637681
+          }
+        ],
+        "multilingualPercentage": 46.3768115942029
+      }
+    },
+    "categoryAnalysis": {
+      "distribution": [
+        {
+          "category": "operations-administration",
+          "count": 81,
+          "percentage": 23.47826086956522
+        },
+        {
+          "category": "policy-strategic-planning",
+          "count": 72,
+          "percentage": 20.869565217391305
+        },
+        {
+          "category": "communications-partnerships",
+          "count": 51,
+          "percentage": 14.782608695652174
+        },
+        {
+          "category": "digital-technology",
+          "count": 34,
+          "percentage": 9.855072463768117
+        },
+        {
+          "category": "leadership-executive",
+          "count": 25,
+          "percentage": 7.246376811594203
+        },
+        {
+          "category": "economic-affairs-trade",
+          "count": 23,
+          "percentage": 6.666666666666667
+        },
+        {
+          "category": "climate-environment",
+          "count": 17,
+          "percentage": 4.9275362318840585
+        },
+        {
+          "category": "legal-compliance",
+          "count": 10,
+          "percentage": 2.898550724637681
+        },
+        {
+          "category": "supply-chain-logistics",
+          "count": 9,
+          "percentage": 2.608695652173913
+        },
+        {
+          "category": "social-affairs-human-rights",
+          "count": 8,
+          "percentage": 2.318840579710145
+        },
+        {
+          "category": "education-development",
+          "count": 4,
+          "percentage": 1.1594202898550725
+        },
+        {
+          "category": "peace-security",
+          "count": 4,
+          "percentage": 1.1594202898550725
+        },
+        {
+          "category": "health-medical",
+          "count": 4,
+          "percentage": 1.1594202898550725
+        },
+        {
+          "category": "governance-rule-of-law",
+          "count": 2,
+          "percentage": 0.5797101449275363
+        },
+        {
+          "category": "translation-interpretation",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        }
+      ],
+      "trendingCategories": [
+        "operations-administration",
+        "policy-strategic-planning",
+        "communications-partnerships"
+      ],
+      "emergingCategories": [],
+      "categoryDiversity": 80.65292611203992
+    },
+    "geographicAnalysis": {
+      "regionDistribution": [
+        {
+          "region": "Asia",
+          "count": 107,
+          "percentage": 31.01449275362319
+        },
+        {
+          "region": "Latin America and the Caribbean",
+          "count": 82,
+          "percentage": 23.768115942028984
+        },
+        {
+          "region": "Africa",
+          "count": 71,
+          "percentage": 20.579710144927535
+        },
+        {
+          "region": "Europe",
+          "count": 37,
+          "percentage": 10.72463768115942
+        },
+        {
+          "region": "Other",
+          "count": 33,
+          "percentage": 9.565217391304348
+        },
+        {
+          "region": "Northern America",
+          "count": 8,
+          "percentage": 2.318840579710145
+        },
+        {
+          "region": "Oceania",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "region": "Home-based",
+          "count": 3,
+          "percentage": 0.8695652173913043
+        },
+        {
+          "region": "N/A",
+          "count": 1,
+          "percentage": 0.2898550724637681
+        }
+      ],
+      "topDutyStations": [
+        {
+          "station": "Unspecified",
+          "count": 33,
+          "percentage": 9.565217391304348
+        },
+        {
+          "station": "Mexico",
+          "count": 25,
+          "percentage": 7.246376811594203
+        },
+        {
+          "station": "Bangladesh",
+          "count": 20,
+          "percentage": 5.797101449275362
+        },
+        {
+          "station": "Panama",
+          "count": 14,
+          "percentage": 4.057971014492753
+        },
+        {
+          "station": "Baghdad",
+          "count": 11,
+          "percentage": 3.1884057971014492
+        },
+        {
+          "station": "Ukraine",
+          "count": 10,
+          "percentage": 2.898550724637681
+        },
+        {
+          "station": "New York",
+          "count": 8,
+          "percentage": 2.318840579710145
+        },
+        {
+          "station": "Copenhagen",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Erbil",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Mozambique",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Chisinau",
+          "count": 7,
+          "percentage": 2.0289855072463765
+        },
+        {
+          "station": "Addis Ababa",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "station": "Ha Noi",
+          "count": 6,
+          "percentage": 1.7391304347826086
+        },
+        {
+          "station": "Beijing",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        },
+        {
+          "station": "Guatemala City",
+          "count": 5,
+          "percentage": 1.4492753623188406
+        }
+      ],
+      "hqVsFieldRatio": {
+        "hq": {
+          "count": 17,
+          "percentage": 4.9275362318840585
+        },
+        "field": {
+          "count": 325,
+          "percentage": 94.20289855072464
+        },
+        "remote": {
+          "count": 3,
+          "percentage": 0.8695652173913043
+        }
+      }
+    },
+    "temporalAnalysis": {
+      "postingsByMonth": [
+        {
+          "month": "2025-10",
+          "count": 54
+        },
+        {
+          "month": "2025-11",
+          "count": 291
+        }
+      ],
+      "weekdayDistribution": [
+        {
+          "weekday": "Thursday",
+          "count": 28
+        },
+        {
+          "weekday": "Friday",
+          "count": 65
+        },
+        {
+          "weekday": "Sunday",
+          "count": 1
+        },
+        {
+          "weekday": "Monday",
+          "count": 55
+        },
+        {
+          "weekday": "Tuesday",
+          "count": 16
+        },
+        {
+          "weekday": "Wednesday",
+          "count": 175
+        },
+        {
+          "weekday": "Saturday",
+          "count": 5
+        }
+      ],
+      "peakPostingDay": "Wednesday"
+    }
+  },
+  "benchmarks": {
+    "marketAverages": {
+      "avgPostingsPerAgency": 128,
+      "avgApplicationWindow": 13,
+      "avgActivePositions": 0,
+      "marketTotalVolume": 3718
+    },
+    "peerAverages": {
+      "avgPostingsPerPeer": 478,
+      "totalPeersActive": 3,
+      "peerGroupVolume": 1435
+    },
+    "industryStandards": {
+      "targetApplicationWindow": 45,
+      "targetActivePositionRatio": 0.7,
+      "targetCategoryDiversity": 0.6
+    }
+  },
+  "competitiveIntelligence": {
+    "marketPosition": {
+      "marketRank": 5,
+      "totalAgenciesInMarket": 29,
+      "marketShare": 9.279182356105432,
+      "volumeVsMarketAverage": 169.09628832705755
+    },
+    "peerGroupComparison": {
+      "peerGroupName": "Large Operational Agencies",
+      "peerGroupTier": 1,
+      "peerAgencies": [
+        "UNICEF",
+        "WFP",
+        "UNHCR"
+      ],
+      "yourRankInGroup": 3,
+      "avgPostingsInGroup": 478.3333333333333,
+      "yourPostings": 345,
+      "performanceVsPeers": "below"
+    },
+    "competitorAnalysis": [
+      {
+        "agency": "UNICEF",
+        "volume": 927,
+        "categoryOverlap": 15,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UN Secretariat",
+        "volume": 702,
+        "categoryOverlap": 14,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "WFP",
+        "volume": 379,
+        "categoryOverlap": 12,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "FAO",
+        "volume": 364,
+        "categoryOverlap": 12,
+        "competitionLevel": "high"
+      },
+      {
+        "agency": "UNEP",
+        "volume": 245,
+        "categoryOverlap": 13,
+        "competitionLevel": "high"
+      }
+    ],
+    "categoryCompetition": [
+      {
+        "category": "operations-administration",
+        "agencyShare": 11.621233859397417,
+        "totalMarketVolume": 697,
+        "competitorsCount": 23,
+        "agencyRank": 1
+      },
+      {
+        "category": "policy-strategic-planning",
+        "agencyShare": 7.399794450154163,
+        "totalMarketVolume": 973,
+        "competitorsCount": 24,
+        "agencyRank": 1
+      },
+      {
+        "category": "communications-partnerships",
+        "agencyShare": 9.058614564831261,
+        "totalMarketVolume": 563,
+        "competitorsCount": 23,
+        "agencyRank": 1
+      },
+      {
+        "category": "digital-technology",
+        "agencyShare": 10.029498525073747,
+        "totalMarketVolume": 339,
+        "competitorsCount": 19,
+        "agencyRank": 1
+      },
+      {
+        "category": "leadership-executive",
+        "agencyShare": 24.271844660194176,
+        "totalMarketVolume": 103,
+        "competitorsCount": 17,
+        "agencyRank": 1
+      }
+    ]
+  },
+  "insights": {
+    "volumeInsights": [
+      {
+        "type": "positive",
+        "title": "Significant Hiring Increase",
+        "description": "407% increase in postings compared to the previous period.",
+        "metric": "407%",
+        "value": 407.35294117647055
+      },
+      {
+        "type": "positive",
+        "title": "Faster Hiring Cycles",
+        "description": "Application windows average 7 days shorter than market average.",
+        "metric": "6 days",
+        "value": 6.4
+      },
+      {
+        "type": "neutral",
+        "title": "Active Positions",
+        "description": "21% of positions still accepting applications.",
+        "metric": "72 active",
+        "value": 20.869565217391305
+      },
+      {
+        "type": "neutral",
+        "title": "Total Postings",
+        "description": "345 total job postings in this period.",
+        "metric": "345 jobs",
+        "value": 345
+      }
+    ],
+    "competitiveInsights": [
+      {
+        "type": "positive",
+        "title": "Market Presence",
+        "description": "9.3% of total UN system job postings.",
+        "metric": "9.3%",
+        "value": 9.279182356105432
+      },
+      {
+        "type": "positive",
+        "title": "Market Ranking",
+        "description": "Ranked #5 out of 29 agencies by hiring volume.",
+        "metric": "#5",
+        "value": 5
+      },
+      {
+        "type": "warning",
+        "title": "Below Peer Average",
+        "description": "Hiring volume below peer group average.",
+        "metric": "345 vs 478 avg",
+        "value": 345
+      }
+    ],
+    "strategicInsights": [
+      {
+        "type": "positive",
+        "title": "Strong Localization",
+        "description": "National staff positions (64%) exceed international positions (5%).",
+        "metric": "64% national",
+        "value": 64.05797101449275
+      },
+      {
+        "type": "neutral",
+        "title": "Top Location",
+        "description": "Unspecified is the primary duty station with 10% of positions.",
+        "metric": "33 jobs",
+        "value": 33
+      },
+      {
+        "type": "neutral",
+        "title": "Primary Focus Area",
+        "description": "operations-administration represents 23% of all positions.",
+        "metric": "81 jobs",
+        "value": 81
+      }
+    ]
+  },
+  "recommendations": [
+    {
+      "priority": "medium",
+      "area": "Leadership Pipeline",
+      "recommendation": "Strengthen Senior Talent Pipeline",
+      "rationale": "Only 2% of positions are at senior level.",
+      "impact": "Stronger succession planning and organizational capability"
+    }
+  ]
+}
