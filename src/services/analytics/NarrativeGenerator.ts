@@ -15,6 +15,14 @@ import {
   ExecutiveSummary,
   AnomalySignal
 } from './IntelligenceInsightsEngine';
+import { 
+  formatNumber, 
+  formatPercent, 
+  formatChange, 
+  formatChangeDescription, 
+  getChangeWord, 
+  getMagnitudeWord 
+} from '../../utils/formatters';
 
 // ============ TYPES ============
 
@@ -31,44 +39,6 @@ export interface GeneratedNarrative {
   highlights: string[];
   callouts: { type: 'positive' | 'negative' | 'neutral'; text: string }[];
 }
-
-// ============ HELPER FUNCTIONS ============
-
-const formatNumber = (n: number): string => {
-  if (n >= 1000) {
-    return n.toLocaleString();
-  }
-  return String(n);
-};
-
-const formatPercent = (n: number, decimals = 0): string => {
-  return `${n.toFixed(decimals)}%`;
-};
-
-const formatChange = (n: number, decimals = 0): string => {
-  const abs = Math.abs(n);
-  const sign = n >= 0 ? '+' : '';
-  return `${sign}${abs.toFixed(decimals)}${n !== 0 ? '%' : ''}`;
-};
-
-const formatChangeDescription = (change: number, threshold = 5): string => {
-  if (Math.abs(change) < threshold) return 'unchanged from';
-  return change > 0 ? 'up from' : 'down from';
-};
-
-const getChangeWord = (change: number): string => {
-  if (Math.abs(change) < 3) return 'steady';
-  if (Math.abs(change) < 10) return change > 0 ? 'increased' : 'decreased';
-  if (Math.abs(change) < 25) return change > 0 ? 'grew significantly' : 'declined notably';
-  return change > 0 ? 'surged' : 'dropped sharply';
-};
-
-const getMagnitudeWord = (value: number, thresholds: [number, number, number]): string => {
-  if (value >= thresholds[2]) return 'highest';
-  if (value >= thresholds[1]) return 'high';
-  if (value <= thresholds[0]) return 'low';
-  return 'moderate';
-};
 
 // ============ NARRATIVE GENERATORS ============
 

@@ -9,6 +9,7 @@ import { ProcessedJobData } from '../../types';
 import { classifyGrade, getConsolidatedTier } from '../../utils/gradeClassification';
 import { parseISO, subWeeks, subMonths, isWithinInterval, differenceInDays, format, startOfWeek } from 'date-fns';
 import { getAgencyPeerGroup, getPeerAgencies } from '../../config/peerGroups';
+import { formatNumber, formatPercent, formatChange, formatPPChange, getChangeWord, getOrdinal } from '../../utils/formatters';
 
 // ============ TYPES ============
 
@@ -52,33 +53,6 @@ export interface IntelligenceBrief {
   strategicFindings: StrategicFinding[];
   signals: Signal[];
 }
-
-// ============ HELPER FUNCTIONS ============
-
-const formatNumber = (n: number): string => n.toLocaleString();
-const formatPercent = (n: number, decimals = 0): string => `${n.toFixed(decimals)}%`;
-const formatChange = (n: number): string => {
-  if (Math.abs(n) < 1) return 'unchanged';
-  return n > 0 ? `+${n.toFixed(0)}%` : `${n.toFixed(0)}%`;
-};
-
-const formatPPChange = (n: number): string => {
-  if (Math.abs(n) < 1) return 'unchanged';
-  return n > 0 ? `+${n.toFixed(0)}pp` : `${n.toFixed(0)}pp`;
-};
-
-const getChangeWord = (change: number, threshold = 20): string => {
-  if (Math.abs(change) < 5) return 'remained steady at';
-  if (Math.abs(change) < threshold) return change > 0 ? 'increased to' : 'decreased to';
-  if (Math.abs(change) < 50) return change > 0 ? 'rose significantly to' : 'fell notably to';
-  return change > 0 ? 'surged to' : 'dropped sharply to';
-};
-
-const getOrdinal = (n: number): string => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
 
 // ============ MAIN GENERATOR CLASS ============
 

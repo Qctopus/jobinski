@@ -7,11 +7,9 @@ export { default as AreaChart } from './AreaChart';
 export { default as RadarChart } from './RadarChart';
 export { default as ScatterChart } from './ScatterChart';
 export { BCGMatrixChart } from './BCGMatrixChart';
-export { CategoryEvolutionChart } from './CategoryEvolutionChart';
 export { PostedVsOpenChart } from './PostedVsOpenChart';
 export { MarketShareEvolutionChart } from './MarketShareEvolutionChart';
 export { TalentWarZonesHeatmap } from './TalentWarZonesHeatmap';
-export { WorkforceEvolutionChart } from './WorkforceEvolutionChart';
 
 // Re-export types for convenience
 export type { default as BaseChartProps } from './BaseChart';
