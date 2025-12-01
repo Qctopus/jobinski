@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@types/pdfmake": "^0.2.12",
+    "@vercel/node": "^5.5.13",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
     "tailwindcss": "^3.3.0"

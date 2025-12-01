@@ -1,9 +1,12 @@
 /**
  * DashboardApi - Frontend API client for the new backend endpoints
  * All analytics are pre-computed on the backend for instant loading
+ * In production (Vercel), uses relative /api paths
+ * In development, uses localhost:5000
  */
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const isProduction = process.env.NODE_ENV === 'production';
+const API_BASE = process.env.REACT_APP_API_URL || (isProduction ? '/api' : 'http://localhost:5000/api');
 
 interface ApiResponse<T = any> {
   success: boolean;
