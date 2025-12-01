@@ -1,9 +1,8 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
   "functions": {
-    "api/**/*.ts": {
+    "api/*.ts": {
       "runtime": "@vercel/node@3.0.0",
       "maxDuration": 30
     }
@@ -12,7 +11,7 @@
     { "source": "/api/dashboard/sync-status", "destination": "/api/sync-status" },
     { "source": "/api/dashboard/jobs", "destination": "/api/jobs" },
     { "source": "/api/dashboard/all", "destination": "/api/all" },
-    { "source": "/((?!api/|static/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

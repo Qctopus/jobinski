@@ -4,12 +4,16 @@
  */
 import { neon } from '@neondatabase/serverless';
 
-// Initialize Neon client - uses DATABASE_URL environment variable
+// Initialize Neon client - uses DATABASE_URL or POSTGRES_URL environment variable
 export function getDb() {
-  const databaseUrl = process.env.DATABASE_URL;
+  // Try multiple possible env var names (Neon/Vercel uses different ones)
+  const databaseUrl = process.env.DATABASE_URL || 
+                      process.env.POSTGRES_URL || 
+                      process.env.POSTGRES_PRISMA_URL;
   
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is not set');
+    throw new Error('DATABASE_URL environment variable is not set. Available: ' + 
+      Object.keys(process.env).filter(k => k.includes('POSTGRES') || k.includes('DATABASE')).join(', '));
   }
   
   return neon(databaseUrl);
