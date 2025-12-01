@@ -9,7 +9,7 @@ import {
 import { ProcessedJobData, FilterOptions } from '../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { useDataProcessing } from '../contexts/DataProcessingContext';
-import { getAgencyLogo } from '../utils/agencyLogos';
+import { TabHeader } from './shared';
 
 interface SkillsProps {
   data: ProcessedJobData[];
@@ -514,30 +514,14 @@ const Skills: React.FC<SkillsProps> = ({ data, filters }) => {
 
   return (
     <div className="space-y-4">
-      {/* Header - Matching Intelligence tab style */}
-      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {isAgencyView && filters.selectedAgency !== 'all' ? (
-            getAgencyLogo(filters.selectedAgency) ? (
-              <img src={getAgencyLogo(filters.selectedAgency)!} alt={filters.selectedAgency} className="h-5 w-5 object-contain" />
-            ) : (
-              <Briefcase className="h-4 w-4 text-blue-600" />
-            )
-          ) : (
-            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
-          )}
-          <div>
-            <span className="text-sm font-semibold text-gray-800">Skills Intelligence</span>
-            <span className="text-xs text-gray-500 ml-2">
-              {isAgencyView ? `${filters.selectedAgency} analysis` : 'Market-wide analysis'}
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">{filteredData.length.toLocaleString()} positions analyzed</span>
-        </div>
-      </div>
+      {/* Standardized Tab Header */}
+      <TabHeader
+        agencyName={isAgencyView && filters.selectedAgency !== 'all' ? filters.selectedAgency : undefined}
+        tabTitle="Skills Intelligence"
+        stats={`${filteredData.length.toLocaleString()} positions analyzed`}
+        isAgencyView={isAgencyView}
+        icon={<Briefcase className="h-5 w-5" />}
+      />
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

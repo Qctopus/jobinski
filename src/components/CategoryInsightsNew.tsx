@@ -9,13 +9,13 @@
 
 import React, { useMemo, useState } from 'react';
 import { 
-  Brain, TrendingUp, Download, Filter, 
+  Brain, TrendingUp, Download, Filter, Target,
   ArrowUp, ArrowDown, AlertCircle, Clock, Zap, MapPin, Users, Calendar, ChevronDown, Eye
 } from 'lucide-react';
 import { DashboardMetrics, ProcessedJobData, FilterOptions } from '../types';
 import { JOB_CLASSIFICATION_DICTIONARY } from '../dictionary';
 import { getAgencyPeerGroup, getPeerAgencies } from '../config/peerGroups';
-import { getAgencyLogo } from '../utils/agencyLogos';
+import { TabHeader } from './shared';
 import { SurgeDetector } from '../services/analytics/SurgeDetector';
 import { CategoryShiftAnalyzer } from '../services/analytics/CategoryShiftAnalyzer';
 import { parseISO, subWeeks, subMonths, format } from 'date-fns';
@@ -300,27 +300,16 @@ const CategoryInsightsNew: React.FC<CategoryInsightsProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Header - Matching Intelligence tab style */}
-      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {isAgencyView && agencyName ? (
-            getAgencyLogo(agencyName) ? (
-              <img src={getAgencyLogo(agencyName)!} alt={agencyName} className="h-5 w-5 object-contain" />
-            ) : (
-              <Brain className="h-4 w-4 text-blue-600" />
-            )
-          ) : (
-            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
-          )}
-          <div>
-            <span className="text-sm font-semibold text-gray-800">Category Analysis</span>
-            <span className="text-xs text-gray-500 ml-2">
-              {isAgencyView ? `${agencyName} composition` : 'UN System hiring patterns'}
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
+      {/* Standardized Tab Header */}
+      <div className="flex items-center justify-between">
+        <TabHeader
+          agencyName={agencyName || undefined}
+          tabTitle="Category Analysis"
+          stats={`${recentTrends.currentTotalCount.toLocaleString()} positions`}
+          isAgencyView={isAgencyView}
+          icon={<Target className="h-5 w-5" />}
+        />
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-1.5 rounded transition-colors ${

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Users, Briefcase, Target, Activity, HelpCircle, Globe, Calendar, TrendingUp, ChevronDown } from 'lucide-react';
+import { Users, Briefcase, Target, Activity, HelpCircle, Globe, Calendar, TrendingUp, ChevronDown, Zap } from 'lucide-react';
 import { ProcessedJobData, FilterOptions, TIME_RANGE_CONFIG } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { TimeframeProvider, useTimeframe } from '../contexts/TimeframeContext';
@@ -7,7 +7,7 @@ import { getAgencyLogo } from '../utils/agencyLogos';
 import CategoryInsights from './CategoryInsightsNew';
 import WorkforceStructure from './WorkforceStructure';
 import Skills from './Skills';
-import MarketIntelligence from './overview/MarketIntelligence';
+import IntelligenceBrief from './intelligence/IntelligenceBrief';
 import GeographyIntelligence from './GeographyIntelligence';
 import { CompactJobBrowser } from './CompactJobBrowser';
 import { parseISO, format } from 'date-fns';
@@ -93,8 +93,8 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
     {
       id: 'overview' as TabType,
       name: 'Intelligence',
-      icon: <Activity className="h-5 w-5" />,
-      description: 'Executive briefing — what\'s changing across the UN talent market'
+      icon: <Zap className="h-5 w-5" />,
+      description: 'Strategic intelligence brief — key findings, interpretations, and signals to watch'
     },
     {
       id: 'categories' as TabType,
@@ -132,14 +132,10 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
     switch (activeTab) {
       case 'overview':
         return (
-          <MarketIntelligence
-            data={data}
-            filteredData={filteredData}
-            filters={filters}
-            metrics={metrics}
-            marketMetrics={marketMetrics}
-              isAgencyView={isAgencyView}
-              selectedAgencyName={selectedAgencyName}
+          <IntelligenceBrief
+            jobs={data}
+            timeRange={filters.timeRange}
+            selectedAgency={isAgencyView ? selectedAgencyName : undefined}
           />
         );
 

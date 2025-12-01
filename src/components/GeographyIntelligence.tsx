@@ -25,7 +25,7 @@ import {
   HARDSHIP_LABELS,
   HardshipClass 
 } from '../data/icscHardshipClassifications';
-import { getAgencyLogo } from '../utils/agencyLogos';
+import { TabHeader } from './shared';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -139,29 +139,14 @@ const GeographyIntelligence: React.FC<GeographyIntelligenceProps> = ({ data, fil
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {isAgencyView ? (
-            getAgencyLogo(selectedAgencyName) ? (
-              <img src={getAgencyLogo(selectedAgencyName)!} alt={selectedAgencyName} className="h-5 w-5 object-contain" />
-            ) : (
-              <Globe className="h-4 w-4 text-emerald-600" />
-            )
-          ) : (
-            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
-          )}
-          <div>
-            <span className="text-sm font-semibold text-gray-800">
-              {isAgencyView ? `${selectedAgencyName} Geographic Intelligence` : 'UN System Geographic Intelligence'}
-            </span>
-            <span className="text-xs text-gray-500 ml-2">
-              {kpis.countriesActive} countries • {hardshipProfile.totalPositions.toLocaleString()} positions
-            </span>
-          </div>
-        </div>
-        
-      </div>
+      {/* Standardized Tab Header */}
+      <TabHeader
+        agencyName={selectedAgencyName}
+        tabTitle="Geographic Intelligence"
+        stats={`${kpis.countriesActive} countries • ${hardshipProfile.totalPositions.toLocaleString()} positions`}
+        isAgencyView={isAgencyView}
+        icon={<Globe className="h-5 w-5" />}
+      />
 
       {/* Interactive Geographic Map */}
       <Section

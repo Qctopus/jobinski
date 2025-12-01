@@ -18,7 +18,7 @@ import {
 import { ProcessedJobData, FilterOptions } from '../types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import WorkforceStructureAnalyzer from '../services/analytics/WorkforceStructureAnalyzer';
-import { getAgencyLogo } from '../utils/agencyLogos';
+import { TabHeader, SectionHeader } from './shared';
 
 // Sub-components
 import WorkforcePyramid from './workforce/WorkforcePyramid';
@@ -148,34 +148,18 @@ const WorkforceStructure: React.FC<WorkforceStructureProps> = ({ data, filters }
 
   return (
     <div className="space-y-4">
-      {/* Header - Matching Intelligence tab style */}
-      <div className="bg-gray-50 rounded-lg border border-gray-200 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {isAgencyView ? (
-            getAgencyLogo(selectedAgencyName) ? (
-              <img src={getAgencyLogo(selectedAgencyName)!} alt={selectedAgencyName} className="h-5 w-5 object-contain" />
-            ) : (
-              <Users className="h-4 w-4 text-blue-600" />
-            )
-          ) : (
-            <img src="/logo/logo/United_Nations.png" alt="UN System" className="h-5 w-5 object-contain" />
-          )}
-          <div>
-            <span className="text-sm font-semibold text-gray-800">
-              {isAgencyView ? `${selectedAgencyName} Workforce Structure` : 'UN System Workforce Structure'}
-            </span>
-            <span className="text-xs text-gray-500 ml-2">
-              {pyramidData.totalPositions.toLocaleString()} positions
-            </span>
-          </div>
-        </div>
-        {highImpactInsights.length > 0 && (
-          <div className="flex items-center gap-1.5 text-amber-600">
-            <AlertTriangle className="h-4 w-4" />
-            <span className="text-xs font-medium">{highImpactInsights.length} insight{highImpactInsights.length > 1 ? 's' : ''}</span>
-          </div>
-        )}
-      </div>
+      {/* Standardized Tab Header */}
+      <TabHeader
+        agencyName={selectedAgencyName}
+        tabTitle="Workforce Structure"
+        stats={`${pyramidData.totalPositions.toLocaleString()} positions`}
+        isAgencyView={isAgencyView}
+        badge={highImpactInsights.length > 0 ? {
+          type: 'insight',
+          count: highImpactInsights.length
+        } : undefined}
+        icon={<Users className="h-5 w-5" />}
+      />
       
       {/* Key Metrics Cards with Integrated Insights */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
