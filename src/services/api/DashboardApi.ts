@@ -4,13 +4,23 @@
  * In development, uses localhost:5000 (local backend)
  */
 
-// Detect production environment
-const isProduction = process.env.NODE_ENV === 'production' || 
-                     window.location.hostname !== 'localhost';
-const API_BASE = process.env.REACT_APP_API_URL || (isProduction ? '/api' : 'http://localhost:5000/api');
+// Determine API base URL based on current hostname
+function getApiBase(): string {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  
+  // If we're on localhost, use the local backend
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  
+  // Otherwise use relative /api path (Vercel serverless)
+  return '/api';
+}
+
+const API_BASE = getApiBase();
 
 // Debug log for API configuration
-console.log(`🔌 API configured: isProduction=${isProduction}, API_BASE=${API_BASE}`);
+console.log(`🔌 API configured: hostname=${typeof window !== 'undefined' ? window.location.hostname : 'ssr'}, API_BASE=${API_BASE}`);
 
 interface ApiResponse<T = any> {
   success: boolean;
