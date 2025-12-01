@@ -1,17 +1,25 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "functions": {
-    "api/*.ts": {
-      "runtime": "@vercel/node@3.0.0",
-      "maxDuration": 30
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    },
+    {
+      "src": "api/*.ts",
+      "use": "@vercel/node"
     }
-  },
-  "rewrites": [
-    { "source": "/api/dashboard/sync-status", "destination": "/api/sync-status" },
-    { "source": "/api/dashboard/jobs", "destination": "/api/jobs" },
-    { "source": "/api/dashboard/all", "destination": "/api/all" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "routes": [
+    { "src": "/api/dashboard/sync-status", "dest": "/api/sync-status" },
+    { "src": "/api/dashboard/jobs", "dest": "/api/jobs" },
+    { "src": "/api/dashboard/all", "dest": "/api/all" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
     {
