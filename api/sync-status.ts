@@ -1,8 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import * as fs from 'fs';
-import * as path from 'path';
+import { getDb } from './db';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -13,34 +12,30 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
-    const dataPath = path.join(process.cwd(), 'api', 'jobs-data.json');
-    const rawData = fs.readFileSync(dataPath, 'utf-8');
-    const jobs = JSON.parse(rawData) as any[];
+    const sql = getDb();
     
-    res.status(200).json({
+    // Get total jobs count
+    const countResult = await sql`SELECT COUNT(*) as total FROM jobs WHERE archived = false`;
+    const totalJobs = parseInt(countResult[0]?.total || '0');
+    
+    return res.status(200).json({
       success: true,
       data: {
-        hasData: jobs.length > 0,
+        hasData: totalJobs > 0,
         needsSync: false,
         last_sync_at: new Date().toISOString(),
-        total_jobs: jobs.length,
-        status: 'completed'
+        total_jobs: totalJobs,
+        status: 'connected'
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    // Fallback with hardcoded data
-    res.status(200).json({
-      success: true,
-      data: {
-        hasData: true,
-        needsSync: false,
-        last_sync_at: new Date().toISOString(),
-        total_jobs: 450,
-        status: 'completed'
-      },
+    console.error('Database error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Database connection failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     });
   }
 }
-

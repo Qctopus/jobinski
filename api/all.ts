@@ -1,103 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import * as fs from 'fs';
-import * as path from 'path';
+import { getDb } from './db';
 
-function loadJobs(): any[] {
-  try {
-    const dataPath = path.join(process.cwd(), 'api', 'jobs-data.json');
-    const rawData = fs.readFileSync(dataPath, 'utf-8');
-    return JSON.parse(rawData);
-  } catch {
-    return [];
-  }
-}
-
-// Compute basic analytics from the job data
-function computeAnalytics(jobs: any[], agencyFilter?: string) {
-  const filteredJobs = agencyFilter && agencyFilter !== 'all' 
-    ? jobs.filter(j => j.short_agency === agencyFilter || j.long_agency?.includes(agencyFilter))
-    : jobs;
-
-  // Category distribution
-  const categoryMap = new Map<string, number>();
-  filteredJobs.forEach(job => {
-    const cat = job.primary_category || 'Other';
-    categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
-  });
-  const categories = Array.from(categoryMap.entries())
-    .map(([name, count]) => ({ name, count, percentage: (count / filteredJobs.length) * 100 }))
-    .sort((a, b) => b.count - a.count);
-
-  // Agency distribution
-  const agencyMap = new Map<string, number>();
-  jobs.forEach(job => {
-    const agency = job.short_agency || 'Unknown';
-    agencyMap.set(agency, (agencyMap.get(agency) || 0) + 1);
-  });
-  const agencies = Array.from(agencyMap.entries())
-    .map(([name, count]) => ({ name, count, percentage: (count / jobs.length) * 100 }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 20);
-
-  // Grade distribution
-  const gradeMap = new Map<string, number>();
-  filteredJobs.forEach(job => {
-    const grade = job.up_grade || 'Unknown';
-    gradeMap.set(grade, (gradeMap.get(grade) || 0) + 1);
-  });
-  const grades = Array.from(gradeMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
-  // Location distribution
-  const locationMap = new Map<string, number>();
-  filteredJobs.forEach(job => {
-    const location = job.duty_country || job.duty_station || 'Unknown';
-    locationMap.set(location, (locationMap.get(location) || 0) + 1);
-  });
-  const locations = Array.from(locationMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 15);
-
-  // Active vs expired
-  const now = new Date();
-  const activeJobs = filteredJobs.filter(j => {
-    if (!j.apply_until) return true;
-    return new Date(j.apply_until) >= now;
-  });
-
-  return {
-    overview: {
-      totalJobs: filteredJobs.length,
-      activeJobs: activeJobs.length,
-      totalAgencies: agencyMap.size,
-      uniqueLocations: locationMap.size,
-      avgApplicationWindow: 30
-    },
-    categories,
-    agencies,
-    grades,
-    locations,
-    temporal: {
-      monthly: [],
-      weekly: []
-    },
-    workforce: {
-      grades,
-      seniorityDistribution: []
-    },
-    skills: {
-      topSkills: [],
-      emergingSkills: []
-    },
-    competitive: {
-      marketShare: agencies
-    }
-  };
-}
-
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -107,16 +11,134 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
   
-  const jobs = loadJobs();
-  const { agency } = req.query;
-  
-  const analytics = computeAnalytics(jobs, agency as string);
-  
-  res.status(200).json({
-    success: true,
-    data: analytics,
-    cached: true,
-    timestamp: new Date().toISOString()
-  });
+  try {
+    const sql = getDb();
+    const { agency } = req.query;
+    
+    // Base filter for active jobs
+    const baseFilter = agency && agency !== 'all' 
+      ? sql`WHERE archived = false AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})`
+      : sql`WHERE archived = false`;
+    
+    // Get overview stats
+    const overviewResult = await sql`
+      SELECT 
+        COUNT(*) as total_jobs,
+        COUNT(CASE WHEN apply_until::timestamp > NOW() THEN 1 END) as active_jobs,
+        COUNT(DISTINCT short_agency) as total_agencies,
+        COUNT(DISTINCT duty_country) as unique_locations
+      FROM jobs
+      WHERE archived = false
+      ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
+    `;
+    
+    // Get category distribution
+    const categoryResult = await sql`
+      SELECT 
+        COALESCE(primary_category, sectoral_category, 'Other') as name,
+        COUNT(*) as count
+      FROM jobs
+      WHERE archived = false
+      ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
+      GROUP BY COALESCE(primary_category, sectoral_category, 'Other')
+      ORDER BY count DESC
+      LIMIT 15
+    `;
+    
+    // Get agency distribution
+    const agencyResult = await sql`
+      SELECT 
+        short_agency as name,
+        COUNT(*) as count
+      FROM jobs
+      WHERE archived = false AND short_agency IS NOT NULL
+      GROUP BY short_agency
+      ORDER BY count DESC
+      LIMIT 20
+    `;
+    
+    // Get grade distribution  
+    const gradeResult = await sql`
+      SELECT 
+        up_grade as name,
+        COUNT(*) as count
+      FROM jobs
+      WHERE archived = false AND up_grade IS NOT NULL
+      ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
+      GROUP BY up_grade
+      ORDER BY count DESC
+    `;
+    
+    // Get location distribution
+    const locationResult = await sql`
+      SELECT 
+        duty_country as name,
+        COUNT(*) as count
+      FROM jobs
+      WHERE archived = false AND duty_country IS NOT NULL
+      ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
+      GROUP BY duty_country
+      ORDER BY count DESC
+      LIMIT 15
+    `;
+    
+    const overview = overviewResult[0] || {};
+    const totalJobs = parseInt(overview.total_jobs || '0');
+    
+    // Format categories with percentages
+    const categories = categoryResult.map(r => ({
+      name: r.name,
+      count: parseInt(r.count),
+      percentage: totalJobs > 0 ? (parseInt(r.count) / totalJobs) * 100 : 0
+    }));
+    
+    // Format agencies with percentages (from full market)
+    const totalMarket = parseInt(overviewResult[0]?.total_jobs || '0');
+    const agencies = agencyResult.map(r => ({
+      name: r.name,
+      count: parseInt(r.count),
+      percentage: totalMarket > 0 ? (parseInt(r.count) / totalMarket) * 100 : 0
+    }));
+    
+    const grades = gradeResult.map(r => ({
+      name: r.name,
+      count: parseInt(r.count)
+    }));
+    
+    const locations = locationResult.map(r => ({
+      name: r.name,
+      count: parseInt(r.count)
+    }));
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        overview: {
+          totalJobs,
+          activeJobs: parseInt(overview.active_jobs || '0'),
+          totalAgencies: parseInt(overview.total_agencies || '0'),
+          uniqueLocations: parseInt(overview.unique_locations || '0'),
+          avgApplicationWindow: 30
+        },
+        categories,
+        agencies,
+        grades,
+        locations,
+        temporal: { monthly: [], weekly: [] },
+        workforce: { grades, seniorityDistribution: [] },
+        skills: { topSkills: [], emergingSkills: [] },
+        competitive: { marketShare: agencies }
+      },
+      cached: false,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dashboard data',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+  }
 }
-
