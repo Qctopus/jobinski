@@ -5,8 +5,13 @@
  * In development, uses localhost:5000
  */
 
-const isProduction = process.env.NODE_ENV === 'production';
+// Detect production environment - Create React App sets NODE_ENV to 'production' when building
+const isProduction = process.env.NODE_ENV === 'production' || 
+                     window.location.hostname !== 'localhost';
 const API_BASE = process.env.REACT_APP_API_URL || (isProduction ? '/api' : 'http://localhost:5000/api');
+
+// Debug log for API configuration
+console.log(`🔌 API configured: isProduction=${isProduction}, API_BASE=${API_BASE}`);
 
 interface ApiResponse<T = any> {
   success: boolean;
