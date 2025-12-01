@@ -834,20 +834,48 @@ export class IntelligenceBriefEngine {
       'Home-based': 'Home-based'
     };
     
+    // Major UN Headquarters locations
+    const hqLocations = [
+      'new york', 'geneva', 'vienna', 'rome', 'paris', 
+      'washington', 'the hague', 'montreal', 'bonn'
+    ];
+    
+    // Regional hubs / offices
+    const regionalHubLocations = [
+      'nairobi', 'bangkok', 'santiago', 'addis ababa', 'beirut',
+      'amman', 'dakar', 'johannesburg', 'panama', 'cairo'
+    ];
+    const regionalIndicators = ['regional', 'hub', 'multi-country', 'sub-regional'];
+    
     const displayTypes = ['Field', 'Headquarters', 'Regional Hub', 'Home-based'];
     
     const countByType = (jobs: ProcessedJobData[]) => {
       const counts: Record<string, number> = {};
       displayTypes.forEach(t => counts[t] = 0);
       jobs.forEach(j => {
-        // Handle home-based detection
-        let type = j.location_type || 'Field';
+        const dutyStation = (j.duty_station || '').toLowerCase();
+        let type: string;
         
-        // Also check is_home_based flag and duty_station for home-based
+        // Priority 1: Home-based detection (check first, most specific)
         if (j.is_home_based || 
-            (j.duty_station && j.duty_station.toLowerCase().includes('home')) ||
-            (j.duty_station && j.duty_station.toLowerCase().includes('remote'))) {
+            dutyStation.includes('home') ||
+            dutyStation.includes('remote') ||
+            dutyStation.includes('telecommuting') ||
+            dutyStation.includes('work from')) {
           type = 'Home-based';
+        }
+        // Priority 2: Headquarters detection - ALWAYS check duty_station
+        else if (hqLocations.some(hq => dutyStation.includes(hq))) {
+          type = 'Headquarters';
+        }
+        // Priority 3: Regional hub detection
+        else if (regionalHubLocations.some(hub => dutyStation.includes(hub)) ||
+                 regionalIndicators.some(r => dutyStation.includes(r))) {
+          type = 'Regional';
+        }
+        // Default: Field
+        else {
+          type = 'Field';
         }
         
         // Map to display type
