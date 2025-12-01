@@ -1,8 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jobsData from '../jobs-data.json';
+import * as fs from 'fs';
+import * as path from 'path';
+
+function loadJobs(): any[] {
+  try {
+    const dataPath = path.join(process.cwd(), 'api', 'jobs-data.json');
+    const rawData = fs.readFileSync(dataPath, 'utf-8');
+    return JSON.parse(rawData);
+  } catch {
+    return [];
+  }
+}
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  const jobs = jobsData as any[];
+  const jobs = loadJobs();
   const { page = 1, limit = 50000 } = req.query;
   
   const pageNum = Number(page);

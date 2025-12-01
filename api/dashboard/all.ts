@@ -1,5 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jobsData from '../jobs-data.json';
+import * as fs from 'fs';
+import * as path from 'path';
+
+function loadJobs(): any[] {
+  try {
+    const dataPath = path.join(process.cwd(), 'api', 'jobs-data.json');
+    const rawData = fs.readFileSync(dataPath, 'utf-8');
+    return JSON.parse(rawData);
+  } catch {
+    return [];
+  }
+}
 
 // Compute basic analytics from the job data
 function computeAnalytics(jobs: any[], agencyFilter?: string) {
@@ -87,7 +98,7 @@ function computeAnalytics(jobs: any[], agencyFilter?: string) {
 }
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  const jobs = jobsData as any[];
+  const jobs = loadJobs();
   const { agency } = req.query;
   
   const analytics = computeAnalytics(jobs, agency as string);
