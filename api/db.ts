@@ -4,16 +4,21 @@
  */
 import { neon } from '@neondatabase/serverless';
 
-// Initialize Neon client - uses DATABASE_URL or POSTGRES_URL environment variable
+// Initialize Neon client - uses DATABASE_URL or custom prefixed URL environment variable
 export function getDb() {
   // Try multiple possible env var names (Neon/Vercel uses different ones)
-  const databaseUrl = process.env.DATABASE_URL || 
+  // User has configured STORAGE as prefix, so check STORAGE_URL first
+  const databaseUrl = process.env.STORAGE_URL ||
+                      process.env.DATABASE_URL || 
                       process.env.POSTGRES_URL || 
-                      process.env.POSTGRES_PRISMA_URL;
+                      process.env.POSTGRES_PRISMA_URL ||
+                      process.env.NEON_DATABASE_URL;
   
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is not set. Available: ' + 
-      Object.keys(process.env).filter(k => k.includes('POSTGRES') || k.includes('DATABASE')).join(', '));
+    throw new Error('Database URL not found. Available env vars: ' + 
+      Object.keys(process.env).filter(k => 
+        k.includes('POSTGRES') || k.includes('DATABASE') || k.includes('STORAGE') || k.includes('NEON')
+      ).join(', '));
   }
   
   return neon(databaseUrl);
