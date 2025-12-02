@@ -4,9 +4,15 @@
  * In development, uses localhost:5000 (local backend)
  */
 
-// Determine API base URL based on current hostname
+// Determine API base URL based on current hostname - evaluated at runtime
 function getApiBase(): string {
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  // Must check at runtime when window is available
+  if (typeof window === 'undefined') {
+    // SSR/build time - use relative path (will be resolved at runtime)
+    return '/api';
+  }
+  
+  const hostname = window.location.hostname;
   
   // If we're on localhost, use the local backend
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -16,11 +22,6 @@ function getApiBase(): string {
   // Otherwise use relative /api path (Vercel serverless)
   return '/api';
 }
-
-const API_BASE = getApiBase();
-
-// Debug log for API configuration
-console.log(`🔌 API configured: hostname=${typeof window !== 'undefined' ? window.location.hostname : 'ssr'}, API_BASE=${API_BASE}`);
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -57,10 +58,9 @@ interface JobQuery {
 }
 
 class DashboardApi {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = `${API_BASE}/dashboard`;
+  private get baseUrl(): string {
+    // Evaluate at runtime, not build time
+    return `${getApiBase()}/dashboard`;
   }
 
   private async request<T>(endpoint: string): Promise<T> {
