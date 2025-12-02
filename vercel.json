@@ -1,13 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "functions": {
-    "api/*.ts": {
-      "runtime": "@vercel/node@3"
+  "builds": [
+    {
+      "src": "api/*.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
     }
-  },
-  "rewrites": [
-    { "source": "/api/dashboard/:path*", "destination": "/api/:path*" }
+  ],
+  "routes": [
+    { "src": "/api/dashboard/(.*)", "dest": "/api/$1" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
