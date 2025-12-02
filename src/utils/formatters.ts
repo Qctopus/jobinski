@@ -107,3 +107,4 @@ export const formatRatio = (numerator: number, denominator: number, decimals = 0
   return formatPercent((numerator / denominator) * 100, decimals);
 };
 
+

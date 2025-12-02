@@ -136,3 +136,4 @@ const MiniTable: React.FC<MiniTableProps> = ({
 
 export default MiniTable;
 
+

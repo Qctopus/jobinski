@@ -116,3 +116,4 @@ const InsightCard: React.FC<InsightCardProps> = ({
 
 export default InsightCard;
 
+

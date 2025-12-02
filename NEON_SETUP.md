@@ -86,3 +86,4 @@ Make sure you've added the `DATABASE_URL` variable in Vercel project settings.
 ### API returns HTML instead of JSON
 The Vercel routing may be misconfigured. Check `vercel.json` rewrites.
 
+
