@@ -1,0 +1,12 @@
+node_modules
+backend/node_modules
+backend/dist
+backend/data
+.git
+build
+*.db
+*.db-shm
+*.db-wal
+*.csv
+reports
+
