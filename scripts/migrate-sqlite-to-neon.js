@@ -2,16 +2,17 @@
  * Migration Script: Local SQLite → Neon PostgreSQL
  */
 
+require('dotenv').config(); // Load .env file
 const { Pool } = require('pg');
 const Database = require('better-sqlite3');
 const path = require('path');
 
 const SQLITE_PATH = path.join(__dirname, '..', 'backend', 'data', 'jobs_cache.db');
-const NEON_URL = process.env.NEON_DATABASE_URL;
+const NEON_URL = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
 async function migrate() {
   if (!NEON_URL) {
-    console.error('❌ Set NEON_DATABASE_URL');
+    console.error('❌ Set NEON_DATABASE_URL or DATABASE_URL in .env');
     process.exit(1);
   }
 
@@ -52,7 +53,14 @@ async function migrate() {
       for (const row of rows) {
         const columns = Object.keys(row);
         const values = columns.map(k => {
-          const v = row[k];
+          let v = row[k];
+          
+          // Specific fix for 'archived' column: 
+          // Force ALL jobs to be ACTIVE ('false') because local DB has them incorrectly marked as archived
+          if (k === 'archived') {
+             return 'false';
+          }
+
           if (v === null || v === undefined || v === 'null') return null;
           return String(v);
         });
@@ -76,7 +84,7 @@ async function migrate() {
     await neonPool.query('CREATE INDEX IF NOT EXISTS idx_jobs_apply_until ON jobs(apply_until)');
     console.log('✅ Indexes created');
 
-    console.log('\n🎉 Done! Add DATABASE_URL to Vercel and redeploy.');
+    console.log('\n🎉 Sync Complete!');
 
   } finally {
     sqliteDb.close();
