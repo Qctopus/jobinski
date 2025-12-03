@@ -41,13 +41,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dbStatus = 'Client initialized';
       
       const startTime = Date.now();
+      // Check connectivity AND data distribution
       const result = await sql`SELECT 1 as connected, current_database() as db_name, version()`;
+      
+      // Inspect jobs table if it exists
+      let jobsStats = [];
+      try {
+        jobsStats = await sql`
+          SELECT archived::text, count(*) 
+          FROM jobs 
+          GROUP BY archived::text 
+          LIMIT 10
+        `;
+      } catch (e) {
+        jobsStats = [{ error: 'Could not query jobs table', details: String(e) }];
+      }
+
       const duration = Date.now() - startTime;
       
       connectionResult = {
         success: true,
         duration: `${duration}ms`,
-        data: result
+        data: result,
+        jobs_stats: jobsStats
       };
     } catch (dbError) {
       console.error('DB Connection Error:', dbError);
