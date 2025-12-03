@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const overviewResult = await sql`
       SELECT 
         COUNT(*) as total_jobs,
-        COUNT(CASE WHEN NULLIF(apply_until, '')::timestamp > NOW() THEN 1 END) as active_jobs,
+        COUNT(CASE WHEN NULLIF(NULLIF(apply_until, ''), 'N/A')::timestamp > NOW() THEN 1 END) as active_jobs,
         COUNT(DISTINCT short_agency) as total_agencies,
         COUNT(DISTINCT duty_country) as unique_locations
       FROM jobs
