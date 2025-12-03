@@ -33,7 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     try {
       // Dynamic import to catch errors during module load
-      const dbModule = await import('./db');
+      // In ESM mode on Vercel, we must import the compiled .js file
+      const dbModule = await import('./db.js');
       dbStatus = 'Module loaded';
       
       const sql = dbModule.getDb();
