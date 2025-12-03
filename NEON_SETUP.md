@@ -87,3 +87,4 @@ Make sure you've added the `DATABASE_URL` variable in Vercel project settings.
 The Vercel routing may be misconfigured. Check `vercel.json` rewrites.
 
 
+

@@ -207,3 +207,4 @@ const IntelligenceTab: React.FC<IntelligenceTabProps> = ({
 export default IntelligenceTab;
 
 
+

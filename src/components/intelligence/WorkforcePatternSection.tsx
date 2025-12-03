@@ -300,3 +300,4 @@ const WorkforcePatternSection: React.FC<WorkforcePatternSectionProps> = ({
 export default WorkforcePatternSection;
 
 
+

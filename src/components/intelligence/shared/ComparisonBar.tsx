@@ -120,3 +120,4 @@ const ComparisonBar: React.FC<ComparisonBarProps> = ({
 export default ComparisonBar;
 
 
+
