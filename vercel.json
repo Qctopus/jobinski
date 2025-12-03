@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "rewrites": [
     { "source": "/api/dashboard/sync-status", "destination": "/api/sync-status" },
     { "source": "/api/dashboard/jobs", "destination": "/api/jobs" },
