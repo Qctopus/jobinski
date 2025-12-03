@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         COUNT(DISTINCT short_agency) as total_agencies,
         COUNT(DISTINCT duty_country) as unique_locations
       FROM jobs
-      WHERE archived = false
+      WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0')
       ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
     `;
     
@@ -38,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         COALESCE(primary_category, sectoral_category, 'Other') as name,
         COUNT(*) as count
       FROM jobs
-      WHERE archived = false
+      WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0')
       ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
       GROUP BY COALESCE(primary_category, sectoral_category, 'Other')
       ORDER BY count DESC
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         short_agency as name,
         COUNT(*) as count
       FROM jobs
-      WHERE archived = false AND short_agency IS NOT NULL
+      WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0') AND short_agency IS NOT NULL
       GROUP BY short_agency
       ORDER BY count DESC
       LIMIT 20
@@ -63,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         up_grade as name,
         COUNT(*) as count
       FROM jobs
-      WHERE archived = false AND up_grade IS NOT NULL
+      WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0') AND up_grade IS NOT NULL
       ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
       GROUP BY up_grade
       ORDER BY count DESC
@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         duty_country as name,
         COUNT(*) as count
       FROM jobs
-      WHERE archived = false AND duty_country IS NOT NULL
+      WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0') AND duty_country IS NOT NULL
       ${agency && agency !== 'all' ? sql`AND (short_agency = ${agency} OR long_agency LIKE ${'%' + agency + '%'})` : sql``}
       GROUP BY duty_country
       ORDER BY count DESC

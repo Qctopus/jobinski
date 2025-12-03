@@ -26,24 +26,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (status === 'active') {
       jobs = await sql`
         SELECT * FROM jobs 
-        WHERE archived = false 
+        WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0')
           AND apply_until::timestamp > NOW()
         ORDER BY posting_date DESC
         LIMIT ${limitNum} OFFSET ${offset}
       `;
       countResult = await sql`
         SELECT COUNT(*) as total FROM jobs 
-        WHERE archived = false AND apply_until::timestamp > NOW()
+        WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0') 
+          AND apply_until::timestamp > NOW()
       `;
     } else {
       jobs = await sql`
         SELECT * FROM jobs 
-        WHERE archived = false
+        WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0')
         ORDER BY posting_date DESC
         LIMIT ${limitNum} OFFSET ${offset}
       `;
       countResult = await sql`
-        SELECT COUNT(*) as total FROM jobs WHERE archived = false
+        SELECT COUNT(*) as total FROM jobs 
+        WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0')
       `;
     }
     
