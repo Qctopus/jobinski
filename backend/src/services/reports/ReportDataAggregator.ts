@@ -391,7 +391,7 @@ export class ReportDataAggregator {
   }
 
   private calculateStaffTypeBreakdown(jobs: any[]) {
-    let international = 0, national = 0, consultant = 0, intern = 0, other = 0;
+    let international = 0, national = 0, serviceAgreement = 0, consultant = 0, intern = 0, other = 0;
     
     jobs.forEach(job => {
       const title = (job.title || '').toLowerCase();
@@ -402,10 +402,13 @@ export class ReportDataAggregator {
       } else if (title.includes('consultant') || grade.includes('consultant') || 
                  title.includes('contractor') || grade.includes('ssc') || grade.includes('iica')) {
         consultant++;
-      } else if (grade.includes('no-') || grade.includes('g-') || grade.includes('gs-') || 
-                 grade.includes('npsa') || grade.includes('lica')) {
+      } else if (grade.includes('npsa') || grade.includes('ipsa') || 
+                 (grade.includes('psa') && !grade.includes('npsa') && !grade.includes('ipsa'))) {
+        // NPSA, IPSA, PSA are Service Agreements - NON-STAFF positions
+        serviceAgreement++;
+      } else if (grade.includes('no-') || grade.includes('g-') || grade.includes('gs-') || grade.includes('lica')) {
         national++;
-      } else if (grade.includes('p-') || grade.includes('d-') || grade.includes('ipsa')) {
+      } else if (grade.includes('p-') || grade.includes('d-')) {
         international++;
       } else {
         other++;
@@ -416,6 +419,7 @@ export class ReportDataAggregator {
     return {
       international: { count: international, percentage: total > 0 ? (international / total) * 100 : 0 },
       national: { count: national, percentage: total > 0 ? (national / total) * 100 : 0 },
+      serviceAgreement: { count: serviceAgreement, percentage: total > 0 ? (serviceAgreement / total) * 100 : 0 },
       consultant: { count: consultant, percentage: total > 0 ? (consultant / total) * 100 : 0 },
       intern: { count: intern, percentage: total > 0 ? (intern / total) * 100 : 0 },
       other: { count: other, percentage: total > 0 ? (other / total) * 100 : 0 }

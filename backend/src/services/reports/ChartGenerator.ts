@@ -117,22 +117,18 @@ export class ChartGenerator {
   private generateStaffTypeChart(metrics: AgencyReportMetrics): ChartData {
     const staffData = metrics.workforceComposition.staffTypeBreakdown;
     
-    const labels = ['International', 'National', 'Consultant', 'Intern', 'Other'];
-    const data = [
-      staffData.international.count,
-      staffData.national.count,
-      staffData.consultant.count,
-      staffData.intern.count,
-      staffData.other.count
-    ].filter(d => d > 0);
-
+    // NPSA/IPSA are Service Agreements (Non-Staff), shown separately
+    const labels = ['International Staff', 'National Staff', 'Service Agreements', 'Consultant', 'Intern', 'Other'];
     const dataValues = [
       staffData.international.count,
       staffData.national.count,
+      staffData.serviceAgreement.count,
       staffData.consultant.count,
       staffData.intern.count,
       staffData.other.count
     ];
+    
+    const data = dataValues.filter(d => d > 0);
     const filteredLabels = labels.filter((_, i) => (dataValues[i] ?? 0) > 0);
 
     return {
@@ -142,7 +138,7 @@ export class ChartGenerator {
       datasets: [{
         label: 'Positions',
         data,
-        backgroundColor: ['#0468B1', '#28A745', '#FFC107', '#17A2B8', '#6C757D']
+        backgroundColor: ['#0468B1', '#28A745', '#0EA5E9', '#FFC107', '#17A2B8', '#6C757D']
       }]
     };
   }

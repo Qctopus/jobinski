@@ -7,7 +7,7 @@
 
 import { ProcessedJobData } from '../../types';
 import { classifyGrade, getConsolidatedTier } from '../../utils/gradeClassification';
-import { parseISO, subWeeks, subMonths, isWithinInterval, format, startOfWeek, differenceInDays } from 'date-fns';
+import { parseISO, subWeeks, subMonths, format, startOfWeek, differenceInDays } from 'date-fns';
 import { getAgencyPeerGroup } from '../../config/peerGroups';
 
 // ============ TYPES ============
@@ -355,10 +355,19 @@ export class IntelligenceBriefEngine {
   private filterByPeriod(jobs: ProcessedJobData[], start: Date, end: Date): ProcessedJobData[] {
     return jobs.filter(job => {
       try {
+        if (!job.posting_date) {
+          return false; // Exclude jobs with no posting date
+        }
         const date = parseISO(job.posting_date);
-        return isWithinInterval(date, { start, end });
+        // Check for invalid date - exclude if invalid
+        if (isNaN(date.getTime())) {
+          return false;
+        }
+        // Use isAfter for consistency with BaseProcessor.applyTimeFilter
+        // This checks: date > start (exclusive start) AND date <= end
+        return date > start && date <= end;
       } catch {
-        return false;
+        return false; // Exclude jobs with unparseable dates
       }
     });
   }
@@ -726,21 +735,25 @@ export class IntelligenceBriefEngine {
     const nonStaff = jobs.filter(j => classifyGrade(j.up_grade).staffCategory !== 'Staff');
     const total = nonStaff.length || 1;
 
-    const types = ['Consultant', 'Intern', 'UNV', 'Other'];
+    // Include Service Agreements (NPSA/IPSA) as a distinct non-staff type
+    const types = ['Service Agreement', 'Consultant', 'Intern', 'UNV', 'Other'];
     const counts: Record<string, number> = {};
     types.forEach(t => counts[t] = 0);
 
     nonStaff.forEach(job => {
       const analysis = classifyGrade(job.up_grade);
-      if (analysis.tier === 'Consultant') counts['Consultant']++;
+      // Service Agreements (NPSA, IPSA, PSA) are a distinct non-staff contract type
+      if (analysis.contractType === 'Service Agreement') counts['Service Agreement']++;
+      else if (analysis.tier === 'Consultant') counts['Consultant']++;
       else if (analysis.tier === 'Intern') counts['Intern']++;
+      else if (analysis.tier === 'Volunteer') counts['UNV']++;
       else counts['Other']++;
     });
 
     return types
       .filter(type => counts[type] > 0)
       .map(type => ({
-        type,
+        type: type === 'Service Agreement' ? 'NPSA/IPSA' : type,  // Display-friendly name
         count: counts[type],
         percentage: (counts[type] / total) * 100
       }));

@@ -1037,12 +1037,19 @@ export class HTMLReportGenerator {
           </div>
         </div>
         
-        <div class="card-grid" style="grid-template-columns: repeat(2, 1fr); align-content: center;">
+        <div class="card-grid" style="grid-template-columns: repeat(3, 1fr); align-content: center;">
           <div class="metric-card">
             <div class="metric-icon">👔</div>
             <div class="metric-value">${wf.contractTypes.staff.percentage.toFixed(0)}%</div>
             <div class="metric-label">Staff Positions</div>
             <div class="metric-context">${wf.contractTypes.staff.count} positions</div>
+          </div>
+          
+          <div class="metric-card">
+            <div class="metric-icon">📄</div>
+            <div class="metric-value">${(wf.contractTypes.serviceAgreement?.percentage || 0).toFixed(0)}%</div>
+            <div class="metric-label">Service Agreements</div>
+            <div class="metric-context">${wf.contractTypes.serviceAgreement?.count || 0} NPSA/IPSA positions</div>
           </div>
           
           <div class="metric-card">
@@ -1724,14 +1731,16 @@ export class HTMLReportGenerator {
 
   private generateContractTypeScript(data: MonthlyReportData): string {
     const ct = data.workforce.contractTypes;
+    // Service Agreements (NPSA/IPSA) are Non-Staff - shown separately from Staff
+    const saPercentage = ct.serviceAgreement?.percentage || 0;
     return `
     new Chart(document.getElementById('contractTypeChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Staff', 'Consultant', 'Intern'],
+        labels: ['Staff', 'Service Agreements', 'Consultant', 'Intern'],
         datasets: [{
-          data: [${ct.staff.percentage}, ${ct.consultant.percentage}, ${ct.intern.percentage}],
-          backgroundColor: [primaryColor, colors.orange, colors.green],
+          data: [${ct.staff.percentage}, ${saPercentage}, ${ct.consultant.percentage}, ${ct.intern.percentage}],
+          backgroundColor: [primaryColor, '#0EA5E9', colors.orange, colors.green],
           borderWidth: 2,
           borderColor: '#fff'
         }]

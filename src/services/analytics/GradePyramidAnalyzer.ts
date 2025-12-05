@@ -8,6 +8,9 @@
 import { ProcessedJobData } from '../../types';
 import { parseISO, subMonths } from 'date-fns';
 
+// GradeGroup types for pyramid analysis
+// NOTE: NPSA/IPSA are classified by level (entry/mid/senior) for analysis purposes
+// 'consultant' includes: IC, LICA, UNV, Interns, and other non-graded contractors
 export type GradeGroup = 'entry' | 'mid' | 'senior' | 'executive' | 'consultant' | 'other';
 export type PyramidShape = 'healthy' | 'inverted' | 'missing_middle' | 'top_heavy' | 'bottom_heavy';
 
@@ -69,11 +72,12 @@ export class GradePyramidAnalyzer {
    * 
    * UN Grade Hierarchy:
    * - Executive: D1, D2, ASG, USG, SG, DSG (International Directors & Senior Officials)
-   * - Senior: P5, P6, P7 (Senior International Professional)
-   * - Mid: P3, P4 (Mid-level International Professional)
-   * - Entry: P1, P2, G1-G7, NO-A/B/C/D, L1-L4, Interns
-   * - Consultant: IC, SSA, LICA, IPSA, Consultants
-   * - Service Agreements: NPSA, PSA, SB (classified by level within 'entry', 'mid', 'senior')
+   * - Senior: P5, P6, P7, IPSA-11/12, NPSA-10/11 (Senior level - includes non-staff at equivalent level)
+   * - Mid: P3, P4, IPSA-9/10, NPSA-7/8/9 (Mid level - includes non-staff at equivalent level)
+   * - Entry: P1, P2, G1-G7, NO-A/B/C/D, L1-L4, NPSA-1-6 (Entry level)
+   * - Consultant: IC, SSA, LICA, Consultants, Interns, UNV
+   * 
+   * NOTE: NPSA and IPSA are Service Agreements (NON-STAFF) but classified by level for analysis
    */
   classifyGrade(grade: string): GradeGroup {
     if (!grade) return 'other';
@@ -86,8 +90,20 @@ export class GradePyramidAnalyzer {
     // Senior International Professional (P5, P6, P7)
     if (/^P[-]?[567]/.test(g)) return 'senior';
     
+    // IPSA-11, IPSA-12 - Senior level service agreements
+    if (g.match(/IPSA[-\s]?1[1-2]/)) return 'senior';
+    
+    // NPSA-10, NPSA-11 - Senior level service agreements
+    if (g.match(/NPSA[-\s]?1[0-1]/)) return 'senior';
+    
     // Mid-level International Professional (P3, P4)
     if (/^P[-]?[34]/.test(g)) return 'mid';
+    
+    // IPSA-9, IPSA-10 - Mid level service agreements
+    if (g.match(/IPSA[-\s]?(9|10)/)) return 'mid';
+    
+    // NPSA-7, NPSA-8, NPSA-9 - Mid level service agreements
+    if (g.match(/NPSA[-\s]?[789]/)) return 'mid';
     
     // Entry-level International Professional (P1, P2)
     if (/^P[-]?[12]/.test(g)) return 'entry';
@@ -101,19 +117,13 @@ export class GradePyramidAnalyzer {
     // Local levels (L1-L4)
     if (/^L[-]?[1-4]/.test(g)) return 'entry';
     
-    // NPSA (National Personnel Service Agreement) - Classify by level
-    // NPSA 10-11: Senior national staff (but NOT executive - these are service agreements)
-    // NPSA 7-9: Mid-level national staff
-    // NPSA 1-6: Entry national staff
-    const npsaMatch = g.match(/NPSA[-\s]?([0-9]+)/);
-    if (npsaMatch) {
-      const level = parseInt(npsaMatch[1]);
-      if (level >= 10) return 'senior'; // Senior national, but not executive
-      if (level >= 7) return 'mid';
-      return 'entry';
-    }
+    // NPSA-1 to NPSA-6 - Entry level service agreements
+    if (g.match(/NPSA[-\s]?[1-6]/)) return 'entry';
     
-    // PSA (Personnel Service Agreement) - Similar classification
+    // IPSA-7, IPSA-8 - Entry level service agreements
+    if (g.match(/IPSA[-\s]?[78]/)) return 'entry';
+    
+    // PSA (Personnel Service Agreement) - classify by level if present, otherwise entry
     const psaMatch = g.match(/PSA[-\s]?([0-9]+)/);
     if (psaMatch) {
       const level = parseInt(psaMatch[1]);
@@ -130,25 +140,8 @@ export class GradePyramidAnalyzer {
       return 'entry';
     }
     
-    // IPSA (International Personnel Service Agreement)
-    const ipsaMatch = g.match(/IPSA[-\s]?([0-9]+)/);
-    if (ipsaMatch) {
-      const level = parseInt(ipsaMatch[1]);
-      if (level >= 10) return 'senior';
-      if (level >= 7) return 'mid';
-      return 'entry';
-    }
-    
-    // LICA (Local Individual Contractor Agreement)
-    if (g.includes('LICA')) {
-      const licaMatch = g.match(/LICA[-\s]?([0-9]+)/);
-      if (licaMatch) {
-        const level = parseInt(licaMatch[1]);
-        if (level >= 10) return 'consultant'; // Senior consultant
-        return 'consultant';
-      }
-      return 'consultant';
-    }
+    // LICA (Local Individual Contractor Agreement) - Consultant
+    if (g.includes('LICA')) return 'consultant';
     
     // Consultant/Contractor types
     if (g.includes('CONSULT') || g === 'IC' || g.includes('SSA') || 
@@ -157,12 +150,10 @@ export class GradePyramidAnalyzer {
     }
     
     // UNV (UN Volunteers)
-    if (g.includes('UNV') || g.includes('VOLUNTEER')) {
-      return 'entry';
-    }
+    if (g.includes('UNV') || g.includes('VOLUNTEER')) return 'consultant';
     
     // Intern
-    if (g.includes('INTERN')) return 'entry';
+    if (g.includes('INTERN')) return 'consultant';
     
     // Log unrecognized grade for debugging
     if (grade && grade.trim().length > 0) {

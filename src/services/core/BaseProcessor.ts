@@ -89,10 +89,18 @@ export abstract class BaseProcessor {
 
     return data.filter(item => {
       try {
-        const postingDate = this.parseDate(item.posting_date);
+        // Exclude items with missing posting dates from time-filtered results
+        if (!item.posting_date) {
+          return false;
+        }
+        const postingDate = parseISO(item.posting_date);
+        // Check for invalid date - exclude if invalid
+        if (isNaN(postingDate.getTime())) {
+          return false;
+        }
         return isAfter(postingDate, cutoffDate);
       } catch {
-        return true; // Include items with unparseable dates
+        return false; // Exclude items with unparseable dates
       }
     });
   }

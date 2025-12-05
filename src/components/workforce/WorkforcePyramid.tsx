@@ -32,6 +32,7 @@ interface GradeRow {
   currentCount: number;
   previousCount: number;
   change: number;
+  isServiceAgreement?: boolean; // NPSA/IPSA - Non-staff but shown at equivalent tier level
 }
 
 // Category colors - used for left side (current period)
@@ -44,15 +45,34 @@ const categoryStyles: Record<string, { color: string; bgLight: string }> = {
   nonstaff: { color: '#EF4444', bgLight: '#FEE2E2' }
 };
 
-// Map grade to category
+// Map grade to category - NPSA/IPSA are non-staff but shown at equivalent tier level
 const getGradeCategory = (grade: string): GradeRow['category'] => {
   const g = grade.toUpperCase();
+  
   if (['D2', 'ASG', 'USG', 'SG', 'DSG'].includes(g)) return 'executive';
-  if (g === 'D1' || g === 'P5' || g === 'NO-D' || g === 'NOD' || g.match(/^IPSA[-]?1[1-2]$/)) return 'senior';
-  if (g.match(/^P[-]?[34]$/) || g === 'NO-C' || g === 'NOC' || g.match(/^IPSA[-]?(9|10)$/) || g.match(/^NPSA[-]?1[0-1]$/)) return 'mid';
-  if (g.match(/^P[-]?[12]$/) || g.match(/^NO[-]?[AB]$/) || g === 'NOA' || g === 'NOB' || g.match(/^IPSA[-]?[78]$/) || g.match(/^NPSA[-]?[789]$/)) return 'entry';
+  
+  // Senior level: D1, P5, NO-D, IPSA-11/12
+  if (g === 'D1' || g === 'P5' || g === 'NO-D' || g === 'NOD') return 'senior';
+  if (g.match(/^IPSA[-]?1[1-2]$/)) return 'senior';
+  
+  // Mid level: P3-P4, NO-C, IPSA-9/10, NPSA-10/11
+  if (g.match(/^P[-]?[34]$/) || g === 'NO-C' || g === 'NOC') return 'mid';
+  if (g.match(/^IPSA[-]?(9|10)$/) || g.match(/^NPSA[-]?1[0-1]$/)) return 'mid';
+  
+  // Entry level: P1-P2, NO-A/B, IPSA-7/8, NPSA-7/8/9
+  if (g.match(/^P[-]?[12]$/) || g.match(/^NO[-]?[AB]$/) || g === 'NOA' || g === 'NOB') return 'entry';
+  if (g.match(/^IPSA[-]?[78]$/) || g.match(/^NPSA[-]?[789]$/)) return 'entry';
+  
+  // Support level: G1-G7, NPSA-1-6
   if (g.match(/^G[-]?[1-7]$/) || g.match(/^NPSA[-]?[1-6]$/)) return 'support';
+  
   return 'nonstaff';
+};
+
+// Check if a grade is a service agreement (non-staff)
+const isServiceAgreement = (grade: string): boolean => {
+  const g = grade.toUpperCase();
+  return g.includes('NPSA') || g.includes('IPSA') || (g.includes('PSA') && !g.includes('NPSA') && !g.includes('IPSA'));
 };
 
 const categoryLabels: Record<string, string> = {
@@ -83,12 +103,14 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
           category: getGradeCategory(g.grade),
           currentCount: g.count,
           previousCount: 0,
-          change: 0
+          change: 0,
+          isServiceAgreement: isServiceAgreement(g.grade) // NPSA/IPSA are non-staff
         });
       });
     });
     
-    // Add non-staff as combined categories
+    // Add non-staff categories (consultants, interns, volunteers - but NOT service agreements 
+    // since NPSA/IPSA are now shown at their equivalent tier level in the pyramid)
     const consultants = data.nonStaff.find(n => n.category === 'Consultants');
     const interns = data.nonStaff.find(n => n.category === 'Interns');
     const volunteers = data.nonStaff.find(n => n.category === 'Volunteers');
@@ -141,7 +163,7 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
         });
       });
       
-      // Previous non-staff
+      // Previous non-staff (consultants, interns, volunteers)
       const prevConsultants = previousPeriodData.nonStaff.find(n => n.category === 'Consultants');
       const prevInterns = previousPeriodData.nonStaff.find(n => n.category === 'Interns');
       const prevVolunteers = previousPeriodData.nonStaff.find(n => n.category === 'Volunteers');
@@ -237,6 +259,14 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
           </div>
         </div>
         
+        <div className="flex items-center gap-2">
+          {/* Service Agreement indicator */}
+          <div className="flex items-center gap-1 text-[10px] text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+            <span className="italic">NPSA/IPSA*</span>
+            <span className="text-sky-400">= Non-Staff</span>
+          </div>
+        </div>
+        
         {previousPeriodData && (
           <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
             totals.change > 0 
@@ -292,10 +322,16 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
             const previousWidth = (row.previousCount / maxCount) * 100;
             const style = categoryStyles[row.category];
             
+            // Service agreements (NPSA/IPSA) get a special color to indicate non-staff
+            const barColor = row.isServiceAgreement ? '#0EA5E9' : style.color;
+            const labelColor = row.isServiceAgreement ? '#0EA5E9' : style.color;
+            
             return (
               <div 
                 key={row.grade} 
-                className="grid grid-cols-[1fr_80px_1fr] hover:bg-slate-50/50 transition-colors"
+                className={`grid grid-cols-[1fr_80px_1fr] hover:bg-slate-50/50 transition-colors ${
+                  row.isServiceAgreement ? 'bg-sky-50/30' : ''
+                }`}
               >
                 {/* Left Bar (Current Period) - extends RIGHT from center */}
                 <div className="py-1 px-1.5 flex items-center justify-end gap-1.5">
@@ -304,17 +340,21 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                   </span>
                   <div className="h-4 flex items-center justify-end" style={{ width: '100%' }}>
                     <div
-                      className="h-full rounded-l-sm transition-all duration-500 relative group"
+                      className={`h-full rounded-l-sm transition-all duration-500 relative group ${
+                        row.isServiceAgreement ? 'opacity-80' : ''
+                      }`}
                       style={{
                         width: `${currentWidth}%`,
                         minWidth: row.currentCount > 0 ? '3px' : '0',
-                        background: `linear-gradient(90deg, ${style.color}dd, ${style.color})`,
+                        background: row.isServiceAgreement 
+                          ? `repeating-linear-gradient(45deg, ${barColor}, ${barColor} 2px, ${barColor}99 2px, ${barColor}99 4px)`
+                          : `linear-gradient(90deg, ${barColor}dd, ${barColor})`,
                       }}
                     >
                       {/* Tooltip on hover */}
                       <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                         <div className="bg-slate-800 text-white text-[10px] rounded px-1.5 py-0.5 whitespace-nowrap">
-                          {row.currentCount}
+                          {row.currentCount}{row.isServiceAgreement ? ' (Non-Staff)' : ''}
                         </div>
                       </div>
                     </div>
@@ -325,11 +365,15 @@ const WorkforcePyramid: React.FC<WorkforcePyramidProps> = ({
                 <div className="py-1 px-0.5 flex items-center justify-center gap-0.5 border-x border-slate-100 bg-white">
                   <ChangeArrow change={row.change} />
                   <span 
-                    className="text-[10px] font-semibold text-center"
-                    style={{ color: style.color }}
+                    className={`text-[10px] font-semibold text-center ${row.isServiceAgreement ? 'italic' : ''}`}
+                    style={{ color: labelColor }}
+                    title={row.isServiceAgreement ? 'Service Agreement (Non-Staff)' : undefined}
                   >
                     {row.grade}
                   </span>
+                  {row.isServiceAgreement && (
+                    <span className="text-[8px] text-sky-500 ml-0.5" title="Non-Staff">*</span>
+                  )}
                 </div>
                 
                 {/* Right Bar (Previous Period) - extends LEFT from center */}

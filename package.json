@@ -32,7 +32,9 @@
     "eject": "react-scripts eject",
     "build:azure": "npm run build && cp web.config build/",
     "serve": "npx serve -s build",
-    "analyze": "npm run build && npx serve -s build"
+    "analyze": "npm run build && npx serve -s build",
+    "deploy:data": "node scripts/migrate-sqlite-to-neon.js",
+    "sync:prod": "cd backend && npm run sync:dev && cd .. && npm run deploy:data"
   },
   "eslintConfig": {
     "extends": [
@@ -56,6 +58,8 @@
     "@types/pdfmake": "^0.2.12",
     "@vercel/node": "^5.5.13",
     "autoprefixer": "^10.4.14",
+    "dotenv": "^17.2.3",
+    "playwright": "^1.57.0",
     "postcss": "^8.4.24",
     "tailwindcss": "^3.3.0"
   }

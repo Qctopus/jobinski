@@ -119,6 +119,7 @@ export interface SeniorityDistributionItem {
 export interface StaffTypeBreakdown {
   international: { count: number; percentage: number };
   national: { count: number; percentage: number };
+  serviceAgreement: { count: number; percentage: number };  // NPSA, IPSA, PSA - Non-staff
   consultant: { count: number; percentage: number };
   intern: { count: number; percentage: number };
   other: { count: number; percentage: number };

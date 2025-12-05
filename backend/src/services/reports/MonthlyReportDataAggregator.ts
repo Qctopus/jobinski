@@ -896,9 +896,11 @@ export class MonthlyReportDataAggregator {
     
     return {
       staff: {
+        // Staff = International + National (excluding NPSA/IPSA which are service agreements, not staff)
         count: staffBreakdown.international.count + staffBreakdown.national.count,
         percentage: staffBreakdown.international.percentage + staffBreakdown.national.percentage
       },
+      serviceAgreement: staffBreakdown.serviceAgreement,  // NPSA, IPSA, PSA - Non-staff
       consultant: staffBreakdown.consultant,
       intern: staffBreakdown.intern,
       trend

@@ -184,8 +184,8 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-4">
-        <div className="max-w-7xl mx-auto">
+      <div className="w-full px-8 xl:px-12 py-4">
+        <div className="max-w-[1400px] mx-auto">
           {/* Header */}
           <div className="mb-4">
             {/* Top Row - Agency & Time Filter */}

@@ -8,12 +8,12 @@
 export type GradeTier = 
   | 'Executive'           // D2, ASG, USG
   | 'Director'            // D1
-  | 'Senior Professional' // P5, IPSA-11, IPSA-12
-  | 'Mid Professional'    // P3, P4, IPSA-9, IPSA-10, NOC, NOD, NPSA-10, NPSA-11
-  | 'Entry Professional'  // P1, P2, NOA, NOB, NPSA-7, NPSA-8, NPSA-9, IPSA-7, IPSA-8
+  | 'Senior Professional' // P5, NO-D, IPSA-11/12 (IPSA are Non-Staff but shown at equivalent level)
+  | 'Mid Professional'    // P3, P4, NO-C, IPSA-9/10, NPSA-10/11 (NPSA/IPSA are Non-Staff)
+  | 'Entry Professional'  // P1, P2, NO-A, NO-B, IPSA-7/8, NPSA-7/8/9 (NPSA/IPSA are Non-Staff)
   | 'Senior Support'      // G6, G7
   | 'Mid Support'         // G4, G5
-  | 'Entry Support'       // G1, G2, G3
+  | 'Entry Support'       // G1, G2, G3, NPSA-1-6 (NPSA are Non-Staff)
   | 'Consultant'          // Consultant, IC, LICA
   | 'Intern'              // Intern
   | 'Volunteer'           // UNV, Volunteer
@@ -132,7 +132,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 9,
       isInternational: true,
       isNational: false,
-      pyramidPosition: 4,
+      pyramidPosition: 4, // Same tier level as P5/NO-D for visualization
       displayLabel: `IPSA-${ipsaSeniorMatch[1]}`
     };
   }
@@ -181,7 +181,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 7,
       isInternational: true,
       isNational: false,
-      pyramidPosition: 3,
+      pyramidPosition: 3, // Same tier level as P3-P4/NO-C for visualization
       displayLabel: `IPSA-${ipsaMidMatch[1]}`
     };
   }
@@ -198,7 +198,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 7,
       isInternational: false,
       isNational: true,
-      pyramidPosition: 3,
+      pyramidPosition: 3, // Same tier level as P3-P4/NO-C for visualization
       displayLabel: `NPSA-${npsaSeniorMatch[1]}`
     };
   }
@@ -276,7 +276,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 5,
       isInternational: false,
       isNational: true,
-      pyramidPosition: 2,
+      pyramidPosition: 2, // Same tier level as P1-P2/NO-A/NO-B for visualization
       displayLabel: `NPSA-${npsaEntryMatch[1]}`
     };
   }
@@ -293,7 +293,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 5,
       isInternational: true,
       isNational: false,
-      pyramidPosition: 2,
+      pyramidPosition: 2, // Same tier level as P1-P2/NO-A/NO-B for visualization
       displayLabel: `IPSA-${ipsaEntryMatch[1]}`
     };
   }
@@ -310,7 +310,7 @@ export function classifyGrade(grade: string): GradeAnalysis {
       numericLevel: 2,
       isInternational: false,
       isNational: true,
-      pyramidPosition: 1,
+      pyramidPosition: 1, // Same tier level as G1-G5 for visualization
       displayLabel: `NPSA-${npsaLowMatch[1]}`
     };
   }
@@ -464,9 +464,9 @@ function createDefaultAnalysis(grade: string): GradeAnalysis {
 export const PYRAMID_TIERS = [
   { level: 6, name: 'Executive', color: '#7C3AED', description: 'ASG, USG, D2' },
   { level: 5, name: 'Director', color: '#2563EB', description: 'D1' },
-  { level: 4, name: 'Senior Professional', color: '#0891B2', description: 'P5, NO-D, IPSA-11+' },
-  { level: 3, name: 'Mid Professional', color: '#059669', description: 'P3-P4, NO-C, NPSA-10+' },
-  { level: 2, name: 'Entry Professional', color: '#D97706', description: 'P1-P2, NO-A/B, G6-7' },
+  { level: 4, name: 'Senior Professional', color: '#0891B2', description: 'P5, NO-D, IPSA-11/12' },
+  { level: 3, name: 'Mid Professional', color: '#059669', description: 'P3-P4, NO-C, IPSA-9/10, NPSA-10/11' },
+  { level: 2, name: 'Entry Professional', color: '#D97706', description: 'P1-P2, NO-A/B, G6-7, IPSA-7/8, NPSA-7/8/9' },
   { level: 1, name: 'Support', color: '#DC2626', description: 'G1-G5, NPSA-1-6' },
 ];
 

@@ -17,7 +17,7 @@ export interface PyramidData {
   count: number;
   percentage: number;
   color: string;
-  grades: Array<{ grade: string; count: number }>;
+  grades: Array<{ grade: string; count: number; isNonStaff?: boolean }>;
 }
 
 export interface NonStaffData {
@@ -148,8 +148,8 @@ export class WorkforceStructureAnalyzer {
     
     const gradeAnalyses = filteredJobs.map(job => classifyGrade(job.up_grade));
     
-    // Count by pyramid position
-    const pyramidCounts: Record<number, { count: number; grades: Record<string, number> }> = {};
+    // Count by pyramid position - includes BOTH staff and non-staff grades with pyramid positions
+    const pyramidCounts: Record<number, { count: number; grades: Record<string, number>; staffGrades: Record<string, number>; nonStaffGrades: Record<string, number> }> = {};
     const nonStaffCounts: Record<string, number> = {
       'Consultant': 0,
       'Intern': 0,
@@ -160,18 +160,34 @@ export class WorkforceStructureAnalyzer {
     let nonStaffCount = 0;
     
     gradeAnalyses.forEach(analysis => {
-      if (analysis.pyramidPosition > 0) {
-        // Staff position - goes in pyramid
+      // Binary staff/non-staff classification based on staffCategory
+      const isStaff = analysis.staffCategory === 'Staff';
+      
+      if (isStaff) {
         staffCount++;
+      } else {
+        nonStaffCount++;
+      }
+      
+      // Add to pyramid breakdown if it has a pyramid position (includes NPSA/IPSA at their equivalent levels)
+      if (analysis.pyramidPosition > 0) {
         if (!pyramidCounts[analysis.pyramidPosition]) {
-          pyramidCounts[analysis.pyramidPosition] = { count: 0, grades: {} };
+          pyramidCounts[analysis.pyramidPosition] = { count: 0, grades: {}, staffGrades: {}, nonStaffGrades: {} };
         }
         pyramidCounts[analysis.pyramidPosition].count++;
         pyramidCounts[analysis.pyramidPosition].grades[analysis.displayLabel] = 
           (pyramidCounts[analysis.pyramidPosition].grades[analysis.displayLabel] || 0) + 1;
-      } else {
-        // Non-staff position
-        nonStaffCount++;
+        
+        // Track staff vs non-staff grades separately for display
+        if (isStaff) {
+          pyramidCounts[analysis.pyramidPosition].staffGrades[analysis.displayLabel] = 
+            (pyramidCounts[analysis.pyramidPosition].staffGrades[analysis.displayLabel] || 0) + 1;
+        } else {
+          pyramidCounts[analysis.pyramidPosition].nonStaffGrades[analysis.displayLabel] = 
+            (pyramidCounts[analysis.pyramidPosition].nonStaffGrades[analysis.displayLabel] || 0) + 1;
+        }
+      } else if (!isStaff) {
+        // Non-staff without pyramid position (consultants, interns, volunteers)
         if (analysis.tier === 'Consultant') {
           nonStaffCounts['Consultant']++;
         } else if (analysis.tier === 'Intern') {
@@ -184,27 +200,32 @@ export class WorkforceStructureAnalyzer {
       }
     });
     
-    // Build pyramid data
+    // Build pyramid data - includes all grades with pyramid positions (staff AND service agreements)
+    const totalPyramidPositions = Object.values(pyramidCounts).reduce((sum, tier) => sum + tier.count, 0) || 1;
     const pyramid: PyramidData[] = PYRAMID_TIERS.map(tier => {
-      const data = pyramidCounts[tier.level] || { count: 0, grades: {} };
+      const data = pyramidCounts[tier.level] || { count: 0, grades: {}, staffGrades: {}, nonStaffGrades: {} };
       return {
         tier: tier.name,
         level: tier.level,
         count: data.count,
-        percentage: staffCount > 0 ? (data.count / staffCount) * 100 : 0,
+        percentage: totalPyramidPositions > 0 ? (data.count / totalPyramidPositions) * 100 : 0,
         color: tier.color,
         grades: Object.entries(data.grades)
-          .map(([grade, count]) => ({ grade, count }))
+          .map(([grade, count]) => ({ 
+            grade, 
+            count,
+            isNonStaff: grade.includes('NPSA') || grade.includes('IPSA') || grade.includes('PSA')
+          }))
           .sort((a, b) => b.count - a.count)
       };
     });
     
-    // Build non-staff data
-    const totalNonStaff = nonStaffCount || 1;
+    // Build non-staff data - only for positions WITHOUT pyramid positions (consultants, interns, volunteers)
+    const totalNonStaffWithoutPyramid = Object.values(nonStaffCounts).reduce((sum, c) => sum + c, 0) || 1;
     const nonStaff: NonStaffData[] = [
-      { category: 'Consultants', count: nonStaffCounts['Consultant'], percentage: (nonStaffCounts['Consultant'] / totalNonStaff) * 100, color: '#F59E0B' },
-      { category: 'Interns', count: nonStaffCounts['Intern'], percentage: (nonStaffCounts['Intern'] / totalNonStaff) * 100, color: '#8B5CF6' },
-      { category: 'Volunteers', count: nonStaffCounts['Volunteer'], percentage: (nonStaffCounts['Volunteer'] / totalNonStaff) * 100, color: '#EC4899' },
+      { category: 'Consultants', count: nonStaffCounts['Consultant'], percentage: (nonStaffCounts['Consultant'] / totalNonStaffWithoutPyramid) * 100, color: '#F59E0B' },
+      { category: 'Interns', count: nonStaffCounts['Intern'], percentage: (nonStaffCounts['Intern'] / totalNonStaffWithoutPyramid) * 100, color: '#8B5CF6' },
+      { category: 'Volunteers', count: nonStaffCounts['Volunteer'], percentage: (nonStaffCounts['Volunteer'] / totalNonStaffWithoutPyramid) * 100, color: '#EC4899' },
     ];
     
     return {

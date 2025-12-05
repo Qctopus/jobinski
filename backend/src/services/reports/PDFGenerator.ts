@@ -375,8 +375,9 @@ export class PDFGenerator {
             { text: 'Count', style: 'tableHeader' },
             { text: 'Percentage', style: 'tableHeader' }
           ],
-          ['International', staffTypes.international.count.toString(), `${staffTypes.international.percentage.toFixed(1)}%`],
-          ['National', staffTypes.national.count.toString(), `${staffTypes.national.percentage.toFixed(1)}%`],
+          ['International Staff', staffTypes.international.count.toString(), `${staffTypes.international.percentage.toFixed(1)}%`],
+          ['National Staff', staffTypes.national.count.toString(), `${staffTypes.national.percentage.toFixed(1)}%`],
+          ['Service Agreements (NPSA/IPSA)', staffTypes.serviceAgreement.count.toString(), `${staffTypes.serviceAgreement.percentage.toFixed(1)}%`],
           ['Consultant', staffTypes.consultant.count.toString(), `${staffTypes.consultant.percentage.toFixed(1)}%`],
           ['Intern', staffTypes.intern.count.toString(), `${staffTypes.intern.percentage.toFixed(1)}%`],
           ['Other', staffTypes.other.count.toString(), `${staffTypes.other.percentage.toFixed(1)}%`]
