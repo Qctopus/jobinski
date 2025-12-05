@@ -29,9 +29,6 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview'); // Default to Overview for better first impression
   
-  // Use pre-computed agencies list when available
-  const precomputedAgencies = dashboardData?.agencies?.data;
-  
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -74,20 +71,16 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
     };
   }, []);
 
-  // Get unique agencies for the selector - prefer precomputed list
+  // Get unique agencies for the selector - always compute from transformed data
+  // This ensures Secretariat breakdown (OCHA, OHCHR, etc.) is applied
   const agencies = useMemo(() => {
-    // Use precomputed agencies if available
-    if (precomputedAgencies?.agencies) {
-      return precomputedAgencies.agencies.map((a: any) => a.agency);
-    }
-    // Fallback to computing from data
     const agencySet = new Set<string>();
     data.forEach(job => {
       const agency = job.short_agency || job.long_agency;
-      if (agency) agencySet.add(agency);
+      if (agency && agency.trim()) agencySet.add(agency);
     });
     return Array.from(agencySet).sort();
-  }, [data, precomputedAgencies]);
+  }, [data]);
 
   const tabs = [
     {
