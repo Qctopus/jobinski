@@ -48,9 +48,7 @@ const AGENCY_LOGO_MAP: AgencyLogoMapping = {
   
   // Offices (separate entities)
   'OCHA': 'UNOCHA.png',
-  'UNOCHA': 'UNOCHA.png',
   'OHCHR': 'UNOHCHR.png',
-  'UNOHCHR': 'UNOHCHR.png',
   'UNOCT': 'UN.png',           // Counter-Terrorism (use UN logo)
   'DCO': 'UN.png',             // Development Coordination
   'UNOOSA': 'UN.png',          // Outer Space Affairs
