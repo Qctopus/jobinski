@@ -64,19 +64,37 @@ export const PEER_GROUPS: Record<string, PeerGroupDefinition> = {
   }
 };
 
-// Add UN Secretariat entities to appropriate tiers
+// UN Secretariat entities with appropriate tiers
+// Now includes all separate entities (offices, regional commissions, overseas offices)
 export const SECRETARIAT_ENTITIES: Record<string, number> = {
+  // UN Secretariat (departments aggregate)
   'UN Secretariat': 1,  // Large
-  'OCHA': 2,
-  'DPKO': 2,
-  'DPO': 2,
-  'DESA': 3,
-  'OHCHR': 3,
+  
+  // Offices (now separate)
+  'OCHA': 2,            // Humanitarian Affairs - large operational
+  'OHCHR': 2,           // Human Rights
+  'UNOCT': 3,           // Counter-Terrorism
+  'DCO': 3,             // Development Coordination
+  'UNDRR': 3,           // Disaster Risk Reduction
+  'UNOOSA': 4,          // Outer Space Affairs
+  'OSAA': 4,            // Special Adviser on Africa
+  'UN-OHRLLS': 4,       // LDCs office
+  
+  // Overseas Offices (now separate)
+  'UNOG': 2,            // Geneva - large
+  'UNOV': 3,            // Vienna
+  'UNON': 3,            // Nairobi
+  
+  // Regional Commissions (now separate)
   'ESCAP': 3,
   'ESCWA': 3,
   'ECA': 3,
   'ECE': 3,
   'ECLAC': 3,
+  
+  // Tribunals
+  'IRMCT': 4,
+  'ICJ': 3,
 };
 
 /**

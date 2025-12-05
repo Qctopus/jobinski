@@ -38,13 +38,27 @@ const AGENCY_LOGO_MAP: AgencyLogoMapping = {
   'UNAMA': 'UNAMA.png',
   'UNGC': 'UNGC.png',
   
-  // UN Secretariat and offices
+  // UN Secretariat (departments stay under this)
   'UN Secretariat': 'UN.png',
+  
+  // Overseas Offices (separate entities)
   'UNOG': 'UNOG.png',
   'UNON': 'UNON.png',
   'UNOV': 'UNOV.png',
   
-  // Departments and offices (commonly using UN logo)
+  // Offices (separate entities)
+  'OCHA': 'UNOCHA.png',
+  'UNOCHA': 'UNOCHA.png',
+  'OHCHR': 'UNOHCHR.png',
+  'UNOHCHR': 'UNOHCHR.png',
+  'UNOCT': 'UN.png',           // Counter-Terrorism (use UN logo)
+  'DCO': 'UN.png',             // Development Coordination
+  'UNOOSA': 'UN.png',          // Outer Space Affairs
+  'OSAA': 'UN.png',            // Special Adviser on Africa
+  'UNDRR': 'UN.png',           // Disaster Risk Reduction
+  'UN-OHRLLS': 'UN.png',       // LDCs office
+  
+  // Departments (stay under Secretariat, but have logos)
   'DESA': 'DESA.png',
   'DGC': 'DGC.png',
   'DOS': 'DOS.png',
@@ -52,6 +66,10 @@ const AGENCY_LOGO_MAP: AgencyLogoMapping = {
   'DPPA': 'DPPA.png',
   'OICT': 'OICT.png',
   'OIOS': 'OIOS.png',
+  
+  // Tribunals (separate entities)
+  'IRMCT': 'UN.png',
+  'ICJ': 'International Court of Justice.png',
   
   // Regional commissions
   'ECA': 'ECA.png',

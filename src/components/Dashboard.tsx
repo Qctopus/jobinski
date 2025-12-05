@@ -273,28 +273,28 @@ const DashboardContent: React.FC<DashboardProps & { filters: FilterOptions; setF
                 </div>
               </div>
 
-              {/* Agency/Market Title - Right aligned */}
-              <div className="flex items-center gap-3">
+              {/* Agency/Market Context - Right aligned */}
+              <div className="flex items-center gap-2">
                 {isAgencyView ? (
-                  <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full">
                     {getAgencyLogo(selectedAgencyName) && (
                       <img
                         src={getAgencyLogo(selectedAgencyName)!}
                         alt={selectedAgencyName}
-                        className="h-8 w-8 object-contain"
+                        className="h-5 w-5 object-contain"
                       />
                     )}
-                    <h2 className="text-xl font-bold text-gray-900">{selectedAgencyName}</h2>
-                  </>
+                    <span className="text-sm font-medium text-blue-700">{selectedAgencyName}</span>
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
                     <img
                       src="/logo/logo/United_Nations.png"
                       alt="UN System"
-                      className="h-8 w-8 object-contain"
+                      className="h-5 w-5 object-contain"
                     />
-                    <h2 className="text-xl font-bold text-gray-900">UN Talent Market</h2>
-                  </>
+                    <span className="text-sm font-medium text-slate-700">UN Talent Market</span>
+                  </div>
                 )}
               </div>
             </div>

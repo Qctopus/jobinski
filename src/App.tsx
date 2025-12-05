@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import { LearningDashboard } from './components/LearningDashboard';
 // Reports temporarily disabled for Vercel build
@@ -13,6 +14,7 @@ import DataErrorBoundary from './components/error-boundaries/DataErrorBoundary';
 import LoadingSpinner from './components/loading/LoadingSpinner';
 import { DashboardSkeleton } from './components/loading/LoadingSkeleton';
 import LoginScreen from './components/auth/LoginScreen';
+import { getEffectiveAgency } from './config/secretariatEntities';
 
 // Check if user is authenticated
 const checkAuth = (): boolean => {
@@ -140,7 +142,8 @@ function App() {
         pipeline: job.pipeline || '',
         department: job.department || '',
         long_agency: job.long_agency || '',
-        short_agency: job.short_agency || '',
+        // Apply Secretariat breakdown: offices like OCHA, OHCHR, UNOG etc. become separate entities
+        short_agency: getEffectiveAgency(job.short_agency || '', job.department || ''),
         posting_date: job.posting_date || '',
         apply_until: job.apply_until || '',
         languages: job.languages || '',
@@ -438,49 +441,55 @@ function App() {
         )}
         {/* Navigation */}
         <nav className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-[1400px] mx-auto px-8 xl:px-12">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <img src="/UNDP_logo.png" alt="UNDP" className="h-8 w-auto" />
-                <span className="ml-3 text-xl font-semibold text-gray-900">Baro Talent Analytics</span>
+          <div className="max-w-[1400px] mx-auto px-6 xl:px-10">
+            <div className="flex justify-between h-14">
+              {/* Logo and Title */}
+              <div className="flex items-center gap-2">
+                <img src="/UNDP_logo.png" alt="UNDP" className="h-9 w-auto" />
+                <span className="text-lg font-semibold text-gray-900 tracking-tight">Baro Talent Analytics</span>
               </div>
-              <div className="flex items-center space-x-4">
+              
+              {/* Navigation Items */}
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentView('dashboard')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${currentView === 'dashboard'
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'dashboard'
                     ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   Analytics Dashboard
                 </button>
                 <button
                   onClick={() => setCurrentView('learning')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${currentView === 'learning'
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'learning'
                     ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   Learning Dashboard
                 </button>
-                {/* Reports temporarily disabled */}
                 <button
                   onClick={() => setCurrentView('admin')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${currentView === 'admin'
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${currentView === 'admin'
                     ? 'bg-amber-100 text-amber-700'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   🔧 Data Quality
                 </button>
-                {/* Sync Button with Status */}
+                
+                {/* Divider */}
+                <div className="w-px h-5 bg-gray-200 mx-2"></div>
+                
+                {/* Sync Button */}
                 <button
                   onClick={triggerSync}
                   disabled={syncing}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
+                  className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
                     syncing
-                      ? 'bg-blue-100 text-blue-600 cursor-not-allowed'
-                      : 'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300'
+                      ? 'bg-blue-50 text-blue-600 cursor-not-allowed'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
                   }`}
                   title={syncStatus?.last_sync_at ? `Last sync: ${new Date(syncStatus.last_sync_at).toLocaleString()}` : 'Never synced'}
                 >
@@ -490,7 +499,7 @@ function App() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Syncing...
+                      <span>Syncing...</span>
                     </>
                   ) : (
                     <>
@@ -499,13 +508,14 @@ function App() {
                     </>
                   )}
                 </button>
-                {/* Logout Button */}
+                
+                {/* Sign Out Icon */}
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-2 rounded-lg text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                   title="Sign out"
                 >
-                  Sign Out
+                  <LogOut className="h-4 w-4" />
                 </button>
               </div>
             </div>
