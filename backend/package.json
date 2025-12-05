@@ -12,7 +12,8 @@
     "seed": "node dist/scripts/seed.js",
     "classify-all": "node dist/scripts/classifyExisting.js",
     "sync": "node dist/scripts/syncFromPostgres.js",
-    "sync:dev": "npx ts-node src/scripts/syncFromPostgres.ts"
+    "sync:dev": "npx ts-node src/scripts/syncFromPostgres.ts",
+    "push:neon": "npx ts-node src/scripts/pushToNeon.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
