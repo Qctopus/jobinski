@@ -2,6 +2,7 @@ import pool from '../config/database';
 import { neonPool } from '../config/neonDatabase';
 import db, { initializeDatabase } from '../config/sqlite';
 import { JobClassificationService } from './JobClassificationService';
+import { getEffectiveAgency } from '../config/secretariatEntities';
 
 interface SyncResult {
   success: boolean;
@@ -375,8 +376,12 @@ export class SyncService {
     // Extract skill domains
     const skillDomains = this.extractSkillDomains(job.job_labels || '');
 
+    // Apply Secretariat breakdown - offices like OCHA, OHCHR become separate entities
+    const effectiveAgency = getEffectiveAgency(job.short_agency || '', job.department || '');
+
     return {
       ...job,
+      short_agency: effectiveAgency,  // Override with effective agency (may be OCHA, OHCHR, etc.)
       primary_category: classification.primary,
       secondary_categories: classification.secondary.map(s => s.category),
       classification_confidence: classification.confidence,
