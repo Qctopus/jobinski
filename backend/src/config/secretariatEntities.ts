@@ -65,28 +65,31 @@ const ALL_ENTITIES: SecretariatEntity[] = [
  * return that entity's short name instead of "UN Secretariat"
  */
 export function getEffectiveAgency(shortAgency: string, department: string): string {
-  // Only process UN Secretariat jobs
-  const normalizedAgency = (shortAgency || '').toLowerCase().trim();
+  if (!shortAgency) return shortAgency;
+  
+  const normalizedAgency = shortAgency.toLowerCase().trim();
+  
+  // Check if this is a UN Secretariat job
   const isSecretariat = normalizedAgency.includes('secretariat') || 
                         normalizedAgency === 'un' ||
-                        normalizedAgency === 'united nations';
+                        normalizedAgency.startsWith('united nations') ||
+                        normalizedAgency === 'un secretariat';
   
   if (!isSecretariat) {
     return shortAgency;
   }
   
-  if (!department) {
-    return 'UN Secretariat';
-  }
-  
-  const normalizedDept = department.toLowerCase().trim();
-  
-  // Check all entities for keyword matches
-  for (const entity of ALL_ENTITIES) {
-    if (entity.showAsSeparate) {
-      for (const keyword of entity.keywords) {
-        if (normalizedDept.includes(keyword.toLowerCase())) {
-          return entity.shortName;
+  // Check if this department maps to a separate entity
+  if (department) {
+    const normalizedDept = department.toLowerCase().trim();
+    
+    // Check all entities for keyword matches
+    for (const entity of ALL_ENTITIES) {
+      if (entity.showAsSeparate) {
+        for (const keyword of entity.keywords) {
+          if (normalizedDept.includes(keyword.toLowerCase())) {
+            return entity.shortName;
+          }
         }
       }
     }

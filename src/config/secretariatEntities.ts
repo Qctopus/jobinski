@@ -320,20 +320,27 @@ export function classifySecretariatDepartment(department: string, shortAgency?: 
  * @returns The effective agency name for analytics
  */
 export function getEffectiveAgency(shortAgency: string, department: string): string {
-  // Only process UN Secretariat jobs
-  const isSecretariat = shortAgency?.toLowerCase().includes('secretariat') || 
-                        shortAgency?.toLowerCase() === 'un' ||
-                        shortAgency?.toLowerCase() === 'united nations';
+  if (!shortAgency) return shortAgency;
+  
+  const normalizedAgency = shortAgency.toLowerCase().trim();
+  
+  // Check if this is a UN Secretariat job
+  const isSecretariat = normalizedAgency.includes('secretariat') || 
+                        normalizedAgency === 'un' ||
+                        normalizedAgency.startsWith('united nations') ||
+                        normalizedAgency === 'un secretariat';
   
   if (!isSecretariat) {
     return shortAgency;
   }
   
   // Check if this department maps to a separate entity
-  const entity = classifySecretariatDepartment(department, shortAgency);
-  
-  if (entity && entity.showAsSeparate) {
-    return entity.shortName;
+  if (department) {
+    const entity = classifySecretariatDepartment(department, shortAgency);
+    
+    if (entity && entity.showAsSeparate) {
+      return entity.shortName;
+    }
   }
   
   // Stay under UN Secretariat
