@@ -23,7 +23,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
     // Simple credential check
     setTimeout(() => {
-      if (username === 'testuster' && password === 'UNDP2025') {
+      if (username === 'testuser' && password === 'UNDP2025') {
         // Store auth state
         localStorage.setItem('baro_auth', 'authenticated');
         localStorage.setItem('baro_auth_time', Date.now().toString());

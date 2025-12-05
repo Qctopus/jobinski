@@ -1,4 +1,5 @@
 import pool from '../config/database';
+import { neonPool } from '../config/neonDatabase';
 import db, { initializeDatabase } from '../config/sqlite';
 import { JobClassificationService } from './JobClassificationService';
 
@@ -11,8 +12,14 @@ interface SyncResult {
 }
 
 /**
- * SyncService - Syncs data from remote PostgreSQL to local SQLite
- * Processes and categorizes jobs for fast frontend access
+ * SyncService - Bidirectional sync between databases
+ * 
+ * Data Flow:
+ * 1. Azure PostgreSQL (source API) → Local SQLite (processing & cache)
+ * 2. Local SQLite → Neon PostgreSQL (powers Vercel deployment)
+ * 
+ * The 'pool' connects to Azure (or primary source database)
+ * The 'neonPool' connects to Neon (production database for Vercel)
  */
 export class SyncService {
   private classifier: JobClassificationService;
@@ -184,88 +191,139 @@ export class SyncService {
   }
 
   /**
-   * Sync classified data back to Neon PostgreSQL
-   * Updates the sectoral_category field with our classifications
+   * Sync all data to Neon PostgreSQL (production database for Vercel)
+   * This pushes the processed/classified jobs from local SQLite to Neon
    */
-  async syncToNeon(): Promise<{ success: boolean; updated: number; error?: string }> {
-    console.log('🔄 Syncing classified data back to Neon...');
+  async syncToNeon(): Promise<{ success: boolean; updated: number; inserted: number; error?: string }> {
+    if (!neonPool) {
+      console.log('⚠️ Neon database not configured - skipping Neon sync');
+      console.log('   Set NEON_DATABASE_URL in .env to enable Neon sync');
+      return { success: true, updated: 0, inserted: 0 };
+    }
+
+    console.log('🔄 Syncing data to Neon PostgreSQL (Vercel production)...');
     
     try {
-      // Get all classified jobs from SQLite
+      // Get all jobs from SQLite with their classifications
       const jobs = db.prepare(`
-        SELECT id, primary_category, classification_confidence 
-        FROM jobs 
+        SELECT * FROM jobs 
         WHERE primary_category IS NOT NULL AND primary_category != ''
-      `).all() as Array<{ id: number; primary_category: string; classification_confidence: number }>;
+      `).all() as any[];
       
-      console.log(`📊 Found ${jobs.length} classified jobs to sync to Neon`);
+      console.log(`📊 Found ${jobs.length} jobs to sync to Neon`);
       
       if (jobs.length === 0) {
-        return { success: true, updated: 0 };
+        return { success: true, updated: 0, inserted: 0 };
       }
-      
-      // Update Neon in batches
-      const BATCH_SIZE = 100;
+
       let updated = 0;
+      let inserted = 0;
+      const BATCH_SIZE = 100;
       
       for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
         const batch = jobs.slice(i, i + BATCH_SIZE);
         
-        // Build batch update query
-        const updates = batch.map(job => ({
-          id: job.id,
-          category: job.primary_category
-        }));
-        
-        // Update each job's sectoral_category in Neon
-        for (const update of updates) {
+        for (const job of batch) {
           try {
-            await pool.query(
-              'UPDATE jobs SET sectoral_category = $1 WHERE id = $2',
-              [update.category, update.id]
+            // Try to update existing job first (by id)
+            const updateResult = await neonPool.query(
+              `UPDATE jobs SET 
+                sectoral_category = $1,
+                primary_category = $1,
+                updated_at = NOW()
+              WHERE id = $2`,
+              [job.primary_category, job.id]
             );
-            updated++;
-          } catch (e) {
-            // Skip individual errors, continue with batch
-            console.warn(`Failed to update job ${update.id}:`, e);
+            
+            if (updateResult.rowCount && updateResult.rowCount > 0) {
+              updated++;
+            } else {
+              // Job doesn't exist in Neon - insert it
+              await neonPool.query(
+                `INSERT INTO jobs (
+                  id, title, description, job_labels, short_agency, long_agency,
+                  duty_station, duty_country, duty_continent, country_code,
+                  up_grade, pipeline, department, posting_date, apply_until,
+                  url, languages, uniquecode, sectoral_category, archived,
+                  created_at, updated_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                  sectoral_category = EXCLUDED.sectoral_category,
+                  updated_at = NOW()`,
+                [
+                  job.id, job.title, job.description, job.job_labels,
+                  job.short_agency, job.long_agency, job.duty_station,
+                  job.duty_country, job.duty_continent, job.country_code,
+                  job.up_grade, job.pipeline, job.department, job.posting_date,
+                  job.apply_until, job.url, job.languages, job.uniquecode,
+                  job.primary_category, job.archived ? 1 : 0
+                ]
+              );
+              inserted++;
+            }
+          } catch (e: any) {
+            // Skip individual errors but log them
+            if (!e.message?.includes('duplicate key')) {
+              console.warn(`Failed to sync job ${job.id}:`, e.message);
+            }
           }
         }
         
         if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= jobs.length) {
-          console.log(`📤 Updated ${Math.min(i + BATCH_SIZE, jobs.length)}/${jobs.length} jobs in Neon`);
+          console.log(`📤 Synced ${Math.min(i + BATCH_SIZE, jobs.length)}/${jobs.length} jobs to Neon`);
         }
       }
       
-      console.log(`✅ Synced ${updated} classifications to Neon`);
-      return { success: true, updated };
+      console.log(`✅ Neon sync complete: ${updated} updated, ${inserted} inserted`);
+      return { success: true, updated, inserted };
       
     } catch (error) {
       console.error('❌ Failed to sync to Neon:', error);
       return { 
         success: false, 
-        updated: 0, 
+        updated: 0,
+        inserted: 0,
         error: error instanceof Error ? error.message : 'Unknown error' 
       };
     }
   }
 
   /**
-   * Full bidirectional sync - pulls from Neon, processes, and pushes classifications back
+   * Full bidirectional sync:
+   * 1. Azure PostgreSQL (source) → Local SQLite (with processing/classification)
+   * 2. Local SQLite → Neon PostgreSQL (production for Vercel)
    */
-  async fullBidirectionalSync(): Promise<SyncResult & { neonUpdated?: number }> {
-    // First do the normal sync (Neon -> SQLite)
+  async fullBidirectionalSync(): Promise<SyncResult & { neonUpdated?: number; neonInserted?: number }> {
+    console.log('═'.repeat(60));
+    console.log('🔄 Starting bidirectional sync...');
+    console.log('   Step 1: Azure → Local SQLite');
+    console.log('   Step 2: Local SQLite → Neon (Vercel production)');
+    console.log('═'.repeat(60));
+
+    // Step 1: Pull from Azure (source) to local SQLite
     const syncResult = await this.fullSync();
     
     if (!syncResult.success) {
+      console.error('❌ Azure sync failed - aborting Neon sync');
       return syncResult;
     }
     
-    // Then sync classifications back to Neon (SQLite -> Neon)
+    console.log('');
+    console.log('─'.repeat(60));
+    
+    // Step 2: Push from local SQLite to Neon (for Vercel)
     const neonResult = await this.syncToNeon();
+    
+    console.log('═'.repeat(60));
+    console.log('✅ Bidirectional sync complete!');
+    console.log(`   Azure → SQLite: ${syncResult.processedJobs} jobs`);
+    console.log(`   SQLite → Neon: ${neonResult.updated} updated, ${neonResult.inserted} inserted`);
+    console.log('═'.repeat(60));
     
     return {
       ...syncResult,
-      neonUpdated: neonResult.updated
+      neonUpdated: neonResult.updated,
+      neonInserted: neonResult.inserted
     };
   }
 
