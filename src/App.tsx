@@ -12,8 +12,24 @@ import ErrorBoundary from './components/error-boundaries/ErrorBoundary';
 import DataErrorBoundary from './components/error-boundaries/DataErrorBoundary';
 import LoadingSpinner from './components/loading/LoadingSpinner';
 import { DashboardSkeleton } from './components/loading/LoadingSkeleton';
+import LoginScreen from './components/auth/LoginScreen';
+
+// Check if user is authenticated
+const checkAuth = (): boolean => {
+  const auth = localStorage.getItem('baro_auth');
+  const authTime = localStorage.getItem('baro_auth_time');
+  
+  if (auth === 'authenticated' && authTime) {
+    // Session expires after 24 hours
+    const sessionAge = Date.now() - parseInt(authTime);
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    return sessionAge < maxAge;
+  }
+  return false;
+};
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(checkAuth());
   const [processedData, setProcessedData] = useState<ProcessedJobData[]>([]);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>({ status: 'idle' });
@@ -238,7 +254,7 @@ function App() {
 
   const triggerSync = async () => {
     setSyncing(true);
-    setSyncNotification({ type: 'info', message: 'Sync started! This may take 30-60 seconds...' });
+    setSyncNotification({ type: 'info', message: 'Syncing with Neon DB... This may take 30-60 seconds.' });
     
     try {
       const response = await fetch('http://localhost:5000/api/dashboard/sync', {
@@ -297,6 +313,23 @@ function App() {
       setTimeout(() => setSyncNotification(null), 5000);
     }
   };
+
+  // Handle login
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('baro_auth');
+    localStorage.removeItem('baro_auth_time');
+    setIsAuthenticated(false);
+  };
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
 
   // Render loading state
   if (loadingState.status === 'loading' || loadingState.status === 'idle') {
@@ -465,6 +498,14 @@ function App() {
                       <span>{syncStatus?.total_jobs?.toLocaleString() || '0'} jobs</span>
                     </>
                   )}
+                </button>
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-lg text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  title="Sign out"
+                >
+                  Sign Out
                 </button>
               </div>
             </div>

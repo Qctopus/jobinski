@@ -383,7 +383,7 @@ router.get('/sync-status', async (req: Request, res: Response) => {
 
 /**
  * POST /api/dashboard/sync
- * Trigger a sync (should be called manually or via cron)
+ * Trigger a bidirectional sync (pulls from Neon, processes, pushes classifications back)
  */
 router.post('/sync', (req: Request, res: Response) => {
   try {
@@ -392,13 +392,16 @@ router.post('/sync', (req: Request, res: Response) => {
     // Start sync in background
     res.json({
       success: true,
-      message: 'Sync started',
+      message: 'Bidirectional sync started (Neon ↔ Local)',
       timestamp: new Date().toISOString()
     });
 
-    // Actually run the sync (non-blocking response already sent)
-    syncService.fullSync().then(result => {
-      console.log('Sync completed:', result);
+    // Run bidirectional sync (non-blocking response already sent)
+    syncService.fullBidirectionalSync().then(result => {
+      console.log('Bidirectional sync completed:', result);
+      if (result.neonUpdated !== undefined) {
+        console.log(`📤 Updated ${result.neonUpdated} classifications in Neon`);
+      }
     }).catch(err => {
       console.error('Sync failed:', err);
     });

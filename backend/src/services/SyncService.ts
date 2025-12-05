@@ -184,6 +184,92 @@ export class SyncService {
   }
 
   /**
+   * Sync classified data back to Neon PostgreSQL
+   * Updates the sectoral_category field with our classifications
+   */
+  async syncToNeon(): Promise<{ success: boolean; updated: number; error?: string }> {
+    console.log('🔄 Syncing classified data back to Neon...');
+    
+    try {
+      // Get all classified jobs from SQLite
+      const jobs = db.prepare(`
+        SELECT id, primary_category, classification_confidence 
+        FROM jobs 
+        WHERE primary_category IS NOT NULL AND primary_category != ''
+      `).all() as Array<{ id: number; primary_category: string; classification_confidence: number }>;
+      
+      console.log(`📊 Found ${jobs.length} classified jobs to sync to Neon`);
+      
+      if (jobs.length === 0) {
+        return { success: true, updated: 0 };
+      }
+      
+      // Update Neon in batches
+      const BATCH_SIZE = 100;
+      let updated = 0;
+      
+      for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+        const batch = jobs.slice(i, i + BATCH_SIZE);
+        
+        // Build batch update query
+        const updates = batch.map(job => ({
+          id: job.id,
+          category: job.primary_category
+        }));
+        
+        // Update each job's sectoral_category in Neon
+        for (const update of updates) {
+          try {
+            await pool.query(
+              'UPDATE jobs SET sectoral_category = $1 WHERE id = $2',
+              [update.category, update.id]
+            );
+            updated++;
+          } catch (e) {
+            // Skip individual errors, continue with batch
+            console.warn(`Failed to update job ${update.id}:`, e);
+          }
+        }
+        
+        if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= jobs.length) {
+          console.log(`📤 Updated ${Math.min(i + BATCH_SIZE, jobs.length)}/${jobs.length} jobs in Neon`);
+        }
+      }
+      
+      console.log(`✅ Synced ${updated} classifications to Neon`);
+      return { success: true, updated };
+      
+    } catch (error) {
+      console.error('❌ Failed to sync to Neon:', error);
+      return { 
+        success: false, 
+        updated: 0, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Full bidirectional sync - pulls from Neon, processes, and pushes classifications back
+   */
+  async fullBidirectionalSync(): Promise<SyncResult & { neonUpdated?: number }> {
+    // First do the normal sync (Neon -> SQLite)
+    const syncResult = await this.fullSync();
+    
+    if (!syncResult.success) {
+      return syncResult;
+    }
+    
+    // Then sync classifications back to Neon (SQLite -> Neon)
+    const neonResult = await this.syncToNeon();
+    
+    return {
+      ...syncResult,
+      neonUpdated: neonResult.updated
+    };
+  }
+
+  /**
    * Process a single job - classify and compute derived fields
    */
   private processJob(job: any): any {
