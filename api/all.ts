@@ -21,10 +21,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : sql`WHERE archived = false`;
     
     // Get overview stats (all jobs, matching local app behavior)
+    // Use archived field for active count since apply_until has non-standard date formats
     const overviewResult = await sql`
       SELECT 
         COUNT(*) as total_jobs,
-        COUNT(CASE WHEN NULLIF(NULLIF(apply_until, ''), 'N/A')::timestamp > NOW() THEN 1 END) as active_jobs,
+        COUNT(CASE WHEN archived::text NOT IN ('true', 'True', 'TRUE', '1') THEN 1 END) as active_jobs,
         COUNT(DISTINCT short_agency) as total_agencies,
         COUNT(DISTINCT duty_country) as unique_locations
       FROM jobs
