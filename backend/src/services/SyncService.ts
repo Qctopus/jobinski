@@ -210,10 +210,9 @@ export class SyncService {
     console.log('🔄 Syncing data to Neon PostgreSQL (Vercel production)...');
 
     try {
-      // Get all jobs from SQLite with their classifications
+      // Get ALL jobs from SQLite - sync everything regardless of classification status
       const jobs = db.prepare(`
-        SELECT * FROM jobs 
-        WHERE primary_category IS NOT NULL AND primary_category != ''
+        SELECT * FROM jobs
       `).all() as any[];
 
       console.log(`📊 Found ${jobs.length} jobs to sync to Neon`);
@@ -279,6 +278,7 @@ export class SyncService {
           ) VALUES ${placeholders.join(', ')}
           ON CONFLICT (id) DO UPDATE SET
             sectoral_category = EXCLUDED.sectoral_category,
+            archived = EXCLUDED.archived,
             updated_at = NOW()
         `;
 
@@ -403,6 +403,7 @@ export class SyncService {
 
     return {
       ...job,
+      archived: isArchived,  // Override with properly parsed boolean (fixes bigint string issue)
       short_agency: effectiveAgency,  // Override with effective agency (may be OCHA, OHCHR, etc.)
       primary_category: classification.primary,
       secondary_categories: classification.secondary.map(s => s.category),

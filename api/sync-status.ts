@@ -14,11 +14,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const sql = getDb();
     
-    // Get total jobs count
-    // Handle archived column potentially being TEXT or BOOLEAN
+    // Get total jobs count (all jobs, matching local app behavior)
     const countResult = await sql`
-      SELECT COUNT(*) as total FROM jobs 
-      WHERE archived IS NULL OR archived::text = 'false' OR archived::text = '0'
+      SELECT COUNT(*) as total FROM jobs
     `;
     const totalJobs = parseInt(countResult[0]?.total || '0');
     

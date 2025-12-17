@@ -24,6 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let countResult;
     
     if (status === 'active') {
+      // Show only active, non-archived jobs with future deadlines
       jobs = await sql`
         SELECT * FROM jobs
         WHERE (archived IS NULL OR archived::text NOT IN ('true', 'True', 'TRUE', '1'))
@@ -37,15 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           AND NULLIF(NULLIF(apply_until, ''), 'N/A')::timestamp > NOW()
       `;
     } else {
+      // Show ALL jobs (matching local app behavior)
       jobs = await sql`
         SELECT * FROM jobs
-        WHERE (archived IS NULL OR archived::text NOT IN ('true', 'True', 'TRUE', '1'))
         ORDER BY posting_date DESC
         LIMIT ${limitNum} OFFSET ${offset}
       `;
       countResult = await sql`
         SELECT COUNT(*) as total FROM jobs
-        WHERE (archived IS NULL OR archived::text NOT IN ('true', 'True', 'TRUE', '1'))
       `;
     }
     
