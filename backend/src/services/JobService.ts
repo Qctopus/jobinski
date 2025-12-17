@@ -32,8 +32,12 @@ export class JobService {
     let paramCount = 0;
 
     // Build WHERE conditions
+    // Always filter out archived jobs to match Vercel API behavior
+    conditions.push(`(archived IS NULL OR archived::text = 'false' OR archived::text = '0')`);
+
     if (category) {
-      conditions.push(`primary_category = $${++paramCount}`);
+      paramCount++;
+      conditions.push(`primary_category = $${paramCount}`);
       values.push(category);
     }
 
@@ -73,7 +77,7 @@ export class JobService {
 
     try {
       // Get total count
-      const countQuery = `SELECT COUNT(*) FROM jobs ${whereClause}`;
+      const countQuery = `SELECT COUNT(*) FROM jobs WHERE (archived IS NULL OR archived::text = 'false' OR archived::text = '0') ${whereClause ? `AND ${whereClause.replace('WHERE ', '')}` : ''}`;
       const countResult = await pool.query(countQuery, values);
       const total = parseInt(countResult.rows[0].count);
 

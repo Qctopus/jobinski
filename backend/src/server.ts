@@ -28,9 +28,12 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] // Replace with your production frontend URL
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'], // Development origins
+  origin: [
+    'https://barotalentanalytics.vercel.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL
+  ].filter(Boolean) as string[],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -142,12 +145,12 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Global error handler:', error);
-  
+
   res.status(500).json({
     success: false,
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Something went wrong!' 
+    message: process.env.NODE_ENV === 'production'
+      ? 'Something went wrong!'
       : error.message,
     timestamp: new Date().toISOString()
   } as ApiResponse);
@@ -156,10 +159,10 @@ app.use((error: Error, req: express.Request, res: express.Response, next: expres
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
   console.log(`\\n📡 Received ${signal}. Starting graceful shutdown...`);
-  
+
   server.close(async () => {
     console.log('🔒 HTTP server closed.');
-    
+
     try {
       await closeDatabase();
       closeDb(); // Close SQLite

@@ -195,6 +195,11 @@ export class SyncService {
    * Sync all data to Neon PostgreSQL (production database for Vercel)
    * This pushes the processed/classified jobs from local SQLite to Neon
    */
+  /**
+   * Sync all data to Neon PostgreSQL (production database for Vercel)
+   * This pushes the processed/classified jobs from local SQLite to Neon
+   * Uses bulk UPSERT for better performance
+   */
   async syncToNeon(): Promise<{ success: boolean; updated: number; inserted: number; error?: string }> {
     if (!neonPool) {
       console.log('⚠️ Neon database not configured - skipping Neon sync');
@@ -203,88 +208,104 @@ export class SyncService {
     }
 
     console.log('🔄 Syncing data to Neon PostgreSQL (Vercel production)...');
-    
+
     try {
       // Get all jobs from SQLite with their classifications
       const jobs = db.prepare(`
         SELECT * FROM jobs 
         WHERE primary_category IS NOT NULL AND primary_category != ''
       `).all() as any[];
-      
+
       console.log(`📊 Found ${jobs.length} jobs to sync to Neon`);
-      
+
       if (jobs.length === 0) {
         return { success: true, updated: 0, inserted: 0 };
       }
 
-      let updated = 0;
-      let inserted = 0;
-      const BATCH_SIZE = 100;
-      
+      let processedCount = 0;
+      // Increased batch size because we're doing bulk inserts now
+      // Postgres param limit is 65535. With ~22 params per row, we can safely do ~2000 rows.
+      // Keeping it at 500 to be safe and responsive.
+      const BATCH_SIZE = 500;
+
       for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
         const batch = jobs.slice(i, i + BATCH_SIZE);
-        
-        for (const job of batch) {
-          try {
-            // Try to update existing job first (by id)
-            const updateResult = await neonPool.query(
-              `UPDATE jobs SET 
-                sectoral_category = $1,
-                primary_category = $1,
-                updated_at = NOW()
-              WHERE id = $2`,
-              [job.primary_category, job.id]
-            );
-            
-            if (updateResult.rowCount && updateResult.rowCount > 0) {
-              updated++;
-            } else {
-              // Job doesn't exist in Neon - insert it
-              await neonPool.query(
-                `INSERT INTO jobs (
-                  id, title, description, job_labels, short_agency, long_agency,
-                  duty_station, duty_country, duty_continent, country_code,
-                  up_grade, pipeline, department, posting_date, apply_until,
-                  url, languages, uniquecode, sectoral_category, archived,
-                  created_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
-                ON CONFLICT (id) DO UPDATE SET
-                  sectoral_category = EXCLUDED.sectoral_category,
-                  updated_at = NOW()`,
-                [
-                  job.id, job.title, job.description, job.job_labels,
-                  job.short_agency, job.long_agency, job.duty_station,
-                  job.duty_country, job.duty_continent, job.country_code,
-                  job.up_grade, job.pipeline, job.department, job.posting_date,
-                  job.apply_until, job.url, job.languages, job.uniquecode,
-                  job.primary_category, job.archived ? 1 : 0
-                ]
-              );
-              inserted++;
-            }
-          } catch (e: any) {
-            // Skip individual errors but log them
-            if (!e.message?.includes('duplicate key')) {
-              console.warn(`Failed to sync job ${job.id}:`, e.message);
-            }
+
+        // Construct bulk query
+        const values: any[] = [];
+        const placeholders: string[] = [];
+
+        batch.forEach((job, index) => {
+          const offset = index * 20; // 20 parameters per row
+          placeholders.push(`(
+            $${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6},
+            $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12},
+            $${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16}, $${offset + 17}, $${offset + 18},
+            $${offset + 19}, $${offset + 20}, NOW()
+          )`);
+
+          values.push(
+            job.id,
+            job.title || '',
+            job.description || '',
+            job.job_labels || '',
+            job.short_agency || '',
+            job.long_agency || '',
+            job.duty_station || '',
+            job.duty_country || '',
+            job.duty_continent || '',
+            job.country_code || '',
+            job.up_grade || '',
+            job.pipeline || '',
+            job.department || '',
+            job.posting_date,
+            job.apply_until,
+            job.url || '',
+            job.languages || '',
+            job.uniquecode || '',
+            job.primary_category, // sectoral_category
+            job.archived ? 1 : 0,
+            // created_at is NOW() in SQL
+          );
+        });
+
+        const query = `
+          INSERT INTO jobs (
+            id, title, description, job_labels, short_agency, long_agency,
+            duty_station, duty_country, duty_continent, country_code,
+            up_grade, pipeline, department, posting_date, apply_until,
+            url, languages, uniquecode, sectoral_category, archived,
+            updated_at
+          ) VALUES ${placeholders.join(', ')}
+          ON CONFLICT (id) DO UPDATE SET
+            sectoral_category = EXCLUDED.sectoral_category,
+            updated_at = NOW()
+        `;
+
+        try {
+          await neonPool.query(query, values);
+          processedCount += batch.length;
+
+          if (processedCount % 1000 === 0 || processedCount >= jobs.length) {
+            console.log(`📤 Synced ${Math.min(processedCount, jobs.length)}/${jobs.length} jobs to Neon`);
           }
-        }
-        
-        if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= jobs.length) {
-          console.log(`📤 Synced ${Math.min(i + BATCH_SIZE, jobs.length)}/${jobs.length} jobs to Neon`);
+        } catch (e: any) {
+          console.error(`❌ Failed to sync batch ${i} to ${i + BATCH_SIZE}:`, e.message);
+          // If batch fails, we could fallback to individual processing or just log.
+          // For now, logging error.
         }
       }
-      
-      console.log(`✅ Neon sync complete: ${updated} updated, ${inserted} inserted`);
-      return { success: true, updated, inserted };
-      
+
+      console.log(`✅ Neon sync complete: ${processedCount} jobs processed`);
+      return { success: true, updated: processedCount, inserted: 0 }; // Cannot distinguish upsert counts easily in bulk
+
     } catch (error) {
       console.error('❌ Failed to sync to Neon:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         updated: 0,
         inserted: 0,
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -303,24 +324,24 @@ export class SyncService {
 
     // Step 1: Pull from Azure (source) to local SQLite
     const syncResult = await this.fullSync();
-    
+
     if (!syncResult.success) {
       console.error('❌ Azure sync failed - aborting Neon sync');
       return syncResult;
     }
-    
+
     console.log('');
     console.log('─'.repeat(60));
-    
+
     // Step 2: Push from local SQLite to Neon (for Vercel)
     const neonResult = await this.syncToNeon();
-    
+
     console.log('═'.repeat(60));
     console.log('✅ Bidirectional sync complete!');
     console.log(`   Azure → SQLite: ${syncResult.processedJobs} jobs`);
     console.log(`   SQLite → Neon: ${neonResult.updated} updated, ${neonResult.inserted} inserted`);
     console.log('═'.repeat(60));
-    
+
     return {
       ...syncResult,
       neonUpdated: neonResult.updated,
@@ -342,7 +363,8 @@ export class SyncService {
       ? Math.ceil((applyUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
-    const isArchived = Boolean(job.archived) && Number(job.archived) !== 0;
+    // archived can be boolean, number (0/1), or string ('0'/'1') due to Postgres bigint
+    const isArchived = job.archived === true || job.archived === 'true' || job.archived === 1 || job.archived === '1';
     const isExpired = isArchived || daysRemaining < 0;
     const isActive = !isExpired && daysRemaining >= 0;
 
@@ -768,7 +790,7 @@ export class SyncService {
     `).all() as any[];
 
     const skillFrequency = new Map<string, number>();
-    
+
     jobs.forEach(job => {
       const skills = (job.job_labels || '').split(',').map((s: string) => s.trim()).filter((s: string) => s);
       skills.forEach((skill: string) => {
@@ -789,7 +811,7 @@ export class SyncService {
     `).all() as any[];
 
     const categorySkillMap = new Map<string, Map<string, number>>();
-    
+
     skillsByCategory.forEach(job => {
       if (!categorySkillMap.has(job.primary_category)) {
         categorySkillMap.set(job.primary_category, new Map());
@@ -813,8 +835,8 @@ export class SyncService {
     return {
       topSkills,
       totalUniqueSkills: skillFrequency.size,
-      avgSkillsPerJob: jobs.length > 0 
-        ? Math.round(Array.from(skillFrequency.values()).reduce((a, b) => a + b, 0) / jobs.length * 10) / 10 
+      avgSkillsPerJob: jobs.length > 0
+        ? Math.round(Array.from(skillFrequency.values()).reduce((a, b) => a + b, 0) / jobs.length * 10) / 10
         : 0,
       topSkillsByCategory
     };
@@ -851,7 +873,7 @@ export class SyncService {
     // Find leading agency per category
     const categoryLeaders: any[] = [];
     const categoryAgencyMap = new Map<string, { agency: string; count: number }[]>();
-    
+
     categoryDominance.forEach(row => {
       if (!categoryAgencyMap.has(row.primary_category)) {
         categoryAgencyMap.set(row.primary_category, []);
@@ -890,7 +912,7 @@ export class SyncService {
 
     const shares = agencies.map(a => (a.volume / total) * 100);
     const herfindahlIndex = shares.reduce((sum, s) => sum + (s * s), 0) / 10000;
-    
+
     return {
       herfindahlIndex: Math.round(herfindahlIndex * 1000) / 1000,
       top3Share: shares.slice(0, 3).reduce((sum, s) => sum + s, 0),
@@ -914,7 +936,7 @@ export class SyncService {
   private getLocationType(country: string, station: string): string {
     const hqCountries = ['United States', 'Switzerland', 'Austria', 'Italy', 'France', 'Belgium', 'Netherlands', 'Kenya', 'Thailand'];
     const stationLower = (station || '').toLowerCase();
-    
+
     if (stationLower.includes('home') || stationLower.includes('remote')) return 'Remote';
     if (hqCountries.some(c => country?.includes(c))) return 'HQ';
     return 'Field';
@@ -923,7 +945,7 @@ export class SyncService {
   private extractSkillDomains(labels: string): string[] {
     const domains: string[] = [];
     const labelsLower = labels.toLowerCase();
-    
+
     const domainKeywords: Record<string, string[]> = {
       'Technical': ['software', 'data', 'IT', 'programming', 'engineering', 'analysis'],
       'Management': ['management', 'coordination', 'leadership', 'planning', 'strategy'],
